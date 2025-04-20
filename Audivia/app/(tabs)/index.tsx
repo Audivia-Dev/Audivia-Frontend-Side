@@ -4,6 +4,7 @@ import styles from "@/styles/home.styles"
 import { COLORS } from "@/constants/theme"
 
 export default function Index() {
+  const avatarUrl = "https://res.cloudinary.com/dgzn2ix8w/image/upload/v1745141656/Audivia/a1wqzwrxluklxcwubzrc.jpg"
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -11,7 +12,18 @@ export default function Index() {
     <Text style={styles.title}>Trang chủ</Text>
         <View style={styles.headerIcons}>
             <Ionicons name="notifications-outline" size={22} color={COLORS.dark} style={styles.icon} />
-            <Ionicons name="person-circle-outline" size={22} color={COLORS.primary} />
+            <View style={styles.avatarWrapper}>
+  {avatarUrl ? (
+    <Image
+      source={{ uri: avatarUrl }}
+      style={styles.avatarImage}
+      resizeMode="cover"
+    />
+  ) : (
+    <Ionicons name="person-circle-outline" size={22} color={COLORS.primary} />
+  )}
+</View>
+
         </View>
     </View>
 

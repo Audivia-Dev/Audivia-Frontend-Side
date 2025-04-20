@@ -19,5 +19,6 @@ export const COLORS = {
         brownLight: "#efebe9",
         purpleLight: "#F3E5F5",
         purpleGradient: "#d6a4ff",
+        redLight: "#FFE0E0",
         
 } as const;

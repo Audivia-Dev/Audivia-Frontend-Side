@@ -4,7 +4,7 @@ import { StyleSheet } from "react-native"
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#F8F9FA",
   },
   header: {
     flexDirection: "row",
@@ -26,6 +26,7 @@ export const styles = StyleSheet.create({
   iconButton: {
     marginLeft: 20,
   },
+  
   tabsContainer: {
     flexDirection: "row",
     paddingHorizontal: 16,
@@ -175,5 +176,22 @@ export const styles = StyleSheet.create({
     color: COLORS.primary,
     fontWeight: "600",
     fontSize: 14,
+  },
+  icon: {
+    marginRight: 16,
+  },
+  avatarWrapper: {
+    width: 32,
+    height: 32,
+    borderRadius: 21,
+    overflow: "hidden",
+    backgroundColor: COLORS.grey,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  
+  avatarImage: {
+    width: "100%",
+    height: "100%",
   },
 })

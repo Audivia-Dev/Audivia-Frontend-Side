@@ -1,0 +1,188 @@
+import { StyleSheet } from "react-native";
+import { COLORS } from "@/constants/theme";
+
+const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: "#F5F7FA",
+    },
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: COLORS.primary,
+      paddingVertical: 16,
+      paddingHorizontal: 16,
+    },
+    backButton: {
+      marginRight: 16,
+    },
+    headerTitle: {
+      fontSize: 18,
+      fontWeight: "600",
+      color: COLORS.light,
+    },
+    content: {
+      flex: 1,
+      padding: 20,
+    },
+    amountInputContainer: {
+      backgroundColor: COLORS.light,
+      borderRadius: 12,
+      padding: 20,
+      marginBottom: 20,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 3,
+    },
+    inputLabel: {
+      fontSize: 16,
+      fontWeight: "500",
+      color: COLORS.dark,
+      marginBottom: 12,
+    },
+    inputWrapper: {
+      flexDirection: "row",
+      alignItems: "center",
+      borderBottomWidth: 1,
+      borderBottomColor: COLORS.grey + "40",
+      paddingBottom: 8,
+    },
+    amountInput: {
+      flex: 1,
+      fontSize: 24,
+      fontWeight: "bold",
+      color: COLORS.dark,
+    },
+    currencyLabel: {
+      fontSize: 18,
+      fontWeight: "500",
+      color: COLORS.grey,
+    },
+    amountInWords: {
+      marginTop: 12,
+      fontSize: 16,
+      color: COLORS.grey,
+    },
+    generateButton: {
+      backgroundColor: COLORS.primary,
+      borderRadius: 8,
+      paddingVertical: 14,
+      alignItems: "center",
+      marginTop: 30,
+    },
+    generateButtonDisabled: {
+      backgroundColor: COLORS.grey + "80",
+    },
+    generateButtonText: {
+      color: COLORS.light,
+      fontSize: 16,
+      fontWeight: "600",
+    },
+    qrContainer: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: COLORS.light,
+      borderRadius: 12,
+      padding: 20,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 3,
+    },
+    qrTitle: {
+      fontSize: 18,
+      fontWeight: "600",
+      color: COLORS.dark,
+      marginBottom: 8,
+    },
+    qrAmount: {
+      fontSize: 24,
+      fontWeight: "bold",
+      color: COLORS.primary,
+      marginBottom: 24,
+    },
+    qrCodeContainer: {
+      padding: 16,
+      backgroundColor: COLORS.light,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: COLORS.grey + "30",
+      marginBottom: 24,
+      height: 240,
+      width: 240,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    qrInstructions: {
+      fontSize: 14,
+      color: COLORS.grey,
+      textAlign: "center",
+      marginBottom: 30,
+      paddingHorizontal: 20,
+    },
+    cancelButton: {
+      borderWidth: 1,
+      borderColor: COLORS.primary,
+      borderRadius: 8,
+      paddingVertical: 12,
+      paddingHorizontal: 24,
+    },
+    cancelButtonText: {
+      color: COLORS.primary,
+      fontSize: 16,
+      fontWeight: "500",
+    },
+    processingContainer: {
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    processingText: {
+      marginTop: 16,
+      fontSize: 14,
+      color: COLORS.dark,
+      fontWeight: "500",
+    },
+    successContainer: {
+      alignItems: "center",
+      justifyContent: "center",
+      padding: 20,
+    },
+    successIconContainer: {
+      marginBottom: 20,
+    },
+    successTitle: {
+      fontSize: 22,
+      fontWeight: "bold",
+      color: COLORS.dark,
+      marginBottom: 12,
+    },
+    successAmount: {
+      fontSize: 28,
+      fontWeight: "bold",
+      color: COLORS.primary,
+      marginBottom: 12,
+    },
+    successMessage: {
+      fontSize: 16,
+      color: COLORS.grey,
+      textAlign: "center",
+      marginBottom: 30,
+    },
+    completeButton: {
+      backgroundColor: COLORS.primary,
+      borderRadius: 8,
+      paddingVertical: 14,
+      paddingHorizontal: 40,
+      alignItems: "center",
+    },
+    completeButtonText: {
+      color: COLORS.light,
+      fontSize: 16,
+      fontWeight: "600",
+    },
+  })
+  export default styles;

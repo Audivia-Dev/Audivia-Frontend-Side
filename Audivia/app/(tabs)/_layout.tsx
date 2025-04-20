@@ -6,6 +6,7 @@ import Animated from 'react-native-reanimated'
 
 export default function TabLayout() {
   return (
+    
     <Tabs screenOptions={
         {tabBarShowLabel: false,
             tabBarActiveTintColor: COLORS.primary,

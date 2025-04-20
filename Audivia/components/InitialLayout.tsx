@@ -1,6 +1,8 @@
+import React from "react";
 import { useAuth } from "@clerk/clerk-expo";
 import { Stack, useRouter, useSegments } from "expo-router";
 import { useEffect } from "react";
+import FloatingButton from "./FloatingButton";
 
 export default function InitialLayout() {
 
@@ -20,5 +22,10 @@ export default function InitialLayout() {
 
     if(!isLoaded) return null
 
-    return <Stack screenOptions={{headerShown: false}}/>
+    return (
+        <>
+            <Stack screenOptions={{headerShown: false}}/>
+            {isSignedIn && <FloatingButton onPress={() => console.log("Pressed")}/>}
+        </>
+    )
 }

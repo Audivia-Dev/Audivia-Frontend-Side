@@ -41,8 +41,9 @@ const POSTS = [
 
 export default function ForumScreen() {
   const [activeTab, setActiveTab] = useState("Following")
+  const avatarUrl = "https://res.cloudinary.com/dgzn2ix8w/image/upload/v1745141656/Audivia/a1wqzwrxluklxcwubzrc.jpg"
 
-  const renderPost = ({ item }) => (
+  const renderPost = ({ item }: { item: any }) => (
     <View style={styles.postContainer}>
       {/* Post Header */}
       <View style={styles.postHeader}>
@@ -117,12 +118,18 @@ export default function ForumScreen() {
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Diễn đàn</Text>
         <View style={styles.headerIcons}>
-          <TouchableOpacity style={styles.iconButton}>
-            <Ionicons name="notifications-outline" size={24} color={COLORS.dark} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.iconButton}>
-            <Ionicons name="person-circle-outline" size={24} color={COLORS.primary} />
-          </TouchableOpacity>
+            <Ionicons name="notifications-outline" size={22} color={COLORS.dark} style={styles.icon} />
+            <View style={styles.avatarWrapper}>
+  {avatarUrl ? (
+    <Image
+      source={{ uri: avatarUrl }}
+      style={styles.avatarImage}
+      resizeMode="cover"
+    />
+  ) : (
+    <Ionicons name="person-circle-outline" size={22} color={COLORS.primary} />
+  )}
+            </View>
         </View>
       </View>
 
