@@ -17,7 +17,7 @@ import { useSSO } from "@clerk/clerk-expo";
 import { useRouter } from "expo-router";
 
 
-export default function Login() {
+export default function Signup() {
 
 
   const [showPassword, setShowPassword] = useState(false);
@@ -49,7 +49,7 @@ export default function Login() {
     </Text>
   }>
     <LinearGradient
-      colors={[COLORS.light, COLORS.purpleGradient]}
+      colors={[COLORS.light, COLORS.purple]}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 0 }}>
       <Text style={[styles.brandTitle, { opacity: 0 }]}>
@@ -61,7 +61,7 @@ export default function Login() {
 
       {/* Form */}
       <View style={styles.form}>
-        <Text style={styles.formTitle}>Đăng nhập</Text>
+        <Text style={styles.formTitle}>Đăng Ký</Text>
         <View style={styles.inputGroup}>
           <Ionicons name="mail-outline" size={20} color={COLORS.grey} style={styles.inputIcon} />
           <TextInput
@@ -71,7 +71,14 @@ export default function Login() {
             keyboardType="email-address"
           />
         </View>
-
+        <View style={styles.inputGroup}>
+          <Ionicons name="person-outline" size={20} color={COLORS.grey} style={styles.inputIcon} />
+          <TextInput
+            style={styles.input}
+            placeholder="Full Name"
+            placeholderTextColor={COLORS.grey}
+          />
+        </View>
         <View style={styles.inputGroup}>
           <Ionicons name="lock-closed-outline" size={20} color={COLORS.grey} style={styles.inputIcon} />
           <TextInput
@@ -88,47 +95,37 @@ export default function Login() {
             />
           </TouchableOpacity>
         </View>
-
-        <View style={styles.row}>
-          <View style={styles.checkboxContainer}>
-          <Checkbox
-        status={checked ? 'checked' : 'unchecked'}
-        onPress={() => {
-          setChecked(!checked);
-        }}
-      />
-            <Text style={styles.remember}>Nhớ đăng nhập</Text>
-          </View>
-          <TouchableOpacity>
-            <Text style={styles.forgot}>Quên mật khẩu?</Text>
+        <View style={styles.inputGroup}>
+          <Ionicons name="lock-closed-outline" size={20} color={COLORS.grey} style={styles.inputIcon} />
+          <TextInput
+            style={styles.input}
+            placeholder="Nhập lại mật khẩu"
+            secureTextEntry={!showPassword}
+            placeholderTextColor={COLORS.grey}
+          />
+          <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+            <Ionicons
+              name={showPassword ? "eye-off-outline" : "eye-outline"}
+              size={20}
+              color={COLORS.grey}
+            />
           </TouchableOpacity>
         </View>
 
         <TouchableOpacity style={styles.loginButton} onPress={() => console.log("Login")}>
           <LinearGradient
-            colors={[COLORS.primary, COLORS.purpleGradient]}
+            colors={[COLORS.primary, COLORS.purple]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={StyleSheet.absoluteFillObject}
           />
-          <Text style={styles.loginButtonText}>Đăng nhập</Text>
-        </TouchableOpacity>
-
-        <View style={styles.orContainer}>
-          <View style={styles.line} />
-          <Text style={styles.orText}>Hoặc</Text>
-          <View style={styles.line} />
-        </View>
-
-        <TouchableOpacity style={styles.socialButton} onPress={handleGoogleLogin}>
-          <Ionicons name="logo-google" size={20} color={COLORS.primary} style={styles.socialIcon} />
-          <Text style={styles.socialText}>Đăng nhập với Google</Text>
+          <Text style={styles.loginButtonText}>Đăng Ký</Text>
         </TouchableOpacity>
 
         <View style={styles.signupWrapper}>
-          <Text>Bạn chưa có tài khoản? </Text>
-          <TouchableOpacity onPress={() => router.push("/signup")}>
-            <Text style={styles.signupText}>Đăng ký</Text>
+          <Text>Bạn có tài khoản? </Text>
+          <TouchableOpacity onPress={() => router.push("/login")}>
+            <Text style={styles.signupText}>Đăng nhập</Text>
           </TouchableOpacity>
         </View>
       </View>

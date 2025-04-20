@@ -4,15 +4,15 @@ import { StyleSheet } from "react-native";
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: COLORS.light,
+        backgroundColor: COLORS.primary,
         justifyContent: "center",
         alignItems: "center",
-        paddingHorizontal: 30,
+        paddingHorizontal: 20,
     },
     logoSection: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 30,
+        marginBottom: 10,
     },
     logo: {
         width: 130,
@@ -27,6 +27,9 @@ const styles = StyleSheet.create({
     },
     form: {
         width: '100%',
+        backgroundColor: COLORS.light,
+        padding: 20,
+        borderRadius: 20,
     },
     formTitle: {
         fontSize: 24,

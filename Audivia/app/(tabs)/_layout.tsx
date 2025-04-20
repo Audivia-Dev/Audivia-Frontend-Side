@@ -30,12 +30,13 @@ export default function TabLayout() {
         { name: 'forum', icon: 'people' },
         { name: 'map', icon: 'map' },
         { name: 'save_tour', icon: 'heart' },
-        { name: 'profile', icon: 'person-circle' },
+        { name: 'menu', icon: 'menu' },
       ].map(({ name, icon }) => (
         <Tabs.Screen
           key={name}
           name={name}
           options={{
+            headerShown: false,
             tabBarIcon: ({ color, size, focused }) => {
               const scale = focused ? 1.5 : 1
               const opacity = focused ? 1 : 0.6
