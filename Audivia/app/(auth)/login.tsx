@@ -15,6 +15,7 @@ import MaskedView from "@react-native-masked-view/masked-view";
 import { Checkbox } from "react-native-paper";
 import { useSSO } from "@clerk/clerk-expo";
 import { useRouter } from "expo-router";
+import { login } from "@/services/user";
 
 
 export default function Login() {
@@ -22,6 +23,8 @@ export default function Login() {
 
   const [showPassword, setShowPassword] = useState(false);
   const [checked, setChecked] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const {startSSOFlow} = useSSO()
   const router = useRouter()
 
@@ -36,7 +39,14 @@ export default function Login() {
         console.error("Error logging in with Google", error)
     }
 }
-
+const handleLogin = async () => {
+  try {
+    await login(email, password); 
+    router.replace("/(tabs)")
+  }catch (error) {
+  console.error("Error logging in", error)
+ } 
+}   
 
   return (
     <View style={styles.container}>
@@ -65,6 +75,8 @@ export default function Login() {
         <View style={styles.inputGroup}>
           <Ionicons name="mail-outline" size={20} color={COLORS.grey} style={styles.inputIcon} />
           <TextInput
+            value={email}
+            onChangeText={setEmail}
             style={styles.input}
             placeholder="Email"
             placeholderTextColor={COLORS.grey}
@@ -75,6 +87,8 @@ export default function Login() {
         <View style={styles.inputGroup}>
           <Ionicons name="lock-closed-outline" size={20} color={COLORS.grey} style={styles.inputIcon} />
           <TextInput
+            value={password}
+            onChangeText={setPassword}
             style={styles.input}
             placeholder="Mật khẩu"
             secureTextEntry={!showPassword}
@@ -104,14 +118,16 @@ export default function Login() {
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity style={styles.loginButton} onPress={() => console.log("Login")}>
+        <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
           <LinearGradient
             colors={[COLORS.primary, COLORS.purpleGradient]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={StyleSheet.absoluteFillObject}
           />
-          <Text style={styles.loginButtonText}>Đăng nhập</Text>
+          <Text style={styles.loginButtonText}>
+            Đăng nhập
+          </Text>
         </TouchableOpacity>
 
         <View style={styles.orContainer}>
