@@ -41,12 +41,17 @@ export default function Login() {
 }
 const handleLogin = async () => {
   try {
-    await login(email, password); 
-    router.replace("/(tabs)")
-  }catch (error) {
-  console.error("Error logging in", error)
- } 
-}   
+    const response = await login(email, password);
+    if (response.accessToken && response.refreshToken) {
+      alert(response.message);
+      router.replace("/(tabs)");
+    } 
+  } catch (error: any) {
+    if (error.response) {
+     alert(error.response.data.message);
+    }
+  }
+};
 
   return (
     <View style={styles.container}>

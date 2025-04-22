@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const login = async (email: string, password: string) => {
   try {
-    const response = await apiClient.post('/Auth/Login', {
+    const response = await apiClient.post('/auth/login', {
       email,
       password,
     });
@@ -14,26 +14,23 @@ export const login = async (email: string, password: string) => {
     await AsyncStorage.setItem('accessToken', accessToken);
     await AsyncStorage.setItem('refreshToken', refreshToken);
 
-    console.log('Login successful:', response.data);
     return response.data;
-  } catch (error) {
-    console.error('Login failed:', error);
+  } catch (error: any) {
     throw error;
   }
 };
 
 export const register = async (username: string, email: string, password: string) => {
   try {
-    const response = await apiClient.post('/Auth/register', {
+    const response = await apiClient.post('/auth/register', {
       userName: username,
       email,
       password,
     });
 
-    console.log('Register successful:', response.data);
     return response.data;
   } catch (error) {
-    console.error('Register failed:', error);
+    console.error('Đăng ký thất bại:', error);
     throw error;
   }
 };
@@ -43,7 +40,7 @@ export const getUserInfo = async (id: string) => {
     const token = await AsyncStorage.getItem('accessToken');
 
     // Thêm token vào header thủ công
-    const response = await apiClient.get(`/User/${id}`, {
+    const response = await apiClient.get(`/user/${id}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
