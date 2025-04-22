@@ -84,5 +84,5 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
   },
 });
-
 export default FloatingButton;
+

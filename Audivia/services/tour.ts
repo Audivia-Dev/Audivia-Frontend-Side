@@ -1,11 +1,11 @@
 import apiClient from "@/utils/apiClient";
 
-export const getTours = async () => {
+export const getTop3Tours= async () => {
   try {
-    const response = await apiClient.get('/Tours');
+    const response = await apiClient.get('/tours?Sort=ratingDesc&Top=3');
     return response.data;
   } catch (error) {
-    console.error('Error fetching tours:', error);
+    console.error('Lỗi khi lấy danh sách tour:', error);
     throw error;
   }
 }

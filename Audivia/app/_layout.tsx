@@ -1,24 +1,15 @@
-import { COLORS } from '@/constants/theme';
 import '../global.css';
 import 'react-native-reanimated';
-import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
-import { ClerkLoaded, ClerkProvider } from '@clerk/clerk-expo'
-import { tokenCache } from '@clerk/clerk-expo/token-cache'
-import InitialLayout from '@/components/InitialLayout';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { AuthProvider } from '@/contexts/AuthContext';
+import LayoutContent from '@/contexts/LayoutContext';
 
 export default function RootLayout() {
-
   return (
-   <ClerkProvider tokenCache={tokenCache}>
-    <ClerkLoaded>
-    <SafeAreaProvider>
-      <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.primary }}>
-    <InitialLayout/>
-      </SafeAreaView>
-    </SafeAreaProvider>
-    </ClerkLoaded>
-   </ClerkProvider>
-      
-      
+    <AuthProvider>
+      <SafeAreaProvider>
+        <LayoutContent/>
+      </SafeAreaProvider>
+    </AuthProvider>
   );
 }

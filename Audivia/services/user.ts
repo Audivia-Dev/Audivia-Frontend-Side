@@ -37,18 +37,12 @@ export const register = async (username: string, email: string, password: string
 
 export const getUserInfo = async (id: string) => {
   try {
-    const token = await AsyncStorage.getItem('accessToken');
 
-    // Thêm token vào header thủ công
-    const response = await apiClient.get(`/user/${id}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
+    const response = await apiClient.get(`/users/${id}`);
+    console.log('RESPONSE', response.data)
     return response.data;
   } catch (error) {
-    console.error('Error fetching user info:', error);
+    console.error('Lỗi lấy thông tin người dùng:', error);
     throw error;
   }
 };

@@ -4,7 +4,7 @@ import { Ionicons, MaterialIcons, FontAwesome5 } from "@expo/vector-icons"
 import { COLORS } from "@/constants/theme"
 import { useRouter } from "expo-router"
 import styles from "@/styles/history_transaction.styles"
-
+import { useUser } from "@/hooks/useUser"
 // Dữ liệu mẫu cho lịch sử giao dịch
 const TRANSACTIONS = [
   {
@@ -57,6 +57,7 @@ const TRANSACTIONS = [
 export default function WalletScreen() {
   const [activeTab, setActiveTab] = useState("all")
   const router = useRouter()
+  const { user } = useUser()
 
   const goBack = () => {
     router.back()
@@ -117,7 +118,7 @@ export default function WalletScreen() {
         {/* Wallet Balance */}
         <View style={styles.balanceCard}>
           <Text style={styles.balanceLabel}>Số dư ví</Text>
-          <Text style={styles.balanceAmount}>{formatCurrency(1250000)}</Text>
+          <Text style={styles.balanceAmount}>{formatCurrency(user?.balanceWallet || 0)}</Text>
           <View style={styles.walletActions}>
             <TouchableOpacity style={styles.walletActionButton} onPress={navigateToDeposit}>
               <View style={styles.actionIconContainer}>

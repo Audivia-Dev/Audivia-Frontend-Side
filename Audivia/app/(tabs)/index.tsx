@@ -1,37 +1,82 @@
-import { Image, Text, TouchableOpacity, View, ScrollView, TextInput, StyleSheet } from "react-native"
-import { Ionicons, MaterialIcons, FontAwesome, FontAwesome5 } from "@expo/vector-icons"
+import { Image, Text, TouchableOpacity, View, ScrollView, TextInput, Dimensions } from "react-native"
+import { Ionicons, FontAwesome } from "@expo/vector-icons"
 import styles from "@/styles/home.styles"
 import { COLORS } from "@/constants/theme"
+import { getTop3Tours } from "@/services/tour"
+import { useEffect, useState, useRef } from "react"
+import { Tour, TourType } from "@/models"
+import { getTourTypes } from "@/services/tour_type"
+import { useUser } from "@/hooks/useUser"
+
+
+const carouselImages = [
+  require('@/assets/images/benthanh.png'),
+  require('@/assets/images/cung-dinh-hue.jpg'),
+  require('@/assets/images/ben-nha-rong.jpg'),
+  require('@/assets/images/lang-khai-dinh.jpg'),
+  require('@/assets/images/nvh1.jpg'),
+]
 
 export default function Index() {
+  const [top3Tours, setTop3Tours] = useState<Tour[]>([])
+  const [tourTypes, setTourTypes] = useState<TourType[]>([])
+  const { user } = useUser()
+  const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const scrollViewRef = useRef<ScrollView>(null)
+
+  useEffect(() => {
+    getTop3Tours().then((res) => {
+      setTop3Tours(res.response.data)
+    })
+  }, [])
+
+  useEffect(() => {
+    getTourTypes().then((res) => {
+      setTourTypes(res.response)
+    })
+  }, [])
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentImageIndex((prevIndex) => {
+        const newIndex = (prevIndex + 1) % carouselImages.length
+        scrollViewRef.current?.scrollTo({
+          x: newIndex * Dimensions.get('window').width,
+          animated: true
+        })
+        return newIndex
+      })
+    }, 3000)
+
+    return () => clearInterval(interval)
+  }, [])
+
   const avatarUrl = "https://res.cloudinary.com/dgzn2ix8w/image/upload/v1745141656/Audivia/a1wqzwrxluklxcwubzrc.jpg"
   return (
     <View style={styles.container}>
       {/* Header */}
-    <View style={styles.header}>
-    <Text style={styles.title}>Trang chủ</Text>
+      <View style={styles.header}>
+        <Text style={styles.title}>Trang chủ</Text>
         <View style={styles.headerIcons}>
-            <Ionicons name="notifications-outline" size={22} color={COLORS.dark} style={styles.icon} />
-            <View style={styles.avatarWrapper}>
-  {avatarUrl ? (
-    <Image
-      source={{ uri: avatarUrl }}
-      style={styles.avatarImage}
-      resizeMode="cover"
-    />
-  ) : (
-    <Ionicons name="person-circle-outline" size={22} color={COLORS.primary} />
-  )}
-</View>
-
+          <Ionicons name="notifications-outline" size={22} color={COLORS.dark} style={styles.icon} />
+          <View style={styles.avatarWrapper}>
+            {avatarUrl ? (
+              <Image
+                source={{ uri: avatarUrl }}
+                style={styles.avatarImage}
+                resizeMode="cover"
+              />
+            ) : (
+              <Ionicons name="person-circle-outline" size={22} color={COLORS.primary} />
+            )}
+          </View>
         </View>
-    </View>
+      </View>
 
-    <View style={styles.locationContainer}>
+      <View style={styles.locationContainer}>
         <Ionicons name="location-outline" size={18} color="#000" />
         <Text style={styles.locationText}>Thu Duc, HCM</Text>
-    </View>
-
+      </View>
 
       {/* Search Bar */}
       <View style={styles.searchContainer}>
@@ -40,52 +85,67 @@ export default function Index() {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Main Image */}
+        {/* Main Image Carousel */}
         <View style={styles.mainImageContainer}>
-          <Image
-            source={require('../../assets/images/benthanh.png')}
-            style={styles.mainImage}
-            resizeMode="cover"
-          />
+          <ScrollView
+            ref={scrollViewRef}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            onScroll={(event) => {
+              const contentOffset = event.nativeEvent.contentOffset
+              const index = Math.round(contentOffset.x / Dimensions.get('window').width)
+              setCurrentImageIndex(index)
+            }}
+            scrollEventThrottle={16}
+            style={{ width: '100%', height: 200 }}
+          >
+            {carouselImages.map((image, index) => (
+              <Image
+                key={index}
+                source={image}
+                style={[styles.mainImage, { width: Dimensions.get('window').width, height: 200 }]}
+                resizeMode="cover"
+              />
+            ))}
+          </ScrollView>
+          <View style={styles.carouselIndicators}>
+            {carouselImages.map((_, index) => (
+              <View
+                key={index}
+                style={[
+                  styles.indicator,
+                  index === currentImageIndex && styles.activeIndicator
+                ]}
+              />
+            ))}
+          </View>
         </View>
 
         {/* Categories */}
         <View style={styles.categoriesSection}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Danh mục</Text>
-            <TouchableOpacity>
-              <Text style={styles.seeAllText}>Xem tất cả</Text>
-            </TouchableOpacity>
           </View>
 
           <View style={styles.categoriesContainer}>
-            <View style={styles.categoryItem}>
-              <View style={[styles.categoryIcon, { backgroundColor: COLORS.blueLight }]}>
-                <FontAwesome5 name="landmark" size={20} color={COLORS.primary} />
-              </View>
-              <Text style={styles.categoryText}>Di tích lịch sử</Text>
-            </View>
-
-            <View style={styles.categoryItem}>
-              <View style={[styles.categoryIcon, { backgroundColor: COLORS.greenLight }]}>
-                <MaterialIcons name="nature" size={20} color={COLORS.green} />
-              </View>
-              <Text style={styles.categoryText}>Tự nhiên</Text>
-            </View>
-
-            <View style={styles.categoryItem}>
-              <View style={[styles.categoryIcon, { backgroundColor: COLORS.purpleLight }]}>
-                <MaterialIcons name="palette" size={20} color={COLORS.purple} />
-              </View>
-              <Text style={styles.categoryText}>Mỹ thuật</Text>
-            </View>
-
-            <View style={styles.categoryItem}>
-              <View style={[styles.categoryIcon, { backgroundColor: COLORS.orangeLight }]}>
-                <MaterialIcons name="restaurant" size={20} color={COLORS.orange} />
-              </View>
-              <Text style={styles.categoryText}>Ẩm thực</Text>
-            </View>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.scrollContent}
+            >
+              {tourTypes.map((category) => (
+                <TouchableOpacity
+                  key={category.id}
+                  style={styles.categoryItem}
+                >
+                  <View style={styles.categoryIconContainer}>
+                    <Ionicons name="headset" size={24} color={COLORS.primary} />
+                  </View>
+                  <Text style={styles.categoryName} numberOfLines={2}>{category.name}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
           </View>
         </View>
 
@@ -141,47 +201,25 @@ export default function Index() {
         {/* Top Places */}
         <View style={styles.topPlacesSection}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Các địa điểm nổi bật</Text>
+            <Text style={styles.sectionTitle}>3 địa điểm nổi bật</Text>
           </View>
 
-          <View style={styles.placeItem}>
-            <Image
-              source={require('../../assets/images/cung-dinh-hue.jpg')}
-              style={styles.placeImage}
-              resizeMode="cover"
-            />
-            <View style={styles.placeDetails}>
-              <Text style={styles.placeName}>Cung đình Huế</Text>
-              <Text style={styles.placeRating}>★★★★☆ 4.2 • 2 giờ</Text>
-              <Text style={styles.placePrice}>140.000đ</Text>
+          {Array.isArray(top3Tours) && top3Tours.map((tour, index) => (
+            <View key={index} style={styles.placeItem}>
+              {tour.thumbnailUrl? (
+                <Image
+                source={{ uri: tour.thumbnailUrl }}
+                style={styles.placeImage}
+                resizeMode="cover"
+              />
+              ): <Text>No image</Text>}
+              <View style={styles.placeDetails}>
+                <Text style={styles.placeName}>{tour.title}</Text>
+                <Text style={styles.placeRating}>★★★★☆ {tour.avgRating} • {tour.duration} giờ</Text>
+                <Text style={styles.placePrice}>{tour.price} VND</Text>
+              </View>
             </View>
-          </View>
-
-          <View style={styles.placeItem}>
-            <Image
-              source={require('../../assets/images/ben-nha-rong.jpg')}
-              style={styles.placeImage}
-              resizeMode="cover"
-            />
-            <View style={styles.placeDetails}>
-              <Text style={styles.placeName}>Bến Nhà Rồng</Text>
-              <Text style={styles.placeRating}>★★★★★ 4.8 • 1 giờ</Text>
-              <Text style={styles.placePrice}>350.000đ</Text>
-            </View>
-          </View>
-
-          <View style={styles.placeItem}>
-            <Image
-              source={require('../../assets/images/lang-khai-dinh.jpg')}
-              style={styles.placeImage}
-              resizeMode="cover"
-            />
-            <View style={styles.placeDetails}>
-              <Text style={styles.placeName}>Lăng Khải Định</Text>
-              <Text style={styles.placeRating}>★★★★☆ 4.3 • 2 giờ</Text>
-              <Text style={styles.placePrice}>180.000đ</Text>
-            </View>
-          </View>
+          ))}
         </View>
       </ScrollView>
     </View>

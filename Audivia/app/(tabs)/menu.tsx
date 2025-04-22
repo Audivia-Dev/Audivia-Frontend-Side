@@ -3,10 +3,13 @@ import { Ionicons, MaterialIcons, FontAwesome5 } from "@expo/vector-icons"
 import styles from "@/styles/menu.styles"
 import { COLORS } from "@/constants/theme"
 import { router } from "expo-router"
-import { useAuth } from "@clerk/clerk-expo"
+import { useAuth } from "@/contexts/AuthContext"
+import { useUser } from "@/hooks/useUser"
 
 export default function MenuScreen() {
-  const { signOut } = useAuth()
+  
+  const { user } = useUser()
+  const { logout } = useAuth()
 
   const navigateToProfile = () => {
     router.push("/profile")
@@ -16,12 +19,7 @@ export default function MenuScreen() {
   }
 
   const handleSignOut = async () => {
-    try {
-      await signOut()
-      router.replace("/(auth)/login")
-    } catch (error) {
-      console.error("Error signing out:", error)
-    }
+    await logout()
   }
 
   return (
@@ -29,20 +27,17 @@ export default function MenuScreen() {
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
-
           <TouchableOpacity onPress={navigateToProfile}>
             <View style={styles.headerContent}>
               <Image
-              source={
-                require("@/assets/images/avatar.jpg")
-              }
-              style={styles.avatar}
-            />
-            <View style={styles.headerTextContainer}>
-              <Text style={styles.userName}>Tina Pham</Text>
-              <Text style={styles.viewProfile}>Xem trang cá nhân của bạn</Text>
+                source={require("@/assets/images/avatar.jpg")}
+                style={styles.avatar}
+              />
+              <View style={styles.headerTextContainer}>
+                <Text style={styles.userName}>{user?.userName}</Text>
+                <Text style={styles.viewProfile}>Xem trang cá nhân của bạn</Text>
+              </View>
             </View>
-          </View>
           </TouchableOpacity>
         </View>
 
@@ -172,7 +167,6 @@ export default function MenuScreen() {
           <Text style={styles.footerText}>Audivia © 2025</Text>
         </View>
       </ScrollView>
-
     </SafeAreaView>
   )
 }

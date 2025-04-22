@@ -1,5 +1,5 @@
 import { COLORS } from "@/constants/theme";
-import { StyleSheet } from "react-native";
+import { Dimensions, StyleSheet } from "react-native";
 const styles = StyleSheet.create({
     container: {
       flex: 1,
@@ -65,6 +65,28 @@ const styles = StyleSheet.create({
       marginTop: 20,
       paddingHorizontal: 16,
     },
+    scrollContent: {
+      paddingHorizontal: 16,
+      
+    },
+    categoryItem: {
+      alignItems: 'center',
+      width: Dimensions.get('window').width / 4 - 20,
+      marginRight: 16,
+      
+    },
+    categoryIcon: {
+      marginBottom: 4,
+      borderWidth: 1,
+      borderColor: COLORS.primary,
+      borderRadius: 20,
+      padding: 20,
+    },
+    categoryName: {
+      fontSize: 12,
+      textAlign: 'center',
+      color: COLORS.dark,
+    },
     sectionHeader: {
       flexDirection: "row",
       justifyContent: "space-between",
@@ -83,17 +105,6 @@ const styles = StyleSheet.create({
       flexDirection: "row",
       justifyContent: "space-between",
       marginBottom: 20,
-    },
-    categoryItem: {
-      alignItems: "center",
-    },
-    categoryIcon: {
-      width: 50,
-      height: 50,
-      borderRadius: 25,
-      justifyContent: "center",
-      alignItems: "center",
-      marginBottom: 8,
     },
     categoryText: {
       fontSize: 12,
@@ -247,6 +258,36 @@ const styles = StyleSheet.create({
     avatarImage: {
       width: "100%",
       height: "100%",
+    },
+    carouselIndicators: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center',
+      position: 'absolute',
+      bottom: 10,
+      width: '100%',
+    },
+    indicator: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      backgroundColor: 'rgba(255, 255, 255, 0.5)',
+      marginHorizontal: 4,
+    },
+    activeIndicator: {
+      backgroundColor: COLORS.primary,
+      width: 12,
+      height: 12,
+      borderRadius: 6,
+    },
+    categoryIconContainer: {
+      width: 50,
+      height: 50,
+      borderRadius: 25,
+      backgroundColor: 'rgba(0, 122, 255, 0.1)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginBottom: 8,
     },
   })
   export default styles;

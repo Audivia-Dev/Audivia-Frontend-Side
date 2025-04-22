@@ -13,45 +13,35 @@ import styles from "@/styles/auth.styles";
 import { COLORS } from "@/constants/theme";
 import MaskedView from "@react-native-masked-view/masked-view";
 import { Checkbox } from "react-native-paper";
-import { useSSO } from "@clerk/clerk-expo";
 import { useRouter } from "expo-router";
 import { login } from "@/services/user";
-
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Login() {
-
-
   const [showPassword, setShowPassword] = useState(false);
   const [checked, setChecked] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const {startSSOFlow} = useSSO()
-  const router = useRouter()
+  const router = useRouter();
+  const { login: authLogin } = useAuth();
+
+  const handleLogin = async () => {
+    try {
+      const response = await login(email, password);
+      if (response.accessToken && response.refreshToken) {
+        await authLogin(response.accessToken, response.refreshToken);
+        alert(response.message);
+      } 
+    } catch (error: any) {
+      if (error.response) {
+        alert(error.response.data.message);
+      }
+    }
+  };
 
   const handleGoogleLogin = async () => {
-    try {
-        const {createdSessionId, setActive} = await startSSOFlow({strategy: "oauth_google"})
-        if (setActive && createdSessionId) {
-            setActive({session: createdSessionId})
-            router.replace("/(tabs)")
-        }
-    } catch (error) {
-        console.error("Error logging in with Google", error)
-    }
-}
-const handleLogin = async () => {
-  try {
-    const response = await login(email, password);
-    if (response.accessToken && response.refreshToken) {
-      alert(response.message);
-      router.replace("/(tabs)");
-    } 
-  } catch (error: any) {
-    if (error.response) {
-     alert(error.response.data.message);
-    }
+    console.log("Google Login")
   }
-};
 
   return (
     <View style={styles.container}>
@@ -59,19 +49,19 @@ const handleLogin = async () => {
       <View style={styles.logoSection}>
         <Image source={require("@/assets/images/logo.png")} style={styles.logo} />
         <MaskedView maskElement={
-    <Text style={[styles.brandTitle, { backgroundColor: 'transparent' }]}>
-      Audivia
-    </Text>
-  }>
-    <LinearGradient
-      colors={[COLORS.light, COLORS.purpleGradient]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 0 }}>
-      <Text style={[styles.brandTitle, { opacity: 0 }]}>
-        Audivia
-      </Text>
-    </LinearGradient>
-  </MaskedView>
+          <Text style={[styles.brandTitle, { backgroundColor: 'transparent' }]}>
+            Audivia
+          </Text>
+        }>
+          <LinearGradient
+            colors={[COLORS.light, COLORS.purpleGradient]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}>
+            <Text style={[styles.brandTitle, { opacity: 0 }]}>
+              Audivia
+            </Text>
+          </LinearGradient>
+        </MaskedView>
       </View>
 
       {/* Form */}
@@ -110,12 +100,12 @@ const handleLogin = async () => {
 
         <View style={styles.row}>
           <View style={styles.checkboxContainer}>
-          <Checkbox
-        status={checked ? 'checked' : 'unchecked'}
-        onPress={() => {
-          setChecked(!checked);
-        }}
-      />
+            <Checkbox
+              status={checked ? 'checked' : 'unchecked'}
+              onPress={() => {
+                setChecked(!checked);
+              }}
+            />
             <Text style={styles.remember}>Nhớ đăng nhập</Text>
           </View>
           <TouchableOpacity>
