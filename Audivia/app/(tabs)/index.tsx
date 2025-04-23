@@ -7,6 +7,7 @@ import { useEffect, useState, useRef } from "react"
 import { Tour, TourType } from "@/models"
 import { getTourTypes } from "@/services/tour_type"
 import { useUser } from "@/hooks/useUser"
+import { router } from "expo-router"
 
 
 const carouselImages = [
@@ -138,6 +139,7 @@ export default function Index() {
                 <TouchableOpacity
                   key={category.id}
                   style={styles.categoryItem}
+                  onPress={() => router.push(`/filter_tour`)}
                 >
                   <View style={styles.categoryIconContainer}>
                     <Ionicons name="headset" size={24} color={COLORS.primary} />

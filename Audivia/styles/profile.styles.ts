@@ -375,5 +375,48 @@ const styles = StyleSheet.create({
     activeNavText: {
       color: COLORS.primary,
     },
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    modalContent: {
+      backgroundColor: '#fff',
+      borderRadius: 12,
+      width: '90%',
+      maxWidth: 400,
+      padding: 20,
+    },
+    modalHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 20,
+    },
+    modalAvatar: {
+      width: '100%',
+      height: 300,
+      borderRadius: 12,
+      marginBottom: 20,
+    },
+    modalActions: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      gap: 10,
+    },
+    modalAction: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: 10,
+      backgroundColor: '#f5f5f5',
+      borderRadius: 8,
+      minWidth: '45%',
+    },
+    modalActionText: {
+      marginLeft: 8,
+      fontSize: 14,
+      color: COLORS.dark,
+    },
   })
   export default styles;

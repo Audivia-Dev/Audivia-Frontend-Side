@@ -5,15 +5,18 @@ import {
   Image,
   TouchableOpacity,
   ScrollView,
-  StyleSheet,
   SafeAreaView,
   FlatList,
-  StatusBar,
+  Modal,
+  Alert,
 } from "react-native"
-import { Ionicons, MaterialIcons } from "@expo/vector-icons"
+import { Ionicons } from "@expo/vector-icons"
 import { COLORS } from "@/constants/theme"
 import { useRouter } from "expo-router"
 import styles from "@/styles/profile.styles"
+import { useUser } from "@/hooks/useUser"
+import * as ImagePicker from 'expo-image-picker'
+import { updateUserInfo } from "@/services/user"
 
 // Dữ liệu mẫu cho bài đăng của người dùng
 const USER_POSTS = [
@@ -27,8 +30,6 @@ const USER_POSTS = [
     time: "3 ngày trước",
   },
 ]
-
-// Dữ liệu người dùng
 const USER_INFO = {
   name: "Tina Pham",
   avatar: "https://res.cloudinary.com/dgzn2ix8w/image/upload/v1745141656/Audivia/a1wqzwrxluklxcwubzrc.jpg",
@@ -38,9 +39,89 @@ const USER_INFO = {
   followers: 420,
 }
 
+
 export default function ProfileScreen() {
   const [activeTab, setActiveTab] = useState("posts")
+  const [showAvatarModal, setShowAvatarModal] = useState(false)
+  const DEFAULT_AVATAR = "https://res.cloudinary.com/dgzn2ix8w/image/upload/v1745396073/Audivia/ddizjlgkux0eoifrsoco.avif"
+  const { user, refreshUser } = useUser()
   const router = useRouter()
+
+  const handleAvatarPress = () => {
+    setShowAvatarModal(true)
+  }
+  const handleCameraAvatar = async () => {
+    try {
+      const permissionResult = await ImagePicker.requestCameraPermissionsAsync()
+      if (!permissionResult.granted) {
+        Alert.alert('Cần quyền truy cập', 'Vui lòng cho phép ứng dụng truy cập camera')
+        return
+      }
+      const result = await ImagePicker.launchCameraAsync({
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 1,
+      })
+      if (!result.canceled) {
+        console.log('Camera image:', result.assets[0].uri)
+        await updateUserInfo(user?.id as string, {avatarUrl: result.assets[0].uri})
+        await refreshUser()
+        setShowAvatarModal(false)
+      }
+    } catch (error) {
+      console.error('Error picking image:', error)
+      Alert.alert('Lỗi', 'Không thể chụp ảnh. Vui lòng thử lại.')
+    }
+  }
+  const handleChangeAvatar = async () => {
+    try {
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync()
+      
+      if (!permissionResult.granted) {
+        Alert.alert('Cần quyền truy cập', 'Vui lòng cho phép ứng dụng truy cập thư viện ảnh')
+        return
+      }
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images', 'videos'],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 1,
+      })
+
+      if (!result.canceled) {
+        await updateUserInfo(user?.id as string, {avatarUrl: result.assets[0].uri})
+        await refreshUser()
+        console.log('Selected image:', result.assets[0].uri)
+      }
+    } catch (error) {
+      console.error('Error picking image:', error)
+      Alert.alert('Lỗi', 'Không thể chọn ảnh. Vui lòng thử lại.')
+    }
+  }
+
+
+  const handleDeleteAvatar = async () => {
+    Alert.alert(
+      'Xác nhận',
+      'Bạn có chắc chắn muốn xóa ảnh đại diện?',
+      [
+        {
+          text: 'Hủy',
+          style: 'cancel'
+        },
+        {
+          text: 'Xóa',
+          style: 'destructive',
+          onPress: async () => {
+            await updateUserInfo(user?.id as string, {avatarUrl: DEFAULT_AVATAR})
+            await refreshUser()
+            setShowAvatarModal(false)
+            console.log('Delete avatar')
+          }
+        }
+      ]
+    )
+  }
 
   const goBack = () => {
     router.back()
@@ -50,9 +131,9 @@ export default function ProfileScreen() {
     <View style={styles.postCard}>
       <View style={styles.postHeader}>
         <View style={styles.postUser}>
-          <Image source={{ uri: USER_INFO.avatar }} style={styles.postAvatar} />
+          <Image source={{ uri: user?.avatarUrl || DEFAULT_AVATAR }} style={styles.postAvatar} />
           <View>
-            <Text style={styles.postUserName}>{USER_INFO.name}</Text>
+            <Text style={styles.postUserName}>{user?.userName}</Text>
             <Text style={styles.postTime}>{item.time}</Text>
           </View>
         </View>
@@ -104,16 +185,50 @@ export default function ProfileScreen() {
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Cover Photo */}
         <View style={styles.coverPhotoContainer}>
-          <Image source={{ uri: USER_INFO.coverPhoto }} style={styles.coverPhoto} />
-          <View style={styles.profileAvatarContainer}>
-            <Image source={{ uri: USER_INFO.avatar }} style={styles.profileAvatar} />
-          </View>
+            <Image source={{ uri: USER_INFO.coverPhoto }} style={styles.coverPhoto} />
+          <TouchableOpacity style={styles.profileAvatarContainer} onPress={handleAvatarPress}>
+            <Image source={{ uri: user?.avatarUrl || DEFAULT_AVATAR }} style={styles.profileAvatar} />
+          </TouchableOpacity>
         </View>
+
+        {/* Avatar Modal */}
+        <Modal
+          visible={showAvatarModal}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setShowAvatarModal(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <View style={styles.modalHeader}>
+                <TouchableOpacity onPress={() => setShowAvatarModal(false)}>
+                  <Ionicons name="close" size={24} color={COLORS.dark} />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={handleDeleteAvatar}>
+                  <Ionicons name="ellipsis-horizontal" size={24} color={COLORS.dark} />
+                </TouchableOpacity>
+              </View>
+              
+              <Image source={{ uri: user?.avatarUrl || DEFAULT_AVATAR }} style={styles.modalAvatar} />
+              
+              <View style={styles.modalActions}>
+              <TouchableOpacity style={styles.modalAction} onPress={handleCameraAvatar}>
+                  <Ionicons name="camera-outline" size={24} color={COLORS.dark} />
+                  <Text style={styles.modalActionText}>Chụp ảnh</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.modalAction} onPress={handleChangeAvatar}>
+                  <Ionicons name="image-outline" size={24} color={COLORS.dark} />
+                  <Text style={styles.modalActionText}>Chọn ảnh</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
 
         {/* Profile Info */}
         <View style={styles.profileInfo}>
-          <Text style={styles.profileName}>{USER_INFO.name}</Text>
-          <Text style={styles.profileBio}>{USER_INFO.bio}</Text>
+          <Text style={styles.profileName}>{user?.fullName}</Text>
+          <Text style={styles.profileBio}>{user?.bio}</Text>
 
           <View style={styles.socialStats}>
             <View style={styles.socialStat}>
@@ -126,13 +241,7 @@ export default function ProfileScreen() {
               <Text style={styles.socialStatLabel}>Người theo dõi</Text>
             </View>
           </View>
-
-          <View style={styles.profileActions}>
-            <TouchableOpacity style={[styles.profileActionButton, styles.primaryActionButton]}>
-              <Ionicons name="pencil" size={18} color={COLORS.light} />
-              <Text style={styles.primaryActionText}>Chỉnh sửa trang cá nhân</Text>
-            </TouchableOpacity>
-          </View>
+         
         </View>
 
         {/* Tabs */}
@@ -163,7 +272,7 @@ export default function ProfileScreen() {
             {/* Create Post */}
             <View style={styles.createPostCard}>
               <View style={styles.createPostHeader}>
-                <Image source={{ uri: USER_INFO.avatar }} style={styles.createPostAvatar} />
+                <Image source={{ uri: user?.avatarUrl || DEFAULT_AVATAR }} style={styles.createPostAvatar} />
                 <TouchableOpacity style={styles.createPostInput}>
                   <Text style={styles.createPostPlaceholder}>Bạn đang nghĩ gì?</Text>
                 </TouchableOpacity>
@@ -196,10 +305,24 @@ export default function ProfileScreen() {
               <Text style={styles.aboutTitle}>Thông tin cá nhân</Text>
 
               <View style={styles.aboutItem}>
+                <Ionicons name="person-outline" size={20} color={COLORS.primary} style={styles.aboutIcon} />
+                <View>
+                  <Text style={styles.aboutLabel}>Username</Text>
+                  <Text style={styles.aboutText}>{user?.userName}</Text>
+                </View>
+              </View>
+              <View style={styles.aboutItem}>
                 <Ionicons name="mail-outline" size={20} color={COLORS.primary} style={styles.aboutIcon} />
                 <View>
                   <Text style={styles.aboutLabel}>Email</Text>
-                  <Text style={styles.aboutText}>tinapham@gmail.com</Text>
+                  <Text style={styles.aboutText}>{user?.email}</Text>
+                </View>
+              </View>
+              <View style={styles.aboutItem}>
+                <Ionicons name="person-circle-outline" size={20} color={COLORS.primary} style={styles.aboutIcon} />
+                <View>
+                  <Text style={styles.aboutLabel}>Full Name</Text>
+                  <Text style={styles.aboutText}>{user?.fullName}</Text>
                 </View>
                 <TouchableOpacity style={styles.aboutEditButton}>
                   <Ionicons name="pencil-outline" size={18} color={COLORS.primary} />
@@ -210,7 +333,7 @@ export default function ProfileScreen() {
                 <Ionicons name="call-outline" size={20} color={COLORS.primary} style={styles.aboutIcon} />
                 <View>
                   <Text style={styles.aboutLabel}>Số điện thoại</Text>
-                  <Text style={styles.aboutText}>+84 812654342</Text>
+                  <Text style={styles.aboutText}>{user?.phone}</Text>
                 </View>
                 <TouchableOpacity style={styles.aboutEditButton}>
                   <Ionicons name="pencil-outline" size={18} color={COLORS.primary} />
@@ -218,26 +341,16 @@ export default function ProfileScreen() {
               </View>
 
               <View style={styles.aboutItem}>
-                <Ionicons name="calendar-outline" size={20} color={COLORS.primary} style={styles.aboutIcon} />
+                <Ionicons name="bonfire-outline" size={20} color={COLORS.primary} style={styles.aboutIcon} />
                 <View>
-                  <Text style={styles.aboutLabel}>Ngày sinh</Text>
-                  <Text style={styles.aboutText}>31 tháng 01, 2003</Text>
+                  <Text style={styles.aboutLabel}>Bio</Text>
+                  <Text style={styles.aboutText}>{user?.bio}</Text>
                 </View>
                 <TouchableOpacity style={styles.aboutEditButton}>
                   <Ionicons name="pencil-outline" size={18} color={COLORS.primary} />
                 </TouchableOpacity>
               </View>
 
-              <View style={styles.aboutItem}>
-                <Ionicons name="home-outline" size={20} color={COLORS.primary} style={styles.aboutIcon} />
-                <View>
-                  <Text style={styles.aboutLabel}>Địa chỉ</Text>
-                  <Text style={styles.aboutText}>Thủ Đức, TP. Hồ Chí Minh, Việt Nam</Text>
-                </View>
-                <TouchableOpacity style={styles.aboutEditButton}>
-                  <Ionicons name="pencil-outline" size={18} color={COLORS.primary} />
-                </TouchableOpacity>
-              </View>
             </View>
 
             <View style={styles.aboutCard}>

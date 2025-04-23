@@ -46,3 +46,12 @@ export const getUserInfo = async (id: string) => {
     throw error;
   }
 };
+export const updateUserInfo = async (id: string, data: any) => {
+  try {
+    await apiClient.put(`/users/${id}`, data);
+  } catch (error) {
+    console.error('Lỗi cập nhật thông tin người dùng:', error);
+    throw error;
+  }
+};
+
