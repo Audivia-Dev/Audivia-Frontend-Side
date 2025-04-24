@@ -19,7 +19,12 @@ export const styles = StyleSheet.create({
     },
     headerTitle: {
       fontSize: 18,
-      fontWeight: "600",
+      fontWeight: "bold",
+      color: "#000",
+    },
+    headerLeft: {
+      flexDirection: "row",
+      alignItems: "center",
     },
     headerRight: {
       flexDirection: "row",
@@ -35,6 +40,11 @@ export const styles = StyleSheet.create({
       alignItems: "center",
       paddingHorizontal: 16,
       paddingVertical: 12,
+    },
+    avatarImage: {
+      width: 30,
+      height: 30,
+      borderRadius: 15,
     },
     title: {
       fontSize: 24,

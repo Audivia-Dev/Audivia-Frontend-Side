@@ -52,7 +52,13 @@ export default function Index() {
     return () => clearInterval(interval)
   }, [])
 
-  const avatarUrl = "https://res.cloudinary.com/dgzn2ix8w/image/upload/v1745141656/Audivia/a1wqzwrxluklxcwubzrc.jpg"
+  const handleCategoryPress = (typeId: string) => {
+    router.push(`/filter_tour?typeId=${typeId}&tourTypeName=${tourTypes.find(type => type.id === typeId)?.name}`)
+  }
+  const handleTourPress = (tourId: string) => {
+    router.push(`/detail_tour?tourId=${tourId}`)
+  }
+
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -61,9 +67,9 @@ export default function Index() {
         <View style={styles.headerIcons}>
           <Ionicons name="notifications-outline" size={22} color={COLORS.dark} style={styles.icon} />
           <View style={styles.avatarWrapper}>
-            {avatarUrl ? (
+            {user?.avatarUrl ? (
               <Image
-                source={{ uri: avatarUrl }}
+                source={{ uri: user?.avatarUrl }}
                 style={styles.avatarImage}
                 resizeMode="cover"
               />
@@ -78,13 +84,7 @@ export default function Index() {
         <Ionicons name="location-outline" size={18} color="#000" />
         <Text style={styles.locationText}>Thu Duc, HCM</Text>
       </View>
-
-      {/* Search Bar */}
-      <View style={styles.searchContainer}>
-        <Ionicons name="search" size={20} color={COLORS.grey} />
-        <TextInput style={styles.searchInput} placeholder="Tìm kiếm địa điểm" placeholderTextColor={COLORS.grey} />
-      </View>
-
+     
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Main Image Carousel */}
         <View style={styles.mainImageContainer}>
@@ -139,10 +139,10 @@ export default function Index() {
                 <TouchableOpacity
                   key={category.id}
                   style={styles.categoryItem}
-                  onPress={() => router.push(`/filter_tour`)}
+                  onPress={() => handleCategoryPress(category.id)}
                 >
                   <View style={styles.categoryIconContainer}>
-                    <Ionicons name="headset" size={24} color={COLORS.primary} />
+                    <Ionicons name="location-outline" size={24} color={COLORS.primary} />
                   </View>
                   <Text style={styles.categoryName} numberOfLines={2}>{category.name}</Text>
                 </TouchableOpacity>
@@ -207,7 +207,7 @@ export default function Index() {
           </View>
 
           {Array.isArray(top3Tours) && top3Tours.map((tour, index) => (
-            <View key={index} style={styles.placeItem}>
+              <TouchableOpacity  key={index} style={styles.placeItem} onPress={() => handleTourPress(tour.id)}>
               {tour.thumbnailUrl? (
                 <Image
                 source={{ uri: tour.thumbnailUrl }}
@@ -220,7 +220,7 @@ export default function Index() {
                 <Text style={styles.placeRating}>★★★★☆ {tour.avgRating} • {tour.duration} giờ</Text>
                 <Text style={styles.placePrice}>{tour.price} VND</Text>
               </View>
-            </View>
+            </TouchableOpacity>
           ))}
         </View>
       </ScrollView>

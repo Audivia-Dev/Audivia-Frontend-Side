@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import {
   View,
   Text,
@@ -10,52 +10,35 @@ import {
   StatusBar,
 } from "react-native"
 import { Ionicons, FontAwesome } from "@expo/vector-icons"
-import { useRouter } from "expo-router"
+import { useLocalSearchParams, useRouter } from "expo-router"
 import { styles } from "@/styles/filter_tour.styles"
+import { getToursByTypeId } from "@/services/tour"
+import { useUser } from "../hooks/useUser"
+import { COLORS } from "@/constants/theme"
 
-// Dữ liệu mẫu cho các tour lịch sử
-const HISTORICAL_TOURS = [
-  {
-    id: "1",
-    name: "Lăng Chủ tịch Hồ Chí Minh",
-    image: "https://images.unsplash.com/photo-1599707367072-cd6ada2bc375?q=80&w=1000&auto=format&fit=crop",
-    price: 29,
-    location: "Hà Nội",
-    duration: "2 giờ",
-    rating: 4.8,
-    reviews: 128,
-  },
-  {
-    id: "2",
-    name: "Cố đô Huế",
-    image: "https://images.unsplash.com/photo-1558321601-6de0f76ff4b8?q=80&w=1000&auto=format&fit=crop",
-    price: 19,
-    location: "Huế",
-    duration: "3 giờ",
-    rating: 4.7,
-    reviews: 95,
-  },
-  {
-    id: "3",
-    name: "Phố cổ Hội An",
-    image: "https://images.unsplash.com/photo-1559592413-7cec4d0cae2b?q=80&w=1000&auto=format&fit=crop",
-    price: 15,
-    location: "Quảng Nam",
-    duration: "2 giờ 30 phút",
-    rating: 4.9,
-    reviews: 210,
-  },
-]
 
 export default function FilterTourScreen() {
   const [searchQuery, setSearchQuery] = useState("")
   const [viewMode, setViewMode] = useState("list") // list or grid
   const router = useRouter()
-
-  const filteredTours = HISTORICAL_TOURS.filter((tour) => tour.name.toLowerCase().includes(searchQuery.toLowerCase()))
-
+  const { typeId, tourTypeName } = useLocalSearchParams()
+  const [tours, setTours] = useState([])
+  const {user} = useUser()
+  
+  useEffect(() => {
+    const fetchToursByTypeId = async () => {
+      try{
+        const response = await getToursByTypeId(typeId as string)
+        setTours(response.response.data)
+      }catch(error){
+        console.error("Lỗi khi lấy danh sách tour:", error)
+      }
+    }
+    fetchToursByTypeId()
+  }, [typeId])
+ 
   const navigateToTourDetail = (tourId: string) => {
-    router.push(`/detail_tour`)
+    router.push(`/detail_tour?tourId=${tourId}`)
   }
 
   const goBack = () => {
@@ -64,46 +47,36 @@ export default function FilterTourScreen() {
 
   const renderTourItem = ({ item }: { item: any }) => (
     <TouchableOpacity style={styles.tourCard} onPress={() => navigateToTourDetail(item.id)}>
-      <Image source={{ uri: item.image }} style={styles.tourImage} />
+      <Image source={{ uri: item.thumbnailUrl || "https://maps.googleapis.com/maps/api/staticmap?center=10.8700,106.8030&zoom=14&size=600x300&maptype=roadmap&markers=color:red%7C10.8700,106.8030&key=YOUR_API_KEY" }} style={styles.tourImage} />
       <View style={styles.priceTag}>
-        <Text style={styles.priceText}>{item.price === 0 ? "Miễn phí" : `${item.price}$`}</Text>
+        <Text style={styles.priceText}>{item.price === 0 ? "Miễn phí" : `${item.price} VND`}</Text>
       </View>
 
       <View style={styles.tourInfo}>
-        <Text style={styles.tourName}>{item.name}</Text>
+        <Text style={styles.tourName}>{item.title}</Text>
 
         <View style={styles.locationContainer}>
           <Ionicons name="location-outline" size={16} color="#666" />
-          <Text style={styles.locationText}>{item.location}</Text>
+          <Text style={styles.locationText}>{item.description}</Text>
         </View>
 
-        <View style={styles.tourMeta}>
           <View style={styles.durationContainer}>
             <Ionicons name="time-outline" size={16} color="#666" />
-            <Text style={styles.durationText}>{item.duration}</Text>
+            <Text style={styles.durationText}>{item.duration} giờ</Text>
           </View>
 
           <View style={styles.ratingContainer}>
-            <FontAwesome name="star" size={16} color="#FFD700" />
+            <FontAwesome name="star" size={16} color={COLORS.orange} />
             <Text style={styles.ratingText}>
-              {item.rating} ({item.reviews})
+              {item.avgRating}
             </Text>
           </View>
-        </View>
 
         <TouchableOpacity style={styles.bookButton} onPress={() => navigateToTourDetail(item.id)}>
           <Text style={styles.bookButtonText}>Đặt Ngay</Text>
         </TouchableOpacity>
       </View>
 
-      <View style={styles.mascotContainer}>
-        <Image
-          source={{
-            uri: "https://cdn-icons-png.flaticon.com/512/5229/5229537.png",
-          }}
-          style={styles.mascotImage}
-        />
-      </View>
     </TouchableOpacity>
   )
 
@@ -113,39 +86,27 @@ export default function FilterTourScreen() {
 
       {/* Header */}
       <View style={styles.header}>
+        <View style={styles.headerLeft}>
         <TouchableOpacity style={styles.backButton} onPress={goBack}>
           <Ionicons name="arrow-back" size={24} color="#000" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Lịch Sử</Text>
+        <Text style={styles.headerTitle}>Lọc Tour</Text>
+        </View>
         <View style={styles.headerRight}>
           <TouchableOpacity style={styles.notificationButton}>
-            <Ionicons name="notifications-outline" size={24} color="#000" />
+            <Ionicons name="notifications-outline" size={24} color={COLORS.dark} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.profileButton}>
-            <Ionicons name="person-circle-outline" size={24} color="#4CAF50" />
+            <Image source={{ uri: user?.avatarUrl }} style={styles.avatarImage} />
           </TouchableOpacity>
         </View>
       </View>
 
-      {/* Title and View Mode */}
+      {/* Title */}
       <View style={styles.titleContainer}>
         <View>
-          <Text style={styles.title}>Tour Lịch Sử</Text>
-          <Text style={styles.subtitle}>{filteredTours.length} tour audio khả dụng</Text>
-        </View>
-        <View style={styles.viewModeContainer}>
-          <TouchableOpacity
-            style={[styles.viewModeButton, viewMode === "list" && styles.activeViewMode]}
-            onPress={() => setViewMode("list")}
-          >
-            <Ionicons name="list" size={20} color={viewMode === "list" ? "#000" : "#999"} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.viewModeButton, viewMode === "grid" && styles.activeViewMode]}
-            onPress={() => setViewMode("grid")}
-          >
-            <Ionicons name="grid" size={20} color={viewMode === "grid" ? "#000" : "#999"} />
-          </TouchableOpacity>
+          <Text style={styles.title}>{tourTypeName}</Text>
+          <Text style={styles.subtitle}>{tours.length} tour audio khả dụng</Text>
         </View>
       </View>
 
@@ -168,7 +129,7 @@ export default function FilterTourScreen() {
 
       {/* Tour List */}
       <FlatList
-        data={filteredTours}
+        data={tours}
         renderItem={renderTourItem}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.tourList}

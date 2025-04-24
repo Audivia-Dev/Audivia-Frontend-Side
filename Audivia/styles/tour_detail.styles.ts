@@ -35,7 +35,12 @@ export const styles = StyleSheet.create({
     headerTitle: {
       fontSize: 18,
       fontWeight: "bold",
-      color: "#fff",
+      color: "#000",
+    },
+    headerLeft: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 10,
     },
     favoriteButton: {
       width: 36,
