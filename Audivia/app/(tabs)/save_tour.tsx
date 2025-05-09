@@ -6,16 +6,14 @@ import {
   TouchableOpacity,
   TextInput,
   FlatList,
-  StyleSheet,
   SafeAreaView,
-  StatusBar,
 } from "react-native"
 import { Ionicons, MaterialIcons } from "@expo/vector-icons"
 import { useRouter } from "expo-router"
 import { COLORS } from "@/constants/theme"
 import styles from "@/styles/save_tour.styles"
+import { useUser } from "@/hooks/useUser"
 
-// Dữ liệu mẫu cho các tour đã lưu
 const SAVED_TOURS = [
   {
     id: "2",
@@ -47,7 +45,7 @@ const SAVED_TOURS = [
 ]
 
 export default function SavedToursScreen() {
-  const avatarUrl = "https://res.cloudinary.com/dgzn2ix8w/image/upload/v1745141656/Audivia/a1wqzwrxluklxcwubzrc.jpg"
+  const {user} = useUser()
 
   const [searchQuery, setSearchQuery] = useState("")
   const router = useRouter()
@@ -102,9 +100,9 @@ export default function SavedToursScreen() {
         <View style={styles.headerIcons}>
             <Ionicons name="notifications-outline" size={22} color={COLORS.dark} style={styles.icon} />
             <View style={styles.avatarWrapper}>
-  {avatarUrl ? (
+  {user?.avatarUrl ? (
     <Image
-      source={{ uri: avatarUrl }}
+      source={{ uri: user?.avatarUrl }}
       style={styles.avatarImage}
       resizeMode="cover"
     />
@@ -128,12 +126,6 @@ export default function SavedToursScreen() {
             </Text>
           </View>
         </View>
-        <Image
-          source={
-            require("@/assets/images/avatar.jpg")
-          }
-          style={styles.notificationImage}
-        />
       </View>
 
       {/* Search Bar */}

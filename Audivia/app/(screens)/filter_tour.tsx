@@ -8,6 +8,7 @@ import {
   SafeAreaView,
   FlatList,
   StatusBar,
+  Alert,
 } from "react-native"
 import { Ionicons, FontAwesome } from "@expo/vector-icons"
 import { useLocalSearchParams, useRouter } from "expo-router"
@@ -15,11 +16,11 @@ import { styles } from "@/styles/filter_tour.styles"
 import { getToursByTypeId } from "@/services/tour"
 import { useUser } from "../hooks/useUser"
 import { COLORS } from "@/constants/theme"
+import { createSaveTour } from "@/services/save_tour"
 
 
 export default function FilterTourScreen() {
   const [searchQuery, setSearchQuery] = useState("")
-  const [viewMode, setViewMode] = useState("list") // list or grid
   const router = useRouter()
   const { typeId, tourTypeName } = useLocalSearchParams()
   const [tours, setTours] = useState([])
@@ -40,13 +41,24 @@ export default function FilterTourScreen() {
   const navigateToTourDetail = (tourId: string) => {
     router.push(`/detail_tour?tourId=${tourId}`)
   }
-
+  const handleSaveTour = async (tourId: string) => {
+    try {
+      await createSaveTour(user?.id, tourId)
+      Alert.alert("Đã lưu tour", "Tour đã được thêm vào danh sách yêu thích.")
+    } catch (error) {
+      Alert.alert("Lỗi", "Không thể lưu tour.")
+    }
+  }
   const goBack = () => {
     router.back()
   }
 
   const renderTourItem = ({ item }: { item: any }) => (
+    
     <TouchableOpacity style={styles.tourCard} onPress={() => navigateToTourDetail(item.id)}>
+       <TouchableOpacity style={styles.favoriteButton} onPress={() => handleSaveTour(item.id)}>
+          <Ionicons name="heart-outline" size={20} color={COLORS.light} />
+        </TouchableOpacity>
       <Image source={{ uri: item.thumbnailUrl || "https://maps.googleapis.com/maps/api/staticmap?center=10.8700,106.8030&zoom=14&size=600x300&maptype=roadmap&markers=color:red%7C10.8700,106.8030&key=YOUR_API_KEY" }} style={styles.tourImage} />
       <View style={styles.priceTag}>
         <Text style={styles.priceText}>{item.price === 0 ? "Miễn phí" : `${item.price} VND`}</Text>

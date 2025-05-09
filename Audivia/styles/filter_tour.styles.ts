@@ -111,6 +111,18 @@ export const styles = StyleSheet.create({
       width: "100%",
       height: 180,
     },
+    favoriteButton: {
+      position: "absolute",
+      top: 10,
+      left: 10,
+      backgroundColor: "rgba(0,0,0,0.3)",
+      borderRadius: 20,
+      width: 36,
+      height: 36,
+      justifyContent: "center",
+      alignItems: "center",
+      zIndex: 1,
+    },
     priceTag: {
       position: "absolute",
       top: 12,
