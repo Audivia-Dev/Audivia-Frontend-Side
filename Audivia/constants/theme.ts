@@ -1,4 +1,3 @@
-
 export const COLORS = {
         primary: "#00A5CF",
         secondary: "#00A5CF",
@@ -20,5 +19,12 @@ export const COLORS = {
         purpleLight: "#F3E5F5",
         purpleGradient: "#d6a4ff",
         redLight: "#FFE0E0",
-        
+        lightGrey: "#F5F5F5",
+        darkGrey: "#333333",
+        yellow: "#FFFF00",
+        pink: "#FFC0CB",
+        brown: "#A52A2A",
+        black: "#000000",
+        white: "#FFFFFF",
+        transparent: "transparent",
 } as const;

@@ -39,7 +39,6 @@ export const getUserInfo = async (id: string) => {
   try {
 
     const response = await apiClient.get(`/users/${id}`);
-    console.log('RESPONSE', response.data)
     return response.data;
   } catch (error) {
     console.error('Lỗi lấy thông tin người dùng:', error);

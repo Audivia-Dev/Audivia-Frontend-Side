@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import {
   View,
   Text,
@@ -17,19 +17,10 @@ import styles from "@/styles/profile.styles"
 import { useUser } from "@/hooks/useUser"
 import * as ImagePicker from 'expo-image-picker'
 import { updateUserInfo } from "@/services/user"
+import { createPost, getPostByUserId, updatePost, deletePost } from "@/services/post"
+import { Post } from "@/models"
+import { PostModal } from "@/components/PostModal"
 
-// Dữ liệu mẫu cho bài đăng của người dùng
-const USER_POSTS = [
-  {
-    id: "1",
-    content:
-      "Cảnh đẹp, đồ ăn ngon và dịch vụ tốt.😍🌊",
-    images: ["https://images.unsplash.com/photo-1573270689103-d7a4e42b609a?q=80&w=1000&auto=format&fit=crop"],
-    likes: 87,
-    comments: 12,
-    time: "3 ngày trước",
-  },
-]
 const USER_INFO = {
   name: "Tina Pham",
   avatar: "https://res.cloudinary.com/dgzn2ix8w/image/upload/v1745141656/Audivia/a1wqzwrxluklxcwubzrc.jpg",
@@ -43,13 +34,125 @@ const USER_INFO = {
 export default function ProfileScreen() {
   const [activeTab, setActiveTab] = useState("posts")
   const [showAvatarModal, setShowAvatarModal] = useState(false)
+  const [showPostModal, setShowPostModal] = useState(false)
+  const [showPostOptions, setShowPostOptions] = useState<string | null>(null)
+  const [postContent, setPostContent] = useState("")
+  const [postLocation, setPostLocation] = useState("")
+  const [postImages, setPostImages] = useState<string[]>([])
+  const [editingPost, setEditingPost] = useState<Post | null>(null)
   const DEFAULT_AVATAR = "https://res.cloudinary.com/dgzn2ix8w/image/upload/v1745396073/Audivia/ddizjlgkux0eoifrsoco.avif"
-  const { user, refreshUser } = useUser()
+  const { user } = useUser()
   const router = useRouter()
+  const [posts, setPosts] = useState<Post[]>([])
+
+  useEffect(() => {
+    if (user?.id) {
+      getPostByUserId(user.id).then((res) => {
+        setPosts(res.response)
+      })
+    }
+  }, [user?.id])
+
+  const handleCreatePost = () => {
+    setEditingPost(null)
+    setPostContent("")
+    setPostLocation("")
+    setPostImages([])
+    setShowPostModal(true)
+  }
+
+  const handleEditPost = (post: Post) => {
+    setEditingPost(post)
+    setPostContent(post.content)
+    setPostLocation(post.location)
+    setPostImages(post.images || [])
+    setShowPostModal(true)
+  }
+
+  const handleDeletePost = async (postId: string) => {
+    Alert.alert(
+      'Xác nhận',
+      'Bạn có chắc chắn muốn xóa bài viết này?',
+      [
+        {
+          text: 'Hủy',
+          style: 'cancel'
+        },
+        {
+          text: 'Xóa',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deletePost(postId)
+              setPosts(posts.filter((post: Post) => post.id !== postId))
+              setShowPostOptions(null)
+            } catch (error) {
+              Alert.alert('Lỗi', 'Không thể xóa bài viết. Vui lòng thử lại.')
+            }
+          }
+        }
+      ]
+    )
+  }
+
+  const handleSavePost = async (postData: { content: string; location: string; images: string[] }) => {
+    if (!user?.id) {
+      Alert.alert('Lỗi', 'Không tìm thấy thông tin người dùng');
+      return;
+    }
+
+    try {
+      if (editingPost) {
+        await updatePost(editingPost.id, postData);
+        setPosts(posts.map((post) => 
+          post.id === editingPost.id 
+            ? { ...post, ...postData }
+            : post
+        ));
+        setShowPostModal(false);
+      } else {
+        const response = await createPost(
+          postData.images,
+          postData.location,
+          postData.content,
+          user.id
+        );
+        if (response.success) {
+          setPosts([response.response, ...posts]);
+          setShowPostModal(false);
+        } else {
+          throw new Error(response.message || 'Không thể tạo bài viết');
+        }
+      }
+    } catch (error: any) {
+      Alert.alert(
+        'Lỗi', 
+        error.response?.data?.message || error.message || 'Không thể lưu bài viết. Vui lòng thử lại.'
+      );
+    }
+  };
+
+  const handlePickImage = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 1,
+      })
+
+      if (!result.canceled) {
+        setPostImages([...postImages, result.assets[0].uri])
+      }
+    } catch (error) {
+      Alert.alert('Lỗi', 'Không thể chọn ảnh. Vui lòng thử lại.')
+    }
+  }
 
   const handleAvatarPress = () => {
     setShowAvatarModal(true)
   }
+
   const handleCameraAvatar = async () => {
     try {
       const permissionResult = await ImagePicker.requestCameraPermissionsAsync()
@@ -65,7 +168,6 @@ export default function ProfileScreen() {
       if (!result.canceled) {
         console.log('Camera image:', result.assets[0].uri)
         await updateUserInfo(user?.id as string, {avatarUrl: result.assets[0].uri})
-        await refreshUser()
         setShowAvatarModal(false)
       }
     } catch (error) {
@@ -90,7 +192,6 @@ export default function ProfileScreen() {
 
       if (!result.canceled) {
         await updateUserInfo(user?.id as string, {avatarUrl: result.assets[0].uri})
-        await refreshUser()
         console.log('Selected image:', result.assets[0].uri)
       }
     } catch (error) {
@@ -114,7 +215,6 @@ export default function ProfileScreen() {
           style: 'destructive',
           onPress: async () => {
             await updateUserInfo(user?.id as string, {avatarUrl: DEFAULT_AVATAR})
-            await refreshUser()
             setShowAvatarModal(false)
             console.log('Delete avatar')
           }
@@ -127,24 +227,49 @@ export default function ProfileScreen() {
     router.back()
   }
 
-  const renderPost = ({ item }: { item: any }) => (
+  const renderPost = ({ item }: { item: Post }) => (
     <View style={styles.postCard}>
       <View style={styles.postHeader}>
         <View style={styles.postUser}>
           <Image source={{ uri: user?.avatarUrl || DEFAULT_AVATAR }} style={styles.postAvatar} />
           <View>
             <Text style={styles.postUserName}>{user?.userName}</Text>
+            <Text style={styles.postTime}>{item.location}</Text>
             <Text style={styles.postTime}>{item.time}</Text>
           </View>
         </View>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => setShowPostOptions(showPostOptions === item.id ? null : item.id)}>
           <Ionicons name="ellipsis-horizontal" size={20} color="#666" />
         </TouchableOpacity>
       </View>
 
+      {showPostOptions === item.id && (
+        <View style={styles.postOptions}>
+          <TouchableOpacity 
+            style={styles.postOption} 
+            onPress={() => {
+              handleEditPost(item)
+              setShowPostOptions(null)
+            }}
+          >
+            <Ionicons name="pencil-outline" size={20} color={COLORS.primary} />
+            <Text style={styles.postOptionText}>Chỉnh sửa</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.postOption} 
+            onPress={() => handleDeletePost(item.id)}
+          >
+            <Ionicons name="trash-outline" size={20} color={COLORS.red} />
+            <Text style={[styles.postOptionText, { color: COLORS.red }]}>Xóa</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
       <Text style={styles.postContent}>{item.content}</Text>
 
-      <Image source={{ uri: item.images[0] }} style={styles.postImage} />
+      {item.images && item.images[0] && (
+        <Image source={{ uri: item.images[0] }} style={styles.postImage} />
+      )}
 
       <View style={styles.postStats}>
         <View style={styles.postLikes}>
@@ -165,7 +290,6 @@ export default function ProfileScreen() {
           <Ionicons name="chatbubble-outline" size={22} color="#666" />
           <Text style={styles.actionText}>Bình luận</Text>
         </TouchableOpacity>
-      
       </View>
     </View>
   )
@@ -227,7 +351,7 @@ export default function ProfileScreen() {
 
         {/* Profile Info */}
         <View style={styles.profileInfo}>
-          <Text style={styles.profileName}>{user?.fullName}</Text>
+          <Text style={styles.profileName}>{user?.userName}</Text>
           <Text style={styles.profileBio}>{user?.bio}</Text>
 
           <View style={styles.socialStats}>
@@ -273,16 +397,16 @@ export default function ProfileScreen() {
             <View style={styles.createPostCard}>
               <View style={styles.createPostHeader}>
                 <Image source={{ uri: user?.avatarUrl || DEFAULT_AVATAR }} style={styles.createPostAvatar} />
-                <TouchableOpacity style={styles.createPostInput}>
+                <TouchableOpacity style={styles.createPostInput} onPress={handleCreatePost}>
                   <Text style={styles.createPostPlaceholder}>Bạn đang nghĩ gì?</Text>
                 </TouchableOpacity>
               </View>
               <View style={styles.createPostActions}>
-                <TouchableOpacity style={styles.createPostAction}>
+                <TouchableOpacity style={styles.createPostAction} onPress={handleCreatePost}>
                   <Ionicons name="image-outline" size={20} color={COLORS.green} />
                   <Text style={styles.createPostActionText}>Ảnh</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.createPostAction}>
+                <TouchableOpacity style={styles.createPostAction} onPress={handleCreatePost}>
                   <Ionicons name="location-outline" size={20} color={COLORS.blue} />
                   <Text style={styles.createPostActionText}>Check in</Text>
                 </TouchableOpacity>
@@ -291,7 +415,7 @@ export default function ProfileScreen() {
 
             {/* Posts */}
             <FlatList
-              data={USER_POSTS}
+              data={posts}
               renderItem={renderPost}
               keyExtractor={(item) => item.id}
               scrollEnabled={false}
@@ -379,11 +503,14 @@ export default function ProfileScreen() {
             </View>
           </View>
         )}
-
-        {/* Bottom spacing */}
-        <View style={{ height: 20 }} />
       </ScrollView>
-      
+
+      <PostModal
+        visible={showPostModal}
+        onClose={() => setShowPostModal(false)}
+        onSave={handleSavePost}
+        editingPost={editingPost}
+      />
     </SafeAreaView>
   )
 }

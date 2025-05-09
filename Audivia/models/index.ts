@@ -6,7 +6,18 @@ export interface Tour {
   avgRating: number;
   duration: number;
   price: number;
+  checkpoints: Checkpoint[];
   typeId: string;
+}
+export interface Checkpoint {
+  id: string;
+  tourId: string;
+  title: string;
+  description: string;
+  latitude: number;
+  longitude: number;
+  order: number;
+  imageUrl: string;
 }
 export interface TourType {
   id: string;
@@ -26,3 +37,12 @@ export interface User {
   travelDistance: string;
 }
 
+export interface Post {
+  id: string;
+  content: string;
+  location: string;
+  images: string[];
+  time: string;
+  likes: number;
+  comments: number;
+}

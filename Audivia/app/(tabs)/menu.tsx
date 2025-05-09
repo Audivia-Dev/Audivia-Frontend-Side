@@ -30,7 +30,7 @@ export default function MenuScreen() {
           <TouchableOpacity onPress={navigateToProfile}>
             <View style={styles.headerContent}>
               <Image
-                source={require("@/assets/images/avatar.jpg")}
+                source={{uri: user?.avatarUrl}}
                 style={styles.avatar}
               />
               <View style={styles.headerTextContainer}>

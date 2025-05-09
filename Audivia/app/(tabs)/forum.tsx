@@ -1,57 +1,35 @@
-"use client"
-
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Image, Text, TouchableOpacity, View, FlatList, TextInput } from "react-native"
 import { Ionicons, AntDesign } from "@expo/vector-icons"
 import { COLORS } from "@/constants/theme"
 import { styles } from "@/styles/forum.styles"
-
-// Sample data for posts
-const POSTS = [
-  {
-    id: "1",
-    user: {
-      name: "Thien Thien",
-      avatar: require("@/assets/images/avatar1.jpg"),
-      location: "Vịnh Hạ Long, Việt Nam",
-    },
-    content:
-    "Địa điểm tuyệt vời để đi du lịch",
-    images: ["https://images.unsplash.com/photo-1573270689103-d7a4e42b609a?q=80&w=1000&auto=format&fit=crop"],
-    likes: 243,
-    comments: 42,
-    time: "2 giờ trước",
-  },
-  {
-    id: "2",
-    user: {
-      name: "Tien Pham",
-      avatar: require("@/assets/images/avatar2.jpg"),
-      location: "Hội An, Việt Nam",
-    },
-    content:
-    "Trải nghiệm tuyệt vời luôn",
-    images: ["https://images.unsplash.com/photo-1559592413-7cec4d0cae2b?q=80&w=1000&auto=format&fit=crop"],
-    likes: 512,
-    comments: 78,
-    time: "1 ngày trước",
-  }
-  
-]
+import { useUser } from "@/hooks/useUser"
+import { getAllPosts } from "@/services/post"
 
 export default function ForumScreen() {
-  const [activeTab, setActiveTab] = useState("Following")
-  const avatarUrl = "https://res.cloudinary.com/dgzn2ix8w/image/upload/v1745141656/Audivia/a1wqzwrxluklxcwubzrc.jpg"
+  const [activeTab, setActiveTab] = useState("Popular")
+  const [posts, setPosts] = useState([])
+  const {user} = useUser()
+
+  useEffect(() => {
+    getAllPosts().then((res) => {
+      setPosts(res.response)
+    })
+  },[])
 
   const renderPost = ({ item }: { item: any }) => (
     <View style={styles.postContainer}>
       {/* Post Header */}
       <View style={styles.postHeader}>
         <View style={styles.userInfo}>
-          <Image source={item.user.avatar} style={styles.avatar} />
+        {item.user.avatarUrl ? (
+      <Image source={{uri: item.user.avatarUrl}} style={styles.avatar}  />
+    ) : (
+      <Ionicons name="person-circle-outline" style={styles.avatar} size={44}  color={COLORS.primary} />
+    )}
           <View>
-            <Text style={styles.userName}>{item.user.name}</Text>
-            <Text style={styles.location}>{item.user.location}</Text>
+            <Text style={styles.userName}>{item.user.userName}</Text>
+            <Text style={styles.location}>{item.location}</Text>
           </View>
         </View>
         <TouchableOpacity>
@@ -86,7 +64,7 @@ export default function ForumScreen() {
       {/* Post Content */}
       <View style={styles.postContent}>
         <Text style={styles.postText}>
-          <Text style={styles.userName}>{item.user.name}</Text> {item.content}
+          {item.content}
         </Text>
       </View>
 
@@ -101,7 +79,7 @@ export default function ForumScreen() {
       {/* Comment Input */}
       <View style={styles.commentInputContainer}>
         <Image
-          source={require("@/assets/images/avatar.jpg")}
+          source={{uri: user?.avatarUrl}}
           style={styles.commentAvatar}
         />
         <TextInput style={styles.commentInput} placeholder="Thêm bình luận..." placeholderTextColor={COLORS.grey} />
@@ -120,9 +98,9 @@ export default function ForumScreen() {
         <View style={styles.headerIcons}>
             <Ionicons name="notifications-outline" size={22} color={COLORS.dark} style={styles.icon} />
             <View style={styles.avatarWrapper}>
-  {avatarUrl ? (
+  {user?.avatarUrl ? (
     <Image
-      source={{ uri: avatarUrl }}
+      source={{ uri: user.avatarUrl }}
       style={styles.avatarImage}
       resizeMode="cover"
     />
@@ -149,22 +127,9 @@ export default function ForumScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* What's on your mind section */}
-      <View style={styles.whatsOnYourMindContainer}>
-        <View style={styles.whatsOnYourMindContent}>
-          <Image
-            source={require("@/assets/images/avatar.jpg")}
-            style={styles.whatsOnYourMindAvatar}
-          />
-          <TouchableOpacity style={styles.whatsOnYourMindInput}>
-            <Text style={styles.whatsOnYourMindText}>Bạn đang nghĩ gì?</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
       {/* Posts */}
       <FlatList
-        data={POSTS}
+        data={posts}
         renderItem={renderPost}
         keyExtractor={(item) => item.id}
         showsVerticalScrollIndicator={false}

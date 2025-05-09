@@ -11,7 +11,7 @@ export default function LayoutContent() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.primary }}>
       <Stack screenOptions={{headerShown: false}}/>
-      {isAuthenticated && !pathname.includes('chatbox') && <FloatingButton onPress={() => router.push("/(screens)/chatbox")}/>}
+      {/* {isAuthenticated && !pathname.includes('chatbox') && <FloatingButton onPress={() => router.push("/(screens)/chatbox")}/>} */}
     </SafeAreaView>
   );
 }

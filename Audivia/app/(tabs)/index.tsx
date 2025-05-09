@@ -8,6 +8,7 @@ import { Tour, TourType } from "@/models"
 import { getTourTypes } from "@/services/tour_type"
 import { useUser } from "@/hooks/useUser"
 import { router } from "expo-router"
+import GoogleMapView from "@/components/GoogleMapView"
 
 
 const carouselImages = [
@@ -86,8 +87,8 @@ export default function Index() {
       </View>
      
       <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Main Image Carousel */}
-        <View style={styles.mainImageContainer}>
+         {/* Main Image Carousel */}
+         <View style={styles.mainImageContainer}>
           <ScrollView
             ref={scrollViewRef}
             horizontal
@@ -122,7 +123,7 @@ export default function Index() {
             ))}
           </View>
         </View>
-
+      
         {/* Categories */}
         <View style={styles.categoriesSection}>
           <View style={styles.sectionHeader}>
@@ -151,14 +152,8 @@ export default function Index() {
           </View>
         </View>
 
-        {/* Map Section */}
-        <View style={styles.mapContainer}>
-          <Image
-            source={require('../../assets/images/map-current.png')}
-            style={styles.mapImage}
-            resizeMode="cover"
-          />
-        </View>
+         {/* Google Map View */}
+      <GoogleMapView />
 
         {/* Suggested Tours */}
         <View style={styles.toursSection}>

@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
       fontSize: 16,
       fontWeight: "600",
     },
-    qrContainer: {
+    qrInfoContainer: {
       flex: 1,
       alignItems: "center",
       justifyContent: "center",
@@ -93,14 +93,20 @@ const styles = StyleSheet.create({
       shadowRadius: 4,
       elevation: 3,
     },
-    qrTitle: {
-      fontSize: 18,
+    infoText: {
+      fontSize: 15,
       fontWeight: "600",
       color: COLORS.dark,
       marginBottom: 8,
     },
+    linkText: {
+      color: COLORS.primary,
+      fontSize: 15,
+      textDecorationLine: "underline",
+      marginTop: 10,
+    },
     qrAmount: {
-      fontSize: 24,
+      fontSize: 15,
       fontWeight: "bold",
       color: COLORS.primary,
       marginBottom: 24,

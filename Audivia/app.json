@@ -1,20 +1,26 @@
 {
   "expo": {
     "name": "Audivia",
-    "slug": "Audivia",
+    "slug": "audivia",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "myapp",
+    "scheme": "audivia",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true
     },
     "android": {
+      "package": "com.audivia.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
+      },
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyB4yLOsEBieeciLiqt1muA_O3_hGPD_NpU"
+        }
       }
     },
     "web": {
