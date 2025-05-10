@@ -12,7 +12,7 @@ import {
 } from "react-native"
 import { Ionicons } from "@expo/vector-icons"
 import { COLORS } from "@/constants/theme"
-import { useRouter } from "expo-router"
+import { useRouter, useLocalSearchParams } from "expo-router"
 import styles from "@/styles/profile.styles"
 import { useUser } from "@/hooks/useUser"
 import * as ImagePicker from 'expo-image-picker'
@@ -20,16 +20,6 @@ import { updateUserInfo } from "@/services/user"
 import { createPost, getPostByUserId, updatePost, deletePost } from "@/services/post"
 import { Post } from "@/models"
 import { PostModal } from "@/components/PostModal"
-
-const USER_INFO = {
-  name: "Tina Pham",
-  avatar: "https://res.cloudinary.com/dgzn2ix8w/image/upload/v1745141656/Audivia/a1wqzwrxluklxcwubzrc.jpg",
-  coverPhoto: "https://images.unsplash.com/photo-1528164344705-47542687000d?q=80&w=1000&auto=format&fit=crop",
-  bio: "Yêu du lịch, khám phá những địa điểm mới🌏✈️",
-  friends: 285,
-  followers: 420,
-}
-
 
 export default function ProfileScreen() {
   const [activeTab, setActiveTab] = useState("posts")
@@ -43,15 +33,28 @@ export default function ProfileScreen() {
   const DEFAULT_AVATAR = "https://res.cloudinary.com/dgzn2ix8w/image/upload/v1745396073/Audivia/ddizjlgkux0eoifrsoco.avif"
   const { user } = useUser()
   const router = useRouter()
+  const params = useLocalSearchParams()
+  const [profileUser, setProfileUser] = useState(user)
   const [posts, setPosts] = useState<Post[]>([])
+  const isOwnProfile = !params.userId || params.userId === user?.id
 
   useEffect(() => {
-    if (user?.id) {
-      getPostByUserId(user.id).then((res) => {
+    if (params.userId) {
+      // TODO: Fetch other user's profile data
+      // For now, we'll just use the current user's data
+      setProfileUser(user)
+    } else {
+      setProfileUser(user)
+    }
+  }, [params.userId, user])
+
+  useEffect(() => {
+    if (profileUser?.id) {
+      getPostByUserId(profileUser.id).then((res) => {
         setPosts(res.response)
       })
     }
-  }, [user?.id])
+  }, [profileUser?.id])
 
   const handleCreatePost = () => {
     setEditingPost(null)
@@ -96,7 +99,7 @@ export default function ProfileScreen() {
   }
 
   const handleSavePost = async (postData: { content: string; location: string; images: string[] }) => {
-    if (!user?.id) {
+    if (!profileUser?.id) {
       Alert.alert('Lỗi', 'Không tìm thấy thông tin người dùng');
       return;
     }
@@ -115,7 +118,7 @@ export default function ProfileScreen() {
           postData.images,
           postData.location,
           postData.content,
-          user.id
+          profileUser.id
         );
         if (response.success) {
           setPosts([response.response, ...posts]);
@@ -150,7 +153,9 @@ export default function ProfileScreen() {
   }
 
   const handleAvatarPress = () => {
-    setShowAvatarModal(true)
+    if (isOwnProfile) {
+      setShowAvatarModal(true)
+    }
   }
 
   const handleCameraAvatar = async () => {
@@ -167,7 +172,7 @@ export default function ProfileScreen() {
       })
       if (!result.canceled) {
         console.log('Camera image:', result.assets[0].uri)
-        await updateUserInfo(user?.id as string, {avatarUrl: result.assets[0].uri})
+        await updateUserInfo(profileUser?.id as string, {avatarUrl: result.assets[0].uri})
         setShowAvatarModal(false)
       }
     } catch (error) {
@@ -191,7 +196,7 @@ export default function ProfileScreen() {
       })
 
       if (!result.canceled) {
-        await updateUserInfo(user?.id as string, {avatarUrl: result.assets[0].uri})
+        await updateUserInfo(profileUser?.id as string, {avatarUrl: result.assets[0].uri})
         console.log('Selected image:', result.assets[0].uri)
       }
     } catch (error) {
@@ -214,7 +219,7 @@ export default function ProfileScreen() {
           text: 'Xóa',
           style: 'destructive',
           onPress: async () => {
-            await updateUserInfo(user?.id as string, {avatarUrl: DEFAULT_AVATAR})
+            await updateUserInfo(profileUser?.id as string, {avatarUrl: DEFAULT_AVATAR})
             setShowAvatarModal(false)
             console.log('Delete avatar')
           }
@@ -231,9 +236,9 @@ export default function ProfileScreen() {
     <View style={styles.postCard}>
       <View style={styles.postHeader}>
         <View style={styles.postUser}>
-          <Image source={{ uri: user?.avatarUrl || DEFAULT_AVATAR }} style={styles.postAvatar} />
+          <Image source={{ uri: profileUser?.avatarUrl || DEFAULT_AVATAR }} style={styles.postAvatar} />
           <View>
-            <Text style={styles.postUserName}>{user?.userName}</Text>
+            <Text style={styles.postUserName}>{profileUser?.userName}</Text>
             <Text style={styles.postTime}>{item.location}</Text>
             <Text style={styles.postTime}>{item.time}</Text>
           </View>
@@ -309,9 +314,13 @@ export default function ProfileScreen() {
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Cover Photo */}
         <View style={styles.coverPhotoContainer}>
-            <Image source={{ uri: USER_INFO.coverPhoto }} style={styles.coverPhoto} />
-          <TouchableOpacity style={styles.profileAvatarContainer} onPress={handleAvatarPress}>
-            <Image source={{ uri: user?.avatarUrl || DEFAULT_AVATAR }} style={styles.profileAvatar} />
+            <Image source={{ uri: user?.coverPhoto }} style={styles.coverPhoto} />
+          <TouchableOpacity 
+            style={styles.profileAvatarContainer} 
+            onPress={handleAvatarPress}
+            disabled={!isOwnProfile}
+          >
+            <Image source={{ uri: profileUser?.avatarUrl || DEFAULT_AVATAR }} style={styles.profileAvatar} />
           </TouchableOpacity>
         </View>
 
@@ -333,7 +342,7 @@ export default function ProfileScreen() {
                 </TouchableOpacity>
               </View>
               
-              <Image source={{ uri: user?.avatarUrl || DEFAULT_AVATAR }} style={styles.modalAvatar} />
+              <Image source={{ uri: profileUser?.avatarUrl || DEFAULT_AVATAR }} style={styles.modalAvatar} />
               
               <View style={styles.modalActions}>
               <TouchableOpacity style={styles.modalAction} onPress={handleCameraAvatar}>
@@ -351,20 +360,33 @@ export default function ProfileScreen() {
 
         {/* Profile Info */}
         <View style={styles.profileInfo}>
-          <Text style={styles.profileName}>{user?.userName}</Text>
-          <Text style={styles.profileBio}>{user?.bio}</Text>
+          <Text style={styles.profileName}>{profileUser?.userName}</Text>
+          <Text style={styles.profileBio}>{profileUser?.bio}</Text>
 
-          <View style={styles.socialStats}>
-            <View style={styles.socialStat}>
-              <Text style={styles.socialStatNumber}>{USER_INFO.friends}</Text>
-              <Text style={styles.socialStatLabel}>Bạn bè</Text>
+          {isOwnProfile ? (
+            <View style={styles.socialStats}>
+              <View style={styles.socialStat}>
+                <Text style={styles.socialStatNumber}>{profileUser?.followers}</Text>
+                <Text style={styles.socialStatLabel}>Bạn bè</Text>
+              </View>
+              <View style={styles.socialStatDivider} />
+              <View style={styles.socialStat}>
+                <Text style={styles.socialStatNumber}>{profileUser?.following}</Text>
+                <Text style={styles.socialStatLabel}>Người theo dõi</Text>
+              </View>
             </View>
-            <View style={styles.socialStatDivider} />
-            <View style={styles.socialStat}>
-              <Text style={styles.socialStatNumber}>{USER_INFO.followers}</Text>
-              <Text style={styles.socialStatLabel}>Người theo dõi</Text>
+          ) : (
+            <View style={styles.profileActions}>
+              <TouchableOpacity style={[styles.profileActionButton, styles.primaryActionButton]}>
+                <Ionicons name="person-add-outline" size={20} color="#fff" />
+                <Text style={styles.primaryActionText}>Theo dõi</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.profileActionButton, styles.secondaryActionButton]}>
+                <Ionicons name="chatbubble-outline" size={20} color={COLORS.primary} />
+                <Text style={[styles.secondaryActionText, { color: COLORS.primary }]}>Nhắn tin</Text>
+              </TouchableOpacity>
             </View>
-          </View>
+          )}
          
         </View>
 
@@ -396,7 +418,7 @@ export default function ProfileScreen() {
             {/* Create Post */}
             <View style={styles.createPostCard}>
               <View style={styles.createPostHeader}>
-                <Image source={{ uri: user?.avatarUrl || DEFAULT_AVATAR }} style={styles.createPostAvatar} />
+                <Image source={{ uri: profileUser?.avatarUrl || DEFAULT_AVATAR }} style={styles.createPostAvatar} />
                 <TouchableOpacity style={styles.createPostInput} onPress={handleCreatePost}>
                   <Text style={styles.createPostPlaceholder}>Bạn đang nghĩ gì?</Text>
                 </TouchableOpacity>
@@ -432,21 +454,21 @@ export default function ProfileScreen() {
                 <Ionicons name="person-outline" size={20} color={COLORS.primary} style={styles.aboutIcon} />
                 <View>
                   <Text style={styles.aboutLabel}>Username</Text>
-                  <Text style={styles.aboutText}>{user?.userName}</Text>
+                  <Text style={styles.aboutText}>{profileUser?.userName}</Text>
                 </View>
               </View>
               <View style={styles.aboutItem}>
                 <Ionicons name="mail-outline" size={20} color={COLORS.primary} style={styles.aboutIcon} />
                 <View>
                   <Text style={styles.aboutLabel}>Email</Text>
-                  <Text style={styles.aboutText}>{user?.email}</Text>
+                  <Text style={styles.aboutText}>{profileUser?.email}</Text>
                 </View>
               </View>
               <View style={styles.aboutItem}>
                 <Ionicons name="person-circle-outline" size={20} color={COLORS.primary} style={styles.aboutIcon} />
                 <View>
                   <Text style={styles.aboutLabel}>Full Name</Text>
-                  <Text style={styles.aboutText}>{user?.fullName}</Text>
+                  <Text style={styles.aboutText}>{profileUser?.fullName}</Text>
                 </View>
                 <TouchableOpacity style={styles.aboutEditButton}>
                   <Ionicons name="pencil-outline" size={18} color={COLORS.primary} />
@@ -457,7 +479,7 @@ export default function ProfileScreen() {
                 <Ionicons name="call-outline" size={20} color={COLORS.primary} style={styles.aboutIcon} />
                 <View>
                   <Text style={styles.aboutLabel}>Số điện thoại</Text>
-                  <Text style={styles.aboutText}>{user?.phone}</Text>
+                  <Text style={styles.aboutText}>{profileUser?.phone}</Text>
                 </View>
                 <TouchableOpacity style={styles.aboutEditButton}>
                   <Ionicons name="pencil-outline" size={18} color={COLORS.primary} />
@@ -468,7 +490,7 @@ export default function ProfileScreen() {
                 <Ionicons name="bonfire-outline" size={20} color={COLORS.primary} style={styles.aboutIcon} />
                 <View>
                   <Text style={styles.aboutLabel}>Bio</Text>
-                  <Text style={styles.aboutText}>{user?.bio}</Text>
+                  <Text style={styles.aboutText}>{profileUser?.bio}</Text>
                 </View>
                 <TouchableOpacity style={styles.aboutEditButton}>
                   <Ionicons name="pencil-outline" size={18} color={COLORS.primary} />
@@ -477,30 +499,6 @@ export default function ProfileScreen() {
 
             </View>
 
-            <View style={styles.aboutCard}>
-              <Text style={styles.aboutTitle}>Sở thích</Text>
-              <View style={styles.interestsContainer}>
-                <View style={styles.interestTag}>
-                  <Text style={styles.interestText}>Du lịch</Text>
-                </View>
-                <View style={styles.interestTag}>
-                  <Text style={styles.interestText}>Ẩm thực</Text>
-                </View>
-                <View style={styles.interestTag}>
-                  <Text style={styles.interestText}>Nhiếp ảnh</Text>
-                </View>
-                <View style={styles.interestTag}>
-                  <Text style={styles.interestText}>Khám phá</Text>
-                </View>
-                <View style={styles.interestTag}>
-                  <Text style={styles.interestText}>Văn hóa</Text>
-                </View>
-              </View>
-              <TouchableOpacity style={styles.addInterestButton}>
-                <Ionicons name="add" size={18} color={COLORS.primary} />
-                <Text style={styles.addInterestText}>Thêm sở thích</Text>
-              </TouchableOpacity>
-            </View>
           </View>
         )}
       </ScrollView>

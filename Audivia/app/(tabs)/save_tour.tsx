@@ -1,80 +1,103 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import {
   View,
   Text,
   Image,
   TouchableOpacity,
-  TextInput,
   FlatList,
   SafeAreaView,
+  Alert,
 } from "react-native"
 import { Ionicons, MaterialIcons } from "@expo/vector-icons"
 import { useRouter } from "expo-router"
 import { COLORS } from "@/constants/theme"
 import styles from "@/styles/save_tour.styles"
 import { useUser } from "@/hooks/useUser"
-
-const SAVED_TOURS = [
-  {
-    id: "2",
-    name: "Tuyến Metro Số 1",
-    image: require("@/assets/images/metro.jpg"),
-    savedTime: "5 ngày trước",
-    location: "TP.HCM",
-    duration: "1 giờ 30 phút",
-    rating: 4.8,
-  },
-  {
-    id: "3",
-    name: "Bảo tàng Lịch sử Việt Nam",
-    image: require("@/assets/images/cung-dinh-hue.jpg"),
-    savedTime: "1 tuần trước",
-    location: "Quận 1, TP.HCM",
-    duration: "3 giờ",
-    rating: 4.5,
-  },
-  {
-    id: "4",
-    name: "Chợ Bến Thành",
-    image: require("@/assets/images/benthanh.png"),
-    savedTime: "3 tuần trước",
-    location: "Quận 1, TP.HCM",
-    duration: "2 giờ 30 phút",
-    rating: 4.3,
-  },
-]
+import { deleteSaveTour, getAllSaveTourByUserId } from "@/services/save_tour"
+import { SaveTour } from "@/models"
 
 export default function SavedToursScreen() {
   const {user} = useUser()
 
-  const [searchQuery, setSearchQuery] = useState("")
   const router = useRouter()
-
-  const filteredTours = SAVED_TOURS.filter((tour) => tour.name.toLowerCase().includes(searchQuery.toLowerCase()))
+  const [saveTours, setSaveTour] = useState<SaveTour[]>([])
+  const [showPostOptions, setShowPostOptions] = useState<string | null>(null)
+  
+  
+  useEffect(() => {
+    if (user?.id) {
+      getAllSaveTourByUserId(user.id).then((res) => {
+        setSaveTour(res);
+      });
+    }
+  }, [user?.id]);
+  
 
   const navigateToPlanTour = (tourId: string) => {
     router.push(`/plan_tour?id=${tourId}`)
   }
 
+  const handleDeleteSaveTour = async (tourId: string) => {
+    Alert.alert(
+      'Xác nhận',
+      'Bạn có chắc chắn muốn xóa tour yêu thích này?',
+      [
+        {
+          text: 'Hủy',
+          style: 'cancel'
+        },
+        {
+          text: 'Xóa',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteSaveTour(tourId)
+              setSaveTour(saveTours.filter((post: SaveTour) => post.id !== tourId))
+              setShowPostOptions(null)
+            } catch (error) {
+              Alert.alert('Lỗi', 'Không thể xóa bài viết. Vui lòng thử lại.')
+            }
+          }
+        }
+      ]
+    )
+  }
   const renderTourItem = ({ item }: { item: any }) => (
     <View style={styles.tourCard}>
-      <Image source={item.image} style={styles.tourImage} />
+      <View style={{alignItems: 'flex-end', marginEnd: 10, marginTop: 10}}>
+      <TouchableOpacity onPress={() => setShowPostOptions(showPostOptions === item.id ? null : item.id)}>
+          <Ionicons name="ellipsis-horizontal" size={20} color="#666" />
+      </TouchableOpacity>
+      </View>
+        {showPostOptions === item.id && (
+        <View style={styles.postOptions}>
+          <TouchableOpacity 
+            style={styles.postOption} 
+            onPress={() => handleDeleteSaveTour(item.id)}
+          >
+            <Ionicons name="trash-outline" size={20} color={COLORS.red} />
+            <Text style={[styles.postOptionText, { color: COLORS.red }]}>Xóa</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+      <Image source={{ uri: item.tour.thumbnailUrl }} style={styles.tourImage} />
       <View style={styles.tourContent}>
+      
         <View style={styles.tourHeader}>
           <View>
-            <Text style={styles.tourName}>{item.name}</Text>
+            <Text style={styles.tourName}>{item.tour.title}</Text>
             <Text style={styles.tourLocation}>
-              <Ionicons name="location-outline" size={14} color={COLORS.grey} /> {item.location}
+              <Ionicons name="location-outline" size={14} color={COLORS.grey} /> {item.tour.location}
             </Text>
           </View>
           <View style={styles.tourRating}>
             <Ionicons name="star" size={16} color={COLORS.orange} />
-            <Text style={styles.ratingText}>{item.rating}</Text>
+            <Text style={styles.ratingText}>{item.tour.avgRating}</Text>
           </View>
         </View>
 
         <View style={styles.tourFooter}>
-          <Text style={styles.savedTime}>Đã lưu {item.savedTime}</Text>
+          <Text style={styles.savedTime}>Đã lưu {item.timeAgo}</Text>
           <View style={styles.tourActions}>
             <TouchableOpacity style={styles.actionButton} onPress={() => navigateToPlanTour(item.id)}>
               <View style={[styles.actionButtonInner, styles.scheduleButton]}>
@@ -122,32 +145,16 @@ export default function SavedToursScreen() {
           <View style={styles.notificationTextContainer}>
             <Text style={styles.notificationTitle}>Đến lúc khám phá!</Text>
             <Text style={styles.notificationMessage}>
-              Bạn có {SAVED_TOURS.length} tour đã lưu đang chờ được khám phá
+              Bạn có {saveTours.length} tour đã lưu đang chờ được khám phá
             </Text>
           </View>
         </View>
       </View>
 
-      {/* Search Bar */}
-      <View style={styles.searchContainer}>
-        <Ionicons name="search-outline" size={20} color={COLORS.grey} style={styles.searchIcon} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Tìm kiếm tour đã lưu"
-          placeholderTextColor={COLORS.grey}
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-        />
-        {searchQuery.length > 0 && (
-          <TouchableOpacity onPress={() => setSearchQuery("")}>
-            <Ionicons name="close-circle" size={20} color={COLORS.grey} />
-          </TouchableOpacity>
-        )}
-      </View>
 
       {/* Tour List */}
       <FlatList
-        data={filteredTours}
+        data={saveTours}
         renderItem={renderTourItem}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.tourList}

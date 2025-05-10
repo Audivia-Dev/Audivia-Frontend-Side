@@ -9,3 +9,14 @@ export const getTourTypes = async () => {
     throw error;
   }
 }
+export const updateSaveTour = async (
+  id: string, 
+  plannedTime:string
+) => {
+  try {
+      await apiClient.put(`/posts/${id}`, plannedTime)
+  } catch (error: any) {
+      console.error('Lỗi cập nhật thông tour yêu thích:', error.response?.data || error.message)
+      throw error
+  }
+}

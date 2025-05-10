@@ -127,6 +127,7 @@ const styles = StyleSheet.create({
       fontWeight: "bold",
       color: "#333",
       marginBottom: 4,
+      width: 250
     },
     tourLocation: {
       fontSize: 14,
@@ -150,6 +151,30 @@ const styles = StyleSheet.create({
       flexDirection: "row",
       justifyContent: "space-between",
       alignItems: "center",
+    },
+    postOptions: {
+      position: 'absolute',
+      top: 40,
+      right: 10,
+      backgroundColor: COLORS.light,
+      borderRadius: 8,
+      padding: 8,
+      shadowColor: COLORS.dark,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 3.84,
+      elevation: 5,
+      zIndex: 1000,
+    },
+    postOption: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: 8,
+      gap: 8,
+    },
+    postOptionText: {
+      fontSize: 14,
+      color: COLORS.dark,
     },
     savedTime: {
       fontSize: 14,

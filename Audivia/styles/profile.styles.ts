@@ -117,6 +117,11 @@ const styles = StyleSheet.create({
       borderWidth: 1,
       borderColor: COLORS.primary,
     },
+    secondaryActionText: {
+      color: COLORS.primary,
+      fontWeight: "bold",
+      marginLeft: 8,
+    },
     tabsContainer: {
       flexDirection: "row",
       backgroundColor: "#fff",

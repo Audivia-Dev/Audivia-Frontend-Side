@@ -5,6 +5,7 @@ import { COLORS } from "@/constants/theme"
 import { styles } from "@/styles/forum.styles"
 import { useUser } from "@/hooks/useUser"
 import { getAllPosts } from "@/services/post"
+import { router } from "expo-router"
 
 export default function ForumScreen() {
   const [activeTab, setActiveTab] = useState("Popular")
@@ -17,11 +18,21 @@ export default function ForumScreen() {
     })
   },[])
 
+  const navigateToProfile = (userId: string) => {
+    router.push({
+      pathname: "/profile",
+      params: { userId }
+    })
+  }
+
   const renderPost = ({ item }: { item: any }) => (
     <View style={styles.postContainer}>
       {/* Post Header */}
       <View style={styles.postHeader}>
-        <View style={styles.userInfo}>
+        <TouchableOpacity 
+          style={styles.userInfo}
+          onPress={() => navigateToProfile(item.user.id)}
+        >
         {item.user.avatarUrl ? (
       <Image source={{uri: item.user.avatarUrl}} style={styles.avatar}  />
     ) : (
@@ -31,7 +42,7 @@ export default function ForumScreen() {
             <Text style={styles.userName}>{item.user.userName}</Text>
             <Text style={styles.location}>{item.location}</Text>
           </View>
-        </View>
+        </TouchableOpacity>
         <TouchableOpacity>
           <Ionicons name="ellipsis-horizontal" size={20} color={COLORS.dark} />
         </TouchableOpacity>
