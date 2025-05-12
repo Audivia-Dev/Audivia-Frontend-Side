@@ -6,6 +6,9 @@ const styles = StyleSheet.create({
       flex: 1,
       backgroundColor: "#fff",
     },
+    backButton: {
+        padding: 4,
+      },
     header: {
       flexDirection: "row",
       alignItems: "center",
@@ -14,6 +17,11 @@ const styles = StyleSheet.create({
       paddingVertical: 12,
       borderBottomWidth: 1,
       borderBottomColor: "#f0f0f0",
+    },
+    headerInfo: {
+      flex: 1,
+      flexDirection: "row",
+      alignItems: "center",
     },
     headerTitle: {
       fontSize: 24,
@@ -143,10 +151,26 @@ const styles = StyleSheet.create({
     conversationAvatarContainer: {
       position: "relative",
     },
+    groupAvatarContainer: {
+      position: "relative",
+    },
     conversationAvatar: {
       width: 60,
       height: 60,
       borderRadius: 30,
+    },
+    groupIconBadge: {
+      position: "absolute",
+      bottom: 0,
+      right: 0,
+      width: 22,
+      height: 22,
+      borderRadius: 11,
+      backgroundColor: COLORS.primary,
+      justifyContent: "center",
+      alignItems: "center",
+      borderWidth: 2,
+      borderColor: "#fff",
     },
     conversationOnlineIndicator: {
       position: "absolute",
@@ -253,10 +277,27 @@ const styles = StyleSheet.create({
       color: "#999",
       marginTop: 12,
     },
-    newMessageButton: {
+    floatingButtonsContainer: {
       position: "absolute",
       right: 16,
       bottom: 80,
+      alignItems: "center",
+    },
+    createGroupButton: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      backgroundColor: "#FF9800",
+      justifyContent: "center",
+      alignItems: "center",
+      marginBottom: 12,
+      elevation: 4,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.2,
+      shadowRadius: 4,
+    },
+    newMessageButton: {
       width: 56,
       height: 56,
       borderRadius: 28,
@@ -293,6 +334,140 @@ const styles = StyleSheet.create({
     activeNavText: {
       color: COLORS.primary,
     },
-  })
+    modalContainer: {
+      flex: 1,
+      backgroundColor: "rgba(0, 0, 0, 0.5)",
+      justifyContent: "flex-end",
+    },
+    modalContent: {
+      backgroundColor: "#fff",
+      borderTopLeftRadius: 20,
+      borderTopRightRadius: 20,
+      paddingHorizontal: 16,
+      paddingBottom: 30,
+      maxHeight: "80%",
+    },
+    modalHeader: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      paddingVertical: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: "#f0f0f0",
+    },
+    modalTitle: {
+      fontSize: 18,
+      fontWeight: "bold",
+    },
+    groupNameContainer: {
+      marginTop: 16,
+    },
+    groupNameLabel: {
+      fontSize: 14,
+      color: "#666",
+      marginBottom: 8,
+    },
+    groupNameInput: {
+      borderWidth: 1,
+      borderColor: "#e0e0e0",
+      borderRadius: 8,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+      fontSize: 16,
+    },
+    selectedUsersContainer: {
+      marginTop: 16,
+      maxHeight: 80,
+    },
+    selectedUserItem: {
+      alignItems: "center",
+      marginRight: 12,
+      width: 60,
+      position: "relative",
+    },
+    selectedUserAvatar: {
+      width: 50,
+      height: 50,
+      borderRadius: 25,
+      borderWidth: 2,
+      borderColor: COLORS.primary,
+    },
+    selectedUserName: {
+      fontSize: 12,
+      marginTop: 4,
+      textAlign: "center",
+      width: "100%",
+    },
+    removeUserButton: {
+      position: "absolute",
+      top: -5,
+      right: -5,
+      backgroundColor: "#FF5252",
+      borderRadius: 12,
+      width: 24,
+      height: 24,
+      justifyContent: "center",
+      alignItems: "center",
+      borderWidth: 2,
+      borderColor: "#fff",
+    },
+    selectMembersTitle: {
+      fontSize: 16,
+      fontWeight: "600",
+      marginTop: 16,
+      marginBottom: 8,
+    },
+    userSelectionList: {
+      maxHeight: 300,
+    },
+    userSelectionItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: "#f0f0f0",
+    },
+    userSelectionItemSelected: {
+      backgroundColor: "rgba(0, 188, 212, 0.05)",
+    },
+    userSelectionAvatar: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      marginRight: 12,
+    },
+    userSelectionName: {
+      flex: 1,
+      fontSize: 16,
+    },
+    checkboxContainer: {
+      width: 24,
+      height: 24,
+      borderRadius: 12,
+      borderWidth: 2,
+      borderColor: "#e0e0e0",
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    checkboxSelected: {
+      backgroundColor: COLORS.primary,
+      borderColor: COLORS.primary,
+    },
+    createGroupConfirmButton: {
+      backgroundColor: COLORS.primary,
+      borderRadius: 8,
+      paddingVertical: 14,
+      alignItems: "center",
+      marginTop: 16,
+    },
+    createGroupButtonDisabled: {
+      backgroundColor: "#cccccc",
+    },
+    createGroupButtonText: {
+      color: "#fff",
+      fontSize: 16,
+      fontWeight: "bold",
+    },
+  }) 
   export default styles;
   

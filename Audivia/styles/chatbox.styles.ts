@@ -44,10 +44,39 @@ export const styles = StyleSheet.create({
     headerButton: {
       padding: 4,
     },
+    headerAction: {
+      padding: 8,
+      marginLeft: 5,
+    },
+    friendMessageBubble: {
+      backgroundColor: "#e6e6e6",
+      borderBottomLeftRadius: 5,
+    },
+    messageSender: {
+      fontSize: 12,
+      fontWeight: "600",
+      color: "#555",
+      marginBottom: 3,
+    },
+    friendMessageContainer: {
+      alignSelf: "flex-start",
+      marginRight: "auto",
+    },
+    friendAvatar: {
+      width: 30,
+      height: 30,
+      borderRadius: 15,
+      marginRight: 8,
+      alignSelf: "flex-end",
+    },
     messagesContainer: {
       paddingHorizontal: 16,
       paddingTop: 16,
       paddingBottom: 16,
+    },
+    cameraButton: {
+      padding: 5,
+      marginLeft: 5,
     },
     messageContainer: {
       flexDirection: "row",

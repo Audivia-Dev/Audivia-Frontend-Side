@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState } from "react";
 import {
   View,
   Text,
@@ -8,11 +8,53 @@ import {
   FlatList,
   SafeAreaView,
   StatusBar,
-} from "react-native"
-import { Ionicons } from "@expo/vector-icons"
-import { useRouter } from "expo-router"
-import styles from "@/styles/message_inbox"
+  Modal,
+  ScrollView,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import styles from "@/styles/message_inbox";
 
+// Dữ liệu mẫu cho người dùng đang hoạt động
+const ACTIVE_USERS = [
+  {
+    id: "1",
+    name: "Hương",
+    avatar: "https://randomuser.me/api/portraits/women/32.jpg",
+    isOnline: true,
+  },
+  {
+    id: "2",
+    name: "Minh",
+    avatar: "https://randomuser.me/api/portraits/men/45.jpg",
+    isOnline: true,
+  },
+  {
+    id: "3",
+    name: "Audy",
+    avatar: "https://cdn-icons-png.flaticon.com/512/5229/5229537.png",
+    isOnline: true,
+    isBot: true,
+  },
+  {
+    id: "4",
+    name: "Lan",
+    avatar: "https://randomuser.me/api/portraits/women/44.jpg",
+    isOnline: false,
+  },
+  {
+    id: "5",
+    name: "Tuấn",
+    avatar: "https://randomuser.me/api/portraits/men/32.jpg",
+    isOnline: true,
+  },
+  {
+    id: "6",
+    name: "Hà",
+    avatar: "https://randomuser.me/api/portraits/women/68.jpg",
+    isOnline: false,
+  },
+];
 
 // Dữ liệu mẫu cho các cuộc trò chuyện
 const CONVERSATIONS = [
@@ -26,34 +68,53 @@ const CONVERSATIONS = [
     unread: 1,
     isOnline: true,
     isBot: true,
+    isGroup: false,
+  },
+  {
+    id: "2",
+    name: "Nhóm Tour Huế",
+    avatar:
+      "https://images.unsplash.com/photo-1558321601-6de0f76ff4b8?q=80&w=1000&auto=format&fit=crop",
+    lastMessage:
+      "Hương: Mọi người đã sẵn sàng cho chuyến đi vào cuối tuần này chưa?",
+    time: "09:45",
+    unread: 3,
+    isGroup: true,
+    members: ["Hương", "Minh", "Lan", "Tuấn", "Hà", "Bình"],
   },
   {
     id: "3",
     name: "Minh",
     avatar: "https://randomuser.me/api/portraits/men/45.jpg",
-    lastMessage: "Tôi đã đặt vé máy bay rồi. Chúng ta sẽ gặp nhau ở sân bay lúc 7h sáng nhé!",
+    lastMessage:
+      "Tôi đã đặt vé máy bay rồi. Chúng ta sẽ gặp nhau ở sân bay lúc 7h sáng nhé!",
     time: "Hôm qua",
     unread: 0,
     isOnline: true,
+    isGroup: false,
   },
   {
     id: "4",
     name: "Lan",
     avatar: "https://randomuser.me/api/portraits/women/44.jpg",
-    lastMessage: "Cảm ơn bạn đã chia sẻ thông tin về tour Hội An. Tôi rất thích những bức ảnh bạn đã gửi.",
+    lastMessage:
+      "Cảm ơn bạn đã chia sẻ thông tin về tour Hội An. Tôi rất thích những bức ảnh bạn đã gửi.",
     time: "Hôm qua",
     unread: 0,
     isOnline: false,
+    isGroup: false,
   },
   {
     id: "5",
     name: "Nhóm Phượt Đà Lạt",
-    avatar: "https://images.unsplash.com/photo-1589308078059-be1415eab4c3?q=80&w=1000&auto=format&fit=crop",
-    lastMessage: "Tuấn: Dự báo thời tiết cuối tuần này ở Đà Lạt sẽ mưa nhẹ, mọi người nhớ mang áo mưa nhé!",
+    avatar:
+      "https://images.unsplash.com/photo-1589308078059-be1415eab4c3?q=80&w=1000&auto=format&fit=crop",
+    lastMessage:
+      "Tuấn: Dự báo thời tiết cuối tuần này ở Đà Lạt sẽ mưa nhẹ, mọi người nhớ mang áo mưa nhé!",
     time: "Thứ Tư",
     unread: 0,
     isGroup: true,
-    members: ["Tuấn", "Hà", "Minh", "+5"],
+    members: ["Tuấn", "Hà", "Minh", "Hương", "Lan", "Bình", "Nam", "Thảo"],
   },
   {
     id: "6",
@@ -63,58 +124,138 @@ const CONVERSATIONS = [
     time: "Thứ Ba",
     unread: 0,
     isOnline: true,
+    isGroup: false,
   },
   {
     id: "7",
     name: "Tuấn",
     avatar: "https://randomuser.me/api/portraits/men/32.jpg",
-    lastMessage: "Tôi vừa tìm thấy một quán ăn ngon ở Hội An, để tôi gửi địa chỉ cho bạn.",
+    lastMessage:
+      "Tôi vừa tìm thấy một quán ăn ngon ở Hội An, để tôi gửi địa chỉ cho bạn.",
     time: "23/04",
     unread: 0,
     isOnline: true,
+    isGroup: false,
   },
   {
     id: "8",
     name: "Hà",
     avatar: "https://randomuser.me/api/portraits/women/68.jpg",
-    lastMessage: "Chuyến đi Sapa tháng trước thật tuyệt vời! Cảm ơn bạn đã tổ chức.",
+    lastMessage:
+      "Chuyến đi Sapa tháng trước thật tuyệt vời! Cảm ơn bạn đã tổ chức.",
     time: "20/04",
     unread: 0,
     isOnline: false,
+    isGroup: false,
   },
-]
+];
 
 export default function MessagingInboxScreen() {
-  const [searchQuery, setSearchQuery] = useState("")
-  const [showSearch, setShowSearch] = useState(false)
-  const router = useRouter()
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showSearch, setShowSearch] = useState(false);
+  const [showCreateGroup, setShowCreateGroup] = useState(false);
+  const [selectedUsers, setSelectedUsers] = useState([]);
+  const [groupName, setGroupName] = useState("");
+  const router = useRouter();
 
+  const goBack = () => {
+    router.back();
+  };
   const filteredConversations = CONVERSATIONS.filter((conversation) =>
-    conversation.name.toLowerCase().includes(searchQuery.toLowerCase()),
-  )
+    conversation.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const navigateToChat = (conversationId) => {
-    router.push(`/chat?id=${conversationId}`)
-  }
+    console.log("Navigating to chat with ID:", conversationId);
+    router.push(`/message_detail?id=${conversationId}`);
+  };
+
+  const toggleUserSelection = (user) => {
+    if (selectedUsers.some((selected) => selected.id === user.id)) {
+      setSelectedUsers(
+        selectedUsers.filter((selected) => selected.id !== user.id)
+      );
+    } else {
+      setSelectedUsers([...selectedUsers, user]);
+    }
+  };
+
+  const createGroup = () => {
+    if (groupName.trim() && selectedUsers.length >= 2) {
+      // Trong ứng dụng thực tế, bạn sẽ gọi API để tạo nhóm
+      console.log("Tạo nhóm:", {
+        name: groupName,
+        members: selectedUsers,
+      });
+
+      // Đóng modal và reset state
+      setShowCreateGroup(false);
+      setSelectedUsers([]);
+      setGroupName("");
+
+      // Giả lập chuyển hướng đến nhóm mới
+      setTimeout(() => {
+        alert("Đã tạo nhóm thành công!");
+      }, 500);
+    }
+  };
 
   const renderConversation = ({ item }) => (
-    <TouchableOpacity style={styles.conversationItem} onPress={() => navigateToChat(item.id)}>
+    <TouchableOpacity
+      style={styles.conversationItem}
+      onPress={() => navigateToChat(item.id)}
+    >
       <View style={styles.conversationAvatarContainer}>
-        <Image source={{ uri: item.avatar }} style={styles.conversationAvatar} />
-        {item.isOnline && <View style={styles.conversationOnlineIndicator} />}
+        {item.isGroup ? (
+          <View style={styles.groupAvatarContainer}>
+            <Image
+              source={{ uri: item.avatar }}
+              style={styles.conversationAvatar}
+            />
+            <View style={styles.groupIconBadge}>
+              <Ionicons name="people" size={12} color="#fff" />
+            </View>
+          </View>
+        ) : (
+          <>
+            <Image
+              source={{ uri: item.avatar }}
+              style={styles.conversationAvatar}
+            />
+            {item.isOnline && (
+              <View style={styles.conversationOnlineIndicator} />
+            )}
+          </>
+        )}
       </View>
 
       <View style={styles.conversationContent}>
         <View style={styles.conversationHeader}>
-          <Text style={[styles.conversationName, item.unread > 0 && styles.unreadName]} numberOfLines={1}>
+          <Text
+            style={[
+              styles.conversationName,
+              item.unread > 0 && styles.unreadName,
+            ]}
+            numberOfLines={1}
+          >
             {item.name}
           </Text>
-          <Text style={[styles.conversationTime, item.unread > 0 && styles.unreadTime]}>{item.time}</Text>
+          <Text
+            style={[
+              styles.conversationTime,
+              item.unread > 0 && styles.unreadTime,
+            ]}
+          >
+            {item.time}
+          </Text>
         </View>
 
         <View style={styles.conversationFooter}>
           <Text
-            style={[styles.conversationLastMessage, item.unread > 0 && styles.unreadMessage]}
+            style={[
+              styles.conversationLastMessage,
+              item.unread > 0 && styles.unreadMessage,
+            ]}
             numberOfLines={1}
             ellipsizeMode="tail"
           >
@@ -130,18 +271,51 @@ export default function MessagingInboxScreen() {
         {item.isGroup && (
           <View style={styles.groupMembersContainer}>
             {item.members.slice(0, 3).map((member, index) => (
-              <View key={index} style={[styles.groupMemberBadge, { marginLeft: index * -8 }]}>
+              <View
+                key={index}
+                style={[styles.groupMemberBadge, { marginLeft: index * -8 }]}
+              >
                 <Text style={styles.groupMemberText}>{member.charAt(0)}</Text>
               </View>
             ))}
             {item.members.length > 3 && (
-              <Text style={styles.groupMembersMore}>{item.members[item.members.length - 1]}</Text>
+              <Text style={styles.groupMembersMore}>
+                +{item.members.length - 3}
+              </Text>
             )}
           </View>
         )}
       </View>
     </TouchableOpacity>
-  )
+  );
+
+  const renderUserSelectionItem = ({ item }) => {
+    const isSelected = selectedUsers.some((user) => user.id === item.id);
+
+    return (
+      <TouchableOpacity
+        style={[
+          styles.userSelectionItem,
+          isSelected && styles.userSelectionItemSelected,
+        ]}
+        onPress={() => toggleUserSelection(item)}
+      >
+        <Image
+          source={{ uri: item.avatar }}
+          style={styles.userSelectionAvatar}
+        />
+        <Text style={styles.userSelectionName}>{item.name}</Text>
+        <View
+          style={[
+            styles.checkboxContainer,
+            isSelected && styles.checkboxSelected,
+          ]}
+        >
+          {isSelected && <Ionicons name="checkmark" size={16} color="#fff" />}
+        </View>
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -150,19 +324,27 @@ export default function MessagingInboxScreen() {
       {/* Header */}
       {!showSearch ? (
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Tin nhắn</Text>
-          <View style={styles.headerActions}>
-            <TouchableOpacity style={styles.headerButton}>
-              <Ionicons name="create" size={24} color="#000" />
+          <View style={styles.headerInfo}>
+            <TouchableOpacity style={styles.backButton} onPress={goBack}>
+              <Ionicons name="arrow-back" size={24} color="#000" />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.headerButton} onPress={() => setShowSearch(true)}>
+            <Text style={styles.headerTitle}>Tin nhắn</Text>
+          </View>
+          <View style={styles.headerActions}>
+            <TouchableOpacity
+              style={styles.headerButton}
+              onPress={() => setShowSearch(true)}
+            >
               <Ionicons name="search" size={24} color="#000" />
             </TouchableOpacity>
           </View>
         </View>
       ) : (
         <View style={styles.searchHeader}>
-          <TouchableOpacity style={styles.searchBackButton} onPress={() => setShowSearch(false)}>
+          <TouchableOpacity
+            style={styles.searchBackButton}
+            onPress={() => setShowSearch(false)}
+          >
             <Ionicons name="arrow-back" size={24} color="#000" />
           </TouchableOpacity>
           <View style={styles.searchInputContainer}>
@@ -192,13 +374,99 @@ export default function MessagingInboxScreen() {
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Ionicons name="chatbubble-ellipses-outline" size={60} color="#ccc" />
+            <Ionicons
+              name="chatbubble-ellipses-outline"
+              size={60}
+              color="#ccc"
+            />
             <Text style={styles.emptyText}>Không tìm thấy cuộc trò chuyện</Text>
           </View>
         }
       />
 
-    </SafeAreaView>
-  )
-}
+      {/*Create Group Buttons */}
+      <View style={styles.floatingButtonsContainer}>
+        <TouchableOpacity
+          style={styles.createGroupButton}
+          onPress={() => setShowCreateGroup(true)}
+        >
+          <Ionicons name="people" size={24} color="#fff" />
+        </TouchableOpacity>
+      </View>
 
+      {/* Create Group Modal */}
+      <Modal
+        visible={showCreateGroup}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowCreateGroup(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Tạo nhóm chat mới</Text>
+              <TouchableOpacity onPress={() => setShowCreateGroup(false)}>
+                <Ionicons name="close" size={24} color="#000" />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.groupNameContainer}>
+              <Text style={styles.groupNameLabel}>Tên nhóm</Text>
+              <TextInput
+                style={styles.groupNameInput}
+                placeholder="Nhập tên nhóm..."
+                value={groupName}
+                onChangeText={setGroupName}
+              />
+            </View>
+
+            <View style={styles.selectedUsersContainer}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                {selectedUsers.map((user) => (
+                  <View key={user.id} style={styles.selectedUserItem}>
+                    <Image
+                      source={{ uri: user.avatar }}
+                      style={styles.selectedUserAvatar}
+                    />
+                    <Text style={styles.selectedUserName} numberOfLines={1}>
+                      {user.name}
+                    </Text>
+                    <TouchableOpacity
+                      style={styles.removeUserButton}
+                      onPress={() => toggleUserSelection(user)}
+                    >
+                      <Ionicons name="close-circle" size={18} color="#fff" />
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </ScrollView>
+            </View>
+
+            <Text style={styles.selectMembersTitle}>
+              Chọn thành viên ({selectedUsers.length})
+            </Text>
+
+            <FlatList
+              data={ACTIVE_USERS}
+              renderItem={renderUserSelectionItem}
+              keyExtractor={(item) => item.id}
+              style={styles.userSelectionList}
+            />
+
+            <TouchableOpacity
+              style={[
+                styles.createGroupConfirmButton,
+                (!groupName.trim() || selectedUsers.length < 2) &&
+                  styles.createGroupButtonDisabled,
+              ]}
+              onPress={createGroup}
+              disabled={!groupName.trim() || selectedUsers.length < 2}
+            >
+              <Text style={styles.createGroupButtonText}>Tạo nhóm</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    </SafeAreaView>
+  );
+}
