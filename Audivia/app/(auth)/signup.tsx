@@ -35,7 +35,7 @@ export default function Signup() {
     try {
       const response = await register(username, email, password)
       if(response.success){
-        router.push("/signup-success")
+        router.push("/signup_success")
       }else {
         setMessage(response.message)
       }

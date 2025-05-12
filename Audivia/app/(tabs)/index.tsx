@@ -9,6 +9,7 @@ import { getTourTypes } from "@/services/tour_type"
 import { useUser } from "@/hooks/useUser"
 import { router } from "expo-router"
 import GoogleMapView from "@/components/GoogleMapView"
+import { navigate } from "expo-router/build/global-state/routing"
 
 
 const carouselImages = [
@@ -67,6 +68,9 @@ export default function Index() {
         <Text style={styles.title}>Trang chủ</Text>
         <View style={styles.headerIcons}>
           <Ionicons name="notifications-outline" size={22} color={COLORS.dark} style={styles.icon} />
+          <TouchableOpacity onPress={() => router.push('/(screens)/message_inbox')}>
+            <Ionicons name="chatbubble-ellipses-outline" size={22} color={COLORS.dark} style={styles.icon} />
+          </TouchableOpacity>
           <View style={styles.avatarWrapper}>
             {user?.avatarUrl ? (
               <Image

@@ -1,43 +1,58 @@
-import { useEffect, useState } from "react"
-import { Image, Text, TouchableOpacity, View, FlatList, TextInput } from "react-native"
-import { Ionicons, AntDesign } from "@expo/vector-icons"
-import { COLORS } from "@/constants/theme"
-import { styles } from "@/styles/forum.styles"
-import { useUser } from "@/hooks/useUser"
-import { getAllPosts } from "@/services/post"
-import { router } from "expo-router"
+import { useEffect, useState } from "react";
+import {
+  Image,
+  Text,
+  TouchableOpacity,
+  View,
+  FlatList,
+  TextInput,
+} from "react-native";
+import { Ionicons, AntDesign } from "@expo/vector-icons";
+import { COLORS } from "@/constants/theme";
+import { styles } from "@/styles/forum.styles";
+import { useUser } from "@/hooks/useUser";
+import { getAllPosts } from "@/services/post";
+import { router } from "expo-router";
 
 export default function ForumScreen() {
-  const [activeTab, setActiveTab] = useState("Popular")
-  const [posts, setPosts] = useState([])
-  const {user} = useUser()
+  const [activeTab, setActiveTab] = useState("Popular");
+  const [posts, setPosts] = useState([]);
+  const { user } = useUser();
 
   useEffect(() => {
     getAllPosts().then((res) => {
-      setPosts(res.response)
-    })
-  },[])
+      setPosts(res.response);
+    });
+  }, []);
 
   const navigateToProfile = (userId: string) => {
     router.push({
       pathname: "/profile",
-      params: { userId }
-    })
-  }
+      params: { userId },
+    });
+  };
 
   const renderPost = ({ item }: { item: any }) => (
     <View style={styles.postContainer}>
       {/* Post Header */}
       <View style={styles.postHeader}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.userInfo}
           onPress={() => navigateToProfile(item.user.id)}
         >
-        {item.user.avatarUrl ? (
-      <Image source={{uri: item.user.avatarUrl}} style={styles.avatar}  />
-    ) : (
-      <Ionicons name="person-circle-outline" style={styles.avatar} size={44}  color={COLORS.primary} />
-    )}
+          {item.user.avatarUrl ? (
+            <Image
+              source={{ uri: item.user.avatarUrl }}
+              style={styles.avatar}
+            />
+          ) : (
+            <Ionicons
+              name="person-circle-outline"
+              style={styles.avatar}
+              size={44}
+              color={COLORS.primary}
+            />
+          )}
           <View>
             <Text style={styles.userName}>{item.user.userName}</Text>
             <Text style={styles.location}>{item.location}</Text>
@@ -50,7 +65,11 @@ export default function ForumScreen() {
 
       {/* Post Image */}
       <View style={styles.postImageContainer}>
-        <Image source={{ uri: item.images[0] }} style={styles.postImage} resizeMode="cover" />
+        <Image
+          source={{ uri: item.images[0] }}
+          style={styles.postImage}
+          resizeMode="cover"
+        />
       </View>
 
       {/* Post Actions */}
@@ -63,7 +82,6 @@ export default function ForumScreen() {
             <Ionicons name="chatbubble-outline" size={22} color={COLORS.dark} />
           </TouchableOpacity>
         </View>
-     
       </View>
 
       {/* Post Stats */}
@@ -74,14 +92,14 @@ export default function ForumScreen() {
 
       {/* Post Content */}
       <View style={styles.postContent}>
-        <Text style={styles.postText}>
-          {item.content}
-        </Text>
+        <Text style={styles.postText}>{item.content}</Text>
       </View>
 
       {/* Comments */}
       <TouchableOpacity style={styles.commentsLink}>
-        <Text style={styles.commentsText}>Xem tất cả {item.comments} bình luận</Text>
+        <Text style={styles.commentsText}>
+          Xem tất cả {item.comments} bình luận
+        </Text>
       </TouchableOpacity>
 
       {/* Time */}
@@ -89,17 +107,18 @@ export default function ForumScreen() {
 
       {/* Comment Input */}
       <View style={styles.commentInputContainer}>
-        <Image
-          source={{uri: user?.avatarUrl}}
-          style={styles.commentAvatar}
+        <Image source={{ uri: user?.avatarUrl }} style={styles.commentAvatar} />
+        <TextInput
+          style={styles.commentInput}
+          placeholder="Thêm bình luận..."
+          placeholderTextColor={COLORS.grey}
         />
-        <TextInput style={styles.commentInput} placeholder="Thêm bình luận..." placeholderTextColor={COLORS.grey} />
         <TouchableOpacity>
           <Text style={styles.postButton}>Đăng</Text>
         </TouchableOpacity>
       </View>
     </View>
-  )
+  );
 
   return (
     <View style={styles.container}>
@@ -107,18 +126,37 @@ export default function ForumScreen() {
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Diễn đàn</Text>
         <View style={styles.headerIcons}>
-            <Ionicons name="notifications-outline" size={22} color={COLORS.dark} style={styles.icon} />
-            <View style={styles.avatarWrapper}>
-  {user?.avatarUrl ? (
-    <Image
-      source={{ uri: user.avatarUrl }}
-      style={styles.avatarImage}
-      resizeMode="cover"
-    />
-  ) : (
-    <Ionicons name="person-circle-outline" size={22} color={COLORS.primary} />
-  )}
-            </View>
+          <Ionicons
+            name="notifications-outline"
+            size={22}
+            color={COLORS.dark}
+            style={styles.icon}
+          />
+          <TouchableOpacity
+            onPress={() => router.push("/(screens)/message_inbox")}
+          >
+            <Ionicons
+              name="chatbubble-ellipses-outline"
+              size={22}
+              color={COLORS.dark}
+              style={styles.icon}
+            />
+          </TouchableOpacity>
+          <View style={styles.avatarWrapper}>
+            {user?.avatarUrl ? (
+              <Image
+                source={{ uri: user.avatarUrl }}
+                style={styles.avatarImage}
+                resizeMode="cover"
+              />
+            ) : (
+              <Ionicons
+                name="person-circle-outline"
+                size={22}
+                color={COLORS.primary}
+              />
+            )}
+          </View>
         </View>
       </View>
 
@@ -128,13 +166,27 @@ export default function ForumScreen() {
           style={[styles.tab, activeTab === "Following" && styles.activeTab]}
           onPress={() => setActiveTab("Following")}
         >
-          <Text style={[styles.tabText, activeTab === "Following" && styles.activeTabText]}>Theo dõi</Text>
+          <Text
+            style={[
+              styles.tabText,
+              activeTab === "Following" && styles.activeTabText,
+            ]}
+          >
+            Theo dõi
+          </Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.tab, activeTab === "Popular" && styles.activeTab]}
           onPress={() => setActiveTab("Popular")}
         >
-          <Text style={[styles.tabText, activeTab === "Popular" && styles.activeTabText]}>Đề xuất</Text>
+          <Text
+            style={[
+              styles.tabText,
+              activeTab === "Popular" && styles.activeTabText,
+            ]}
+          >
+            Đề xuất
+          </Text>
         </TouchableOpacity>
       </View>
 
@@ -146,5 +198,5 @@ export default function ForumScreen() {
         showsVerticalScrollIndicator={false}
       />
     </View>
-  )
+  );
 }
