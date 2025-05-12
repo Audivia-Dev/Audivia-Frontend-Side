@@ -20,7 +20,7 @@ import { updateUserInfo, getUserInfo } from "@/services/user"
 import { createPost, getPostByUserId, updatePost, deletePost } from "@/services/post"
 import { Post, User } from "@/models"
 import { PostModal } from "@/components/PostModal"
-import { createUserFollow } from "@/services/user_follow"
+import { createUserFollow, deleteUserFollow, getUserFollows } from "@/services/user_follow"
 
 export default function ProfileScreen() {
   const [activeTab, setActiveTab] = useState("posts")
@@ -38,25 +38,33 @@ export default function ProfileScreen() {
   const [profileUser, setProfileUser] = useState<User | undefined>(user)
   const [posts, setPosts] = useState<Post[]>([])
   const isOwnProfile = !params.userId || params.userId === user?.id
+  const [status, setStatus] = useState("")
 
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        if (params.userId) {
-          // Fetch other user's profile data
-          const response = await getUserInfo(params.userId as string)
-          setProfileUser(response.response)
-        } else {
-          setProfileUser(user)
-        }
-      } catch (error) {
-        console.error('Error fetching user data:', error)
-        Alert.alert('Lỗi', 'Không thể tải thông tin người dùng')
+  const fetchUserData = async () => {
+    try {
+      if (params.userId && user?.id) {
+        // Fetch other user's profile data
+        const userFollowStatus = await getUserFollows(user.id, params.userId as string);
+        setStatus(userFollowStatus.followStatusString);
+
+        const response = await getUserInfo(params.userId as string);
+        setProfileUser(response.response);
+
+      } else if (user) {
+        setProfileUser(user);
       }
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      Alert.alert('Lỗi', 'Không thể tải thông tin người dùng. Vui lòng thử lại.');
     }
+  };
 
-    fetchUserData()
-  }, [params.userId, user])
+  // Ensure user and params.userId are ready before calling fetchUserData
+  useEffect(() => {
+    if (user && (isOwnProfile || params.userId)) {
+      fetchUserData();
+    }
+  }, [params.userId, user]);
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -73,9 +81,38 @@ export default function ProfileScreen() {
 
     fetchPosts()
   }, [profileUser?.id])
-  const handleCreateUserFollow = async() => {
-    await createUserFollow(user?.id, params.userId)
-  }
+
+  const handleCreateUserFollow = async () => {
+    try {
+      await createUserFollow(user?.id, params.userId);
+      setStatus((prevStatus) => {
+        if (prevStatus === "NotFollowing") {
+          return "Following";
+        } else if (prevStatus === "Following") {
+          return "Friends";
+        } else {
+          return prevStatus;
+        }
+      })
+    } catch (error) {
+      console.error("Error creating follow:", error);
+      Alert.alert("Lỗi", "Không thể theo dõi người dùng. Vui lòng thử lại.");
+    }
+  };
+
+  const handleDeleteUserFollow = async () => {
+    try {
+      await deleteUserFollow(user?.id, params.userId);
+      if(status === "Friends") {
+        setStatus("NotFollowing")
+      }else if(status === "Following") {
+        setStatus("NotFollowing")
+      }
+    } catch (error) {
+      console.error("Error deleting follow:", error);
+      Alert.alert("Lỗi", "Không thể hủy theo dõi người dùng. Vui lòng thử lại.");
+    }
+  };
 
   const handleCreatePost = () => {
     setEditingPost(null)
@@ -398,10 +435,23 @@ export default function ProfileScreen() {
             </View>
           ) : (
             <View style={styles.profileActions}>
-              <TouchableOpacity style={[styles.profileActionButton, styles.primaryActionButton]} onPress={handleCreateUserFollow}>
-                <Ionicons name="person-add-outline" size={20} color="#fff" />
-                <Text style={styles.primaryActionText}>Theo dõi</Text>
+              {status === "Friends" ? (
+                <TouchableOpacity style={[styles.profileActionButton, styles.primaryActionButton]} onPress={handleDeleteUserFollow}>
+                <Ionicons name="checkmark-circle-outline" size={20} color="#fff" />
+                <Text style={styles.primaryActionText}>Bạn bè</Text>
               </TouchableOpacity>
+              ): status === "Following" ? (
+                <TouchableOpacity style={[styles.profileActionButton, styles.primaryActionButton]} onPress={handleDeleteUserFollow}>
+                <Ionicons name="checkmark-outline" size={20} color="#fff" />
+                <Text style={styles.primaryActionText}>Đang theo dõi</Text>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity style={[styles.profileActionButton, styles.primaryActionButton]} onPress={handleCreateUserFollow}>
+                  <Ionicons name="person-add-outline" size={20} color="#fff" />
+                  <Text style={styles.primaryActionText}>Thêm bạn</Text>
+                </TouchableOpacity>
+              )
+              }
               <TouchableOpacity style={[styles.profileActionButton, styles.secondaryActionButton]}>
                 <Ionicons name="chatbubble-outline" size={20} color={COLORS.primary} />
                 <Text style={[styles.secondaryActionText, { color: COLORS.primary }]}>Nhắn tin</Text>

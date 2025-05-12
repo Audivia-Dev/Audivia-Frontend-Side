@@ -11,14 +11,21 @@ export const createUserFollow = async (followerId: string, followingId: string )
         throw error
     }
 }
-
-export const deleteUserFollow = async (id: string) => {
+export const getUserFollows = async (currentUserId: string, targetUserId: string ) => {
     try {
-        await apiClient.delete(`/user-follows/${id}`)
+        const response = await apiClient.get(`/user-follows/status?CurrentUserId=${currentUserId}&TargetUserId=${targetUserId}`)
+        console.log('Danh sách bạn bè:', response.data)
+        return response.data
+        } catch (error) {
+            console.error('Lỗi lấy danh sách bạn bè:', error)
+            throw error
+        }
+}
+export const deleteUserFollow = async (followerId: string, followingId: string) => {
+    try {
+        await apiClient.delete(`/user-follows?FollowerId=${followerId}&FollowingId=${followingId}`)
     } catch (error: any) {
         console.error('Lỗi xóa thêm bạn:', error.response?.data || error.message)
         throw error
     }
 }
-
-  
