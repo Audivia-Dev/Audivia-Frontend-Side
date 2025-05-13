@@ -8,8 +8,8 @@ import { Tour, TourType } from "@/models"
 import { getTourTypes } from "@/services/tour_type"
 import { useUser } from "@/hooks/useUser"
 import { router } from "expo-router"
-import GoogleMapView from "@/components/GoogleMapView"
 import { navigate } from "expo-router/build/global-state/routing"
+import UserLocationMap from "@/components/UserLocationMap"
 
 
 const carouselImages = [
@@ -157,7 +157,9 @@ export default function Index() {
         </View>
 
          {/* Google Map View */}
-      <GoogleMapView />
+         <View style={{ alignItems: 'center', width: '100%' }}>
+           <UserLocationMap width={Dimensions.get('window').width - 40} />
+         </View>
 
         {/* Suggested Tours */}
         <View style={styles.toursSection}>

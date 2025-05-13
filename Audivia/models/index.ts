@@ -45,6 +45,7 @@ export interface User {
   coverPhoto: string;
   followers: string;
   following: string;
+  friends: string;
   audioCharacterId: string;
   audioCharacterName: string;
   travelDistance: string;

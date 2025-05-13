@@ -30,13 +30,6 @@ const ACTIVE_USERS = [
     isOnline: true,
   },
   {
-    id: "3",
-    name: "Audy",
-    avatar: "https://cdn-icons-png.flaticon.com/512/5229/5229537.png",
-    isOnline: true,
-    isBot: true,
-  },
-  {
     id: "4",
     name: "Lan",
     avatar: "https://randomuser.me/api/portraits/women/44.jpg",
@@ -59,18 +52,6 @@ const ACTIVE_USERS = [
 // Dữ liệu mẫu cho các cuộc trò chuyện
 const CONVERSATIONS = [
   {
-    id: "1",
-    name: "Audy - Trợ lý du lịch",
-    avatar: "https://cdn-icons-png.flaticon.com/512/5229/5229537.png",
-    lastMessage:
-      "Tôi có thể giúp bạn đặt tour này cho ngày mai. Vui lòng cho tôi biết thời gian bạn muốn bắt đầu tour và số người tham gia.",
-    time: "10:36",
-    unread: 1,
-    isOnline: true,
-    isBot: true,
-    isGroup: false,
-  },
-  {
     id: "2",
     name: "Nhóm Tour Huế",
     avatar:
@@ -83,67 +64,12 @@ const CONVERSATIONS = [
     members: ["Hương", "Minh", "Lan", "Tuấn", "Hà", "Bình"],
   },
   {
-    id: "3",
-    name: "Minh",
-    avatar: "https://randomuser.me/api/portraits/men/45.jpg",
-    lastMessage:
-      "Tôi đã đặt vé máy bay rồi. Chúng ta sẽ gặp nhau ở sân bay lúc 7h sáng nhé!",
-    time: "Hôm qua",
-    unread: 0,
-    isOnline: true,
-    isGroup: false,
-  },
-  {
     id: "4",
     name: "Lan",
     avatar: "https://randomuser.me/api/portraits/women/44.jpg",
     lastMessage:
       "Cảm ơn bạn đã chia sẻ thông tin về tour Hội An. Tôi rất thích những bức ảnh bạn đã gửi.",
     time: "Hôm qua",
-    unread: 0,
-    isOnline: false,
-    isGroup: false,
-  },
-  {
-    id: "5",
-    name: "Nhóm Phượt Đà Lạt",
-    avatar:
-      "https://images.unsplash.com/photo-1589308078059-be1415eab4c3?q=80&w=1000&auto=format&fit=crop",
-    lastMessage:
-      "Tuấn: Dự báo thời tiết cuối tuần này ở Đà Lạt sẽ mưa nhẹ, mọi người nhớ mang áo mưa nhé!",
-    time: "Thứ Tư",
-    unread: 0,
-    isGroup: true,
-    members: ["Tuấn", "Hà", "Minh", "Hương", "Lan", "Bình", "Nam", "Thảo"],
-  },
-  {
-    id: "6",
-    name: "Hương",
-    avatar: "https://randomuser.me/api/portraits/women/32.jpg",
-    lastMessage: "Bạn đã xem review về khách sạn ở Nha Trang mà tôi gửi chưa?",
-    time: "Thứ Ba",
-    unread: 0,
-    isOnline: true,
-    isGroup: false,
-  },
-  {
-    id: "7",
-    name: "Tuấn",
-    avatar: "https://randomuser.me/api/portraits/men/32.jpg",
-    lastMessage:
-      "Tôi vừa tìm thấy một quán ăn ngon ở Hội An, để tôi gửi địa chỉ cho bạn.",
-    time: "23/04",
-    unread: 0,
-    isOnline: true,
-    isGroup: false,
-  },
-  {
-    id: "8",
-    name: "Hà",
-    avatar: "https://randomuser.me/api/portraits/women/68.jpg",
-    lastMessage:
-      "Chuyến đi Sapa tháng trước thật tuyệt vời! Cảm ơn bạn đã tổ chức.",
-    time: "20/04",
     unread: 0,
     isOnline: false,
     isGroup: false,
@@ -165,12 +91,12 @@ export default function MessagingInboxScreen() {
     conversation.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const navigateToChat = (conversationId) => {
+  const navigateToChat = (conversationId: string) => {
     console.log("Navigating to chat with ID:", conversationId);
     router.push(`/message_detail?id=${conversationId}`);
   };
 
-  const toggleUserSelection = (user) => {
+  const toggleUserSelection = (user: any) => {
     if (selectedUsers.some((selected) => selected.id === user.id)) {
       setSelectedUsers(
         selectedUsers.filter((selected) => selected.id !== user.id)
@@ -182,25 +108,22 @@ export default function MessagingInboxScreen() {
 
   const createGroup = () => {
     if (groupName.trim() && selectedUsers.length >= 2) {
-      // Trong ứng dụng thực tế, bạn sẽ gọi API để tạo nhóm
       console.log("Tạo nhóm:", {
         name: groupName,
         members: selectedUsers,
       });
 
-      // Đóng modal và reset state
       setShowCreateGroup(false);
       setSelectedUsers([]);
       setGroupName("");
 
-      // Giả lập chuyển hướng đến nhóm mới
       setTimeout(() => {
         alert("Đã tạo nhóm thành công!");
       }, 500);
     }
   };
 
-  const renderConversation = ({ item }) => (
+  const renderConversation = ({ item }: { item: any }) => (
     <TouchableOpacity
       style={styles.conversationItem}
       onPress={() => navigateToChat(item.id)}
@@ -270,7 +193,7 @@ export default function MessagingInboxScreen() {
 
         {item.isGroup && (
           <View style={styles.groupMembersContainer}>
-            {item.members.slice(0, 3).map((member, index) => (
+            {item.members.slice(0, 3).map((member: any, index: number) => (
               <View
                 key={index}
                 style={[styles.groupMemberBadge, { marginLeft: index * -8 }]}
@@ -289,7 +212,7 @@ export default function MessagingInboxScreen() {
     </TouchableOpacity>
   );
 
-  const renderUserSelectionItem = ({ item }) => {
+  const renderUserSelectionItem = ({ item }: { item: any }) => {
     const isSelected = selectedUsers.some((user) => user.id === item.id);
 
     return (

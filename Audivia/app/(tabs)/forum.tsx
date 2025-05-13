@@ -20,7 +20,7 @@ export default function ForumScreen() {
   const { user } = useUser();
 
   useEffect(() => {
-    getAllPosts().then((res) => {
+    getAllPosts().then((res: any) => {
       setPosts(res.response);
     });
   }, []);

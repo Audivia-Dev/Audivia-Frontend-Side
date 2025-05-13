@@ -21,6 +21,16 @@ export const getUserFollows = async (currentUserId: string, targetUserId: string
             throw error
         }
 }
+export const getUserFriends = async (userId: string) => {
+    try {
+        const response = await apiClient.get(`/user-follows/friends?userId=${userId}`)
+        console.log('Danh sách bạn bè:', response.data)
+        return response.data
+    } catch (error) {
+        console.error('Lỗi lấy danh sách bạn bè:', error)
+        throw error
+    }
+}
 export const deleteUserFollow = async (followerId: string, followingId: string) => {
     try {
         await apiClient.delete(`/user-follows?FollowerId=${followerId}&FollowingId=${followingId}`)

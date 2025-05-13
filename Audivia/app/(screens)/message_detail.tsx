@@ -16,7 +16,6 @@ import { useRouter } from "expo-router"
 import { COLORS } from "@/constants/theme"
 import { styles } from "@/styles/chatbox.styles"
 
-// Sample data for personal chat messages
 const MESSAGES = [
   {
     id: "1",

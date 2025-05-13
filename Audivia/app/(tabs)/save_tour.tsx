@@ -122,6 +122,9 @@ export default function SavedToursScreen() {
         <Text style={styles.headerTitle}>Tour Yêu Thích</Text>
         <View style={styles.headerIcons}>
             <Ionicons name="notifications-outline" size={22} color={COLORS.dark} style={styles.icon} />
+            <TouchableOpacity onPress={() => router.push('/(screens)/message_inbox')}>
+            <Ionicons name="chatbubble-ellipses-outline" size={22} color={COLORS.dark} style={styles.icon} />
+          </TouchableOpacity>
             <View style={styles.avatarWrapper}>
   {user?.avatarUrl ? (
     <Image
