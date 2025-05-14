@@ -1,10 +1,5 @@
-import { useState, useRef, useEffect } from "react"
+import React, { useState, useRef, useEffect } from "react"
 import {
-  View,
-  Text,
-  Image,
-  TouchableOpacity,
-  TextInput,
   FlatList,
   SafeAreaView,
   KeyboardAvoidingView,
@@ -15,6 +10,10 @@ import { Ionicons } from "@expo/vector-icons"
 import { useRouter } from "expo-router"
 import { COLORS } from "@/constants/theme"
 import { styles } from "@/styles/chatbox.styles"
+import { ChatHeader } from "@/components/message/ChatHeader"
+import { MessageBubble } from "@/components/message/MessageBubble"
+import { TypingIndicator } from "@/components/message/TypingIndicator"
+import { ChatInput } from "@/components/message/ChatInput"
 
 const MESSAGES = [
   {
@@ -181,143 +180,47 @@ export default function MessageDetailScreen() {
     }
   }
 
-  const renderMessage = ({ item }: { item: any }) => {
-    const isCurrentUser = item.senderId === currentUserId
-    
-    return (
-      <Animated.View
-        style={[
-          styles.messageContainer,
-          isCurrentUser ? styles.userMessageContainer : styles.friendMessageContainer,
-          item.isNew && { opacity: 1, transform: [{ translateY: 0 }] },
-        ]}
-      >
-        {!isCurrentUser && (
-          <Image 
-            source={item.senderAvatar || require("@/assets/images/avatar.jpg")} 
-            style={styles.friendAvatar} 
-          />
-        )}
-        <View 
-          style={[
-            styles.messageBubble, 
-            isCurrentUser ? styles.userMessageBubble : styles.friendMessageBubble
-          ]}
-        >
-          {CHAT_DETAILS.isGroup && !isCurrentUser && (
-            <Text style={styles.messageSender}>{item.senderName}</Text>
-          )}
-          <Text style={styles.messageText}>{item.text}</Text>
-          <Text style={styles.messageTime}>{item.time}</Text>
-        </View>
-      </Animated.View>
-    )
-  }
-
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={goBack}>
-          <Ionicons name="arrow-back" size={24} color="#000" />
-        </TouchableOpacity>
-        <View style={styles.headerInfo}>
-          <Image
-            source={CHAT_DETAILS.avatar}
-            style={styles.headerAvatar}
-          />
-          <View>
-            <Text style={styles.headerName}>{CHAT_DETAILS.name}</Text>
-          </View>
-        </View>
-      </View>
+      <ChatHeader
+        avatar={CHAT_DETAILS.avatar}
+        name={CHAT_DETAILS.name}
+        isOnline={CHAT_DETAILS.isOnline}
+        lastSeen={CHAT_DETAILS.lastSeen}
+        onBack={goBack}
+      />
 
-      {/* Chat Messages */}
       <FlatList
         ref={flatListRef}
         data={messages}
-        renderItem={renderMessage}
+        renderItem={({ item }) => (
+          <MessageBubble
+            message={item}
+            isCurrentUser={item.senderId === currentUserId}
+            isGroupChat={CHAT_DETAILS.isGroup}
+          />
+        )}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.messagesContainer}
         showsVerticalScrollIndicator={false}
       />
 
-      {/* Typing Indicator */}
       {isTyping && (
-        <View style={styles.typingContainer}>
-          <Image
-            source={CHAT_DETAILS.avatar}
-            style={styles.typingAvatar}
-          />
-          <View style={styles.typingBubble}>
-            <Animated.View
-              style={[
-                styles.typingDot,
-                {
-                  opacity: typingAnimation.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [0.3, 1],
-                  }),
-                },
-              ]}
-            />
-            <Animated.View
-              style={[
-                styles.typingDot,
-                {
-                  opacity: typingAnimation.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [0.5, 1],
-                  }),
-                },
-              ]}
-            />
-            <Animated.View
-              style={[
-                styles.typingDot,
-                {
-                  opacity: typingAnimation.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [0.7, 1],
-                  }),
-                },
-              ]}
-            />
-          </View>
-        </View>
+        <TypingIndicator
+          avatar={CHAT_DETAILS.avatar}
+          animation={typingAnimation}
+        />
       )}
 
-      {/* Input Area */}
       <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={100}
-        style={styles.inputContainer}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
       >
-        <TouchableOpacity style={styles.attachButton}>
-          <Ionicons name="add-circle-outline" size={24} color={COLORS.primary} />
-        </TouchableOpacity>
-        <View style={styles.inputWrapper}>
-          <TextInput
-            style={styles.input}
-            placeholder="Nhập tin nhắn..."
-            value={inputText}
-            onChangeText={setInputText}
-            multiline
-          />
-          <TouchableOpacity style={styles.emojiButton}>
-            <Ionicons name="happy-outline" size={24} color="#666" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.cameraButton}>
-            <Ionicons name="camera-outline" size={24} color="#666" />
-          </TouchableOpacity>
-        </View>
-        <TouchableOpacity
-          style={[styles.sendButton, inputText.trim() ? styles.sendButtonActive : {}]}
-          onPress={sendMessage}
-          disabled={!inputText.trim()}
-        >
-          <Ionicons name="send" size={20} color={inputText.trim() ? "#fff" : "#999"} />
-        </TouchableOpacity>
+        <ChatInput
+          value={inputText}
+          onChangeText={setInputText}
+          onSend={sendMessage}
+        />
       </KeyboardAvoidingView>
     </SafeAreaView>
   )

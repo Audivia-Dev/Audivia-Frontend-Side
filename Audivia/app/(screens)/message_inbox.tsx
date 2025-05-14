@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -14,6 +14,10 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import styles from "@/styles/message_inbox";
+import { Header } from "@/components/message/Header";
+import { Search } from "@/components/message/Search";
+import { ConversationItem } from "@/components/message/ConversationItem";
+import { CreateGroupModal } from "@/components/message/CreateGroupModal";
 
 // Dữ liệu mẫu cho người dùng đang hoạt động
 const ACTIVE_USERS = [
@@ -80,13 +84,14 @@ export default function MessagingInboxScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearch, setShowSearch] = useState(false);
   const [showCreateGroup, setShowCreateGroup] = useState(false);
-  const [selectedUsers, setSelectedUsers] = useState([]);
+  const [selectedUsers, setSelectedUsers] = useState<any[]>([]);
   const [groupName, setGroupName] = useState("");
   const router = useRouter();
 
   const goBack = () => {
     router.back();
   };
+
   const filteredConversations = CONVERSATIONS.filter((conversation) =>
     conversation.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -123,175 +128,25 @@ export default function MessagingInboxScreen() {
     }
   };
 
-  const renderConversation = ({ item }: { item: any }) => (
-    <TouchableOpacity
-      style={styles.conversationItem}
-      onPress={() => navigateToChat(item.id)}
-    >
-      <View style={styles.conversationAvatarContainer}>
-        {item.isGroup ? (
-          <View style={styles.groupAvatarContainer}>
-            <Image
-              source={{ uri: item.avatar }}
-              style={styles.conversationAvatar}
-            />
-            <View style={styles.groupIconBadge}>
-              <Ionicons name="people" size={12} color="#fff" />
-            </View>
-          </View>
-        ) : (
-          <>
-            <Image
-              source={{ uri: item.avatar }}
-              style={styles.conversationAvatar}
-            />
-            {item.isOnline && (
-              <View style={styles.conversationOnlineIndicator} />
-            )}
-          </>
-        )}
-      </View>
-
-      <View style={styles.conversationContent}>
-        <View style={styles.conversationHeader}>
-          <Text
-            style={[
-              styles.conversationName,
-              item.unread > 0 && styles.unreadName,
-            ]}
-            numberOfLines={1}
-          >
-            {item.name}
-          </Text>
-          <Text
-            style={[
-              styles.conversationTime,
-              item.unread > 0 && styles.unreadTime,
-            ]}
-          >
-            {item.time}
-          </Text>
-        </View>
-
-        <View style={styles.conversationFooter}>
-          <Text
-            style={[
-              styles.conversationLastMessage,
-              item.unread > 0 && styles.unreadMessage,
-            ]}
-            numberOfLines={1}
-            ellipsizeMode="tail"
-          >
-            {item.lastMessage}
-          </Text>
-          {item.unread > 0 && (
-            <View style={styles.unreadBadge}>
-              <Text style={styles.unreadBadgeText}>{item.unread}</Text>
-            </View>
-          )}
-        </View>
-
-        {item.isGroup && (
-          <View style={styles.groupMembersContainer}>
-            {item.members.slice(0, 3).map((member: any, index: number) => (
-              <View
-                key={index}
-                style={[styles.groupMemberBadge, { marginLeft: index * -8 }]}
-              >
-                <Text style={styles.groupMemberText}>{member.charAt(0)}</Text>
-              </View>
-            ))}
-            {item.members.length > 3 && (
-              <Text style={styles.groupMembersMore}>
-                +{item.members.length - 3}
-              </Text>
-            )}
-          </View>
-        )}
-      </View>
-    </TouchableOpacity>
-  );
-
-  const renderUserSelectionItem = ({ item }: { item: any }) => {
-    const isSelected = selectedUsers.some((user) => user.id === item.id);
-
-    return (
-      <TouchableOpacity
-        style={[
-          styles.userSelectionItem,
-          isSelected && styles.userSelectionItemSelected,
-        ]}
-        onPress={() => toggleUserSelection(item)}
-      >
-        <Image
-          source={{ uri: item.avatar }}
-          style={styles.userSelectionAvatar}
-        />
-        <Text style={styles.userSelectionName}>{item.name}</Text>
-        <View
-          style={[
-            styles.checkboxContainer,
-            isSelected && styles.checkboxSelected,
-          ]}
-        >
-          {isSelected && <Ionicons name="checkmark" size={16} color="#fff" />}
-        </View>
-      </TouchableOpacity>
-    );
-  };
-
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
 
-      {/* Header */}
       {!showSearch ? (
-        <View style={styles.header}>
-          <View style={styles.headerInfo}>
-            <TouchableOpacity style={styles.backButton} onPress={goBack}>
-              <Ionicons name="arrow-back" size={24} color="#000" />
-            </TouchableOpacity>
-            <Text style={styles.headerTitle}>Tin nhắn</Text>
-          </View>
-          <View style={styles.headerActions}>
-            <TouchableOpacity
-              style={styles.headerButton}
-              onPress={() => setShowSearch(true)}
-            >
-              <Ionicons name="search" size={24} color="#000" />
-            </TouchableOpacity>
-          </View>
-        </View>
+        <Header onBack={goBack} onSearch={() => setShowSearch(true)} />
       ) : (
-        <View style={styles.searchHeader}>
-          <TouchableOpacity
-            style={styles.searchBackButton}
-            onPress={() => setShowSearch(false)}
-          >
-            <Ionicons name="arrow-back" size={24} color="#000" />
-          </TouchableOpacity>
-          <View style={styles.searchInputContainer}>
-            <Ionicons name="search" size={20} color="#999" />
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Tìm kiếm tin nhắn..."
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              autoFocus
-            />
-            {searchQuery.length > 0 && (
-              <TouchableOpacity onPress={() => setSearchQuery("")}>
-                <Ionicons name="close-circle" size={20} color="#999" />
-              </TouchableOpacity>
-            )}
-          </View>
-        </View>
+        <Search
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          onBack={() => setShowSearch(false)}
+        />
       )}
 
-      {/* Conversations */}
       <FlatList
         data={filteredConversations}
-        renderItem={renderConversation}
+        renderItem={({ item }) => (
+          <ConversationItem item={item} onPress={navigateToChat} />
+        )}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.conversationsList}
         showsVerticalScrollIndicator={false}
@@ -307,7 +162,6 @@ export default function MessagingInboxScreen() {
         }
       />
 
-      {/*Create Group Buttons */}
       <View style={styles.floatingButtonsContainer}>
         <TouchableOpacity
           style={styles.createGroupButton}
@@ -317,79 +171,17 @@ export default function MessagingInboxScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Create Group Modal */}
-      <Modal
+      <CreateGroupModal
         visible={showCreateGroup}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setShowCreateGroup(false)}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Tạo nhóm chat mới</Text>
-              <TouchableOpacity onPress={() => setShowCreateGroup(false)}>
-                <Ionicons name="close" size={24} color="#000" />
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.groupNameContainer}>
-              <Text style={styles.groupNameLabel}>Tên nhóm</Text>
-              <TextInput
-                style={styles.groupNameInput}
-                placeholder="Nhập tên nhóm..."
-                value={groupName}
-                onChangeText={setGroupName}
-              />
-            </View>
-
-            <View style={styles.selectedUsersContainer}>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                {selectedUsers.map((user) => (
-                  <View key={user.id} style={styles.selectedUserItem}>
-                    <Image
-                      source={{ uri: user.avatar }}
-                      style={styles.selectedUserAvatar}
-                    />
-                    <Text style={styles.selectedUserName} numberOfLines={1}>
-                      {user.name}
-                    </Text>
-                    <TouchableOpacity
-                      style={styles.removeUserButton}
-                      onPress={() => toggleUserSelection(user)}
-                    >
-                      <Ionicons name="close-circle" size={18} color="#fff" />
-                    </TouchableOpacity>
-                  </View>
-                ))}
-              </ScrollView>
-            </View>
-
-            <Text style={styles.selectMembersTitle}>
-              Chọn thành viên ({selectedUsers.length})
-            </Text>
-
-            <FlatList
-              data={ACTIVE_USERS}
-              renderItem={renderUserSelectionItem}
-              keyExtractor={(item) => item.id}
-              style={styles.userSelectionList}
-            />
-
-            <TouchableOpacity
-              style={[
-                styles.createGroupConfirmButton,
-                (!groupName.trim() || selectedUsers.length < 2) &&
-                  styles.createGroupButtonDisabled,
-              ]}
-              onPress={createGroup}
-              disabled={!groupName.trim() || selectedUsers.length < 2}
-            >
-              <Text style={styles.createGroupButtonText}>Tạo nhóm</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+        onClose={() => setShowCreateGroup(false)}
+        groupName={groupName}
+        onGroupNameChange={setGroupName}
+        selectedUsers={selectedUsers}
+        onUserSelect={toggleUserSelection}
+        onUserRemove={toggleUserSelection}
+        activeUsers={ACTIVE_USERS}
+        onCreateGroup={createGroup}
+      />
     </SafeAreaView>
   );
 }

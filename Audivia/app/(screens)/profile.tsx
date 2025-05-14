@@ -1,19 +1,6 @@
 import { useEffect, useState } from "react"
-import {
-  View,
-  Text,
-  Image,
-  TouchableOpacity,
-  ScrollView,
-  SafeAreaView,
-  FlatList,
-  Modal,
-  Alert,
-} from "react-native"
-import { Ionicons } from "@expo/vector-icons"
-import { COLORS } from "@/constants/theme"
+import { View, SafeAreaView, FlatList, Alert } from "react-native"
 import { useRouter, useLocalSearchParams } from "expo-router"
-import styles from "@/styles/profile.styles"
 import { useUser } from "@/hooks/useUser"
 import * as ImagePicker from 'expo-image-picker'
 import { updateUserInfo, getUserInfo } from "@/services/user"
@@ -21,12 +8,18 @@ import { createPost, getPostByUserId, updatePost, deletePost } from "@/services/
 import { Post, User } from "@/models"
 import { PostModal } from "@/components/PostModal"
 import { createUserFollow, deleteUserFollow, getUserFollows, getUserFriends } from "@/services/user_follow"
+import { ProfileHeader } from "@/components/profile/ProfileHeader"
+import { ProfileCover } from "@/components/profile/ProfileCover"
+import { ProfileInfo } from "@/components/profile/ProfileInfo"
+import { ProfileTabs } from "@/components/profile/ProfileTabs"
+import { ProfileAbout } from "@/components/profile/ProfileAbout"
+import { ProfileFriends } from "@/components/profile/ProfileFriends"
+import { ProfilePosts } from "@/components/profile/ProfilePosts"
 
 export default function ProfileScreen() {
   const [activeTab, setActiveTab] = useState("posts")
   const [showAvatarModal, setShowAvatarModal] = useState(false)
   const [showPostModal, setShowPostModal] = useState(false)
-  const [showPostOptions, setShowPostOptions] = useState<string | null>(null)
   const [postContent, setPostContent] = useState("")
   const [postLocation, setPostLocation] = useState("")
   const [postImages, setPostImages] = useState<string[]>([])
@@ -44,14 +37,11 @@ export default function ProfileScreen() {
   const fetchUserData = async () => {
     try {
       if (params.userId && user?.id) {
-        // Fetch other user's profile data
         const userFollowStatus = await getUserFollows(user.id, params.userId as string);
         setStatus(userFollowStatus.followStatusString);
 
         const response = await getUserInfo(params.userId as string);
         setProfileUser(response.response);
-
-        
       } else if (user) {
         setProfileUser(user);
         const friendList = await getUserFriends(user?.id)
@@ -151,7 +141,6 @@ export default function ProfileScreen() {
             try {
               await deletePost(postId)
               setPosts(posts.filter((post: Post) => post.id !== postId))
-              setShowPostOptions(null)
             } catch (error) {
               Alert.alert('Lỗi', 'Không thể xóa bài viết. Vui lòng thử lại.')
             }
@@ -198,23 +187,6 @@ export default function ProfileScreen() {
     }
   };
 
-  const handlePickImage = async () => {
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [4, 3],
-        quality: 1,
-      })
-
-      if (!result.canceled) {
-        setPostImages([...postImages, result.assets[0].uri])
-      }
-    } catch (error) {
-      Alert.alert('Lỗi', 'Không thể chọn ảnh. Vui lòng thử lại.')
-    }
-  }
-
   const handleAvatarPress = () => {
     if (isOwnProfile) {
       setShowAvatarModal(true)
@@ -234,7 +206,6 @@ export default function ProfileScreen() {
         quality: 1,
       })
       if (!result.canceled) {
-        console.log('Camera image:', result.assets[0].uri)
         await updateUserInfo(profileUser?.id as string, {avatarUrl: result.assets[0].uri})
         setShowAvatarModal(false)
       }
@@ -243,6 +214,7 @@ export default function ProfileScreen() {
       Alert.alert('Lỗi', 'Không thể chụp ảnh. Vui lòng thử lại.')
     }
   }
+
   const handleChangeAvatar = async () => {
     try {
       const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync()
@@ -260,14 +232,12 @@ export default function ProfileScreen() {
 
       if (!result.canceled) {
         await updateUserInfo(profileUser?.id as string, {avatarUrl: result.assets[0].uri})
-        console.log('Selected image:', result.assets[0].uri)
       }
     } catch (error) {
       console.error('Error picking image:', error)
       Alert.alert('Lỗi', 'Không thể chọn ảnh. Vui lòng thử lại.')
     }
   }
-
 
   const handleDeleteAvatar = async () => {
     Alert.alert(
@@ -284,7 +254,6 @@ export default function ProfileScreen() {
           onPress: async () => {
             await updateUserInfo(profileUser?.id as string, {avatarUrl: DEFAULT_AVATAR})
             setShowAvatarModal(false)
-            console.log('Delete avatar')
           }
         }
       ]
@@ -295,295 +264,68 @@ export default function ProfileScreen() {
     router.back()
   }
 
-  const renderPost = ({ item }: { item: Post }) => (
-    <View style={styles.postCard}>
-      <View style={styles.postHeader}>
-        <View style={styles.postUser}>
-          <Image source={{ uri: profileUser?.avatarUrl || DEFAULT_AVATAR }} style={styles.postAvatar} />
-          <View>
-            <Text style={styles.postUserName}>{profileUser?.userName}</Text>
-            <Text style={styles.postTime}>{item.location}</Text>
-            <Text style={styles.postTime}>{item.time}</Text>
-          </View>
-        </View>
-        <TouchableOpacity onPress={() => setShowPostOptions(showPostOptions === item.id ? null : item.id)}>
-          <Ionicons name="ellipsis-horizontal" size={20} color="#666" />
-        </TouchableOpacity>
-      </View>
-
-      {showPostOptions === item.id && (
-        <View style={styles.postOptions}>
-          <TouchableOpacity 
-            style={styles.postOption} 
-            onPress={() => {
-              handleEditPost(item)
-              setShowPostOptions(null)
-            }}
-          >
-            <Ionicons name="pencil-outline" size={20} color={COLORS.primary} />
-            <Text style={styles.postOptionText}>Chỉnh sửa</Text>
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={styles.postOption} 
-            onPress={() => handleDeletePost(item.id)}
-          >
-            <Ionicons name="trash-outline" size={20} color={COLORS.red} />
-            <Text style={[styles.postOptionText, { color: COLORS.red }]}>Xóa</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
-      <Text style={styles.postContent}>{item.content}</Text>
-
-      {item.images && item.images[0] && (
-        <Image source={{ uri: item.images[0] }} style={styles.postImage} />
-      )}
-
-      <View style={styles.postStats}>
-        <View style={styles.postLikes}>
-          <View style={styles.likeIconContainer}>
-            <Ionicons name="heart" size={12} color="#fff" />
-          </View>
-          <Text style={styles.statsText}>{item.likes}</Text>
-        </View>
-        <Text style={styles.statsText}>{item.comments} bình luận</Text>
-      </View>
-
-      <View style={styles.postActions}>
-        <TouchableOpacity style={styles.actionButton}>
-          <Ionicons name="heart-outline" size={22} color="#666" />
-          <Text style={styles.actionText}>Thích</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.actionButton}>
-          <Ionicons name="chatbubble-outline" size={22} color="#666" />
-          <Text style={styles.actionText}>Bình luận</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  )
+  const renderContent = () => {
+    switch (activeTab) {
+      case "posts":
+        return (
+          <ProfilePosts
+            posts={posts}
+            user={profileUser as User}
+            defaultAvatar={DEFAULT_AVATAR}
+            isOwnProfile={isOwnProfile}
+            onEditPost={handleEditPost}
+            onDeletePost={handleDeletePost}
+            onCreatePost={handleCreatePost}
+          />
+        )
+      case "about":
+        return (
+          <ProfileAbout
+            user={profileUser as User}
+            isOwnProfile={isOwnProfile}
+          />
+        )
+      case "friends":
+        return (
+          <ProfileFriends
+            friends={friends}
+          />
+        )
+      default:
+        return null
+    }
+  }
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={goBack}>
-          <Ionicons name="arrow-back" size={24} color={COLORS.dark} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Trang cá nhân</Text>
-      </View>
-
+    <SafeAreaView style={{ flex: 1 }}>
+      <ProfileHeader onBack={goBack} />
+      
       <FlatList
-        data={[1]} // Single item to render the profile content
+        data={[1]}
         renderItem={() => (
           <View style={{ flex: 1 }}>
-            {/* Cover Photo */}
-            <View style={styles.coverPhotoContainer}>
-              <Image source={{ uri: profileUser?.coverPhoto }} style={styles.coverPhoto} />
-              <TouchableOpacity 
-                style={styles.profileAvatarContainer} 
-                onPress={handleAvatarPress}
-                disabled={!isOwnProfile}
-              >
-                <Image source={{ uri: profileUser?.avatarUrl || DEFAULT_AVATAR }} style={styles.profileAvatar} />
-              </TouchableOpacity>
-            </View>
+            <ProfileCover
+              coverPhoto={profileUser?.coverPhoto}
+              avatarUrl={profileUser?.avatarUrl}
+              defaultAvatar={DEFAULT_AVATAR}
+              onAvatarPress={handleAvatarPress}
+              isOwnProfile={isOwnProfile}
+            />
 
-            {/* Profile Info */}
-            <View style={styles.profileInfo}>
-              <Text style={styles.profileName}>{profileUser?.userName}</Text>
-              <Text style={styles.profileBio}>{profileUser?.bio}</Text>
+            <ProfileInfo
+              user={profileUser as User}
+              isOwnProfile={isOwnProfile}
+              status={status}
+              onFollow={handleCreateUserFollow}
+              onUnfollow={handleDeleteUserFollow}
+            />
 
-              {isOwnProfile ? (
-                <View style={styles.socialStats}>
-                  <View style={styles.socialStat}>
-                    <Text style={styles.socialStatNumber}>{profileUser?.friends}</Text>
-                    <Text style={styles.socialStatLabel}>Bạn bè</Text>
-                  </View>
-                  <View style={styles.socialStatDivider} />
-                  <View style={styles.socialStat}>
-                    <Text style={styles.socialStatNumber}>{profileUser?.followers}</Text>
-                    <Text style={styles.socialStatLabel}>Người theo dõi</Text>
-                  </View>
-                </View>
-              ) : (
-                <View style={styles.profileActions}>
-                  {status === "Friends" ? (
-                    <TouchableOpacity style={[styles.profileActionButton, styles.primaryActionButton]} onPress={handleDeleteUserFollow}>
-                      <Ionicons name="checkmark-circle-outline" size={20} color="#fff" />
-                      <Text style={styles.primaryActionText}>Bạn bè</Text>
-                    </TouchableOpacity>
-                  ): status === "Following" ? (
-                    <TouchableOpacity style={[styles.profileActionButton, styles.primaryActionButton]} onPress={handleDeleteUserFollow}>
-                      <Ionicons name="checkmark-outline" size={20} color="#fff" />
-                      <Text style={styles.primaryActionText}>Đang theo dõi</Text>
-                    </TouchableOpacity>
-                  ) : (
-                    <TouchableOpacity style={[styles.profileActionButton, styles.primaryActionButton]} onPress={handleCreateUserFollow}>
-                      <Ionicons name="person-add-outline" size={20} color="#fff" />
-                      <Text style={styles.primaryActionText}>Thêm bạn</Text>
-                    </TouchableOpacity>
-                  )}
-                  <TouchableOpacity style={[styles.profileActionButton, styles.secondaryActionButton]}>
-                    <Ionicons name="chatbubble-outline" size={20} color={COLORS.primary} />
-                    <Text style={[styles.secondaryActionText, { color: COLORS.primary }]}>Nhắn tin</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-            </View>
+            <ProfileTabs
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+            />
 
-            {/* Tabs */}
-            <View style={styles.tabsContainer}>
-              <TouchableOpacity
-                style={[styles.tab, activeTab === "posts" && styles.activeTab]}
-                onPress={() => setActiveTab("posts")}
-              >
-                <Text style={[styles.tabText, activeTab === "posts" && styles.activeTabText]}>Bài viết</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.tab, activeTab === "about" && styles.activeTab]}
-                onPress={() => setActiveTab("about")}
-              >
-                <Text style={[styles.tabText, activeTab === "about" && styles.activeTabText]}>Giới thiệu</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.tab, activeTab === "friends" && styles.activeTab]}
-                onPress={() => setActiveTab("friends")}
-              >
-                <Text style={[styles.tabText, activeTab === "friends" && styles.activeTabText]}>Bạn bè</Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Content based on active tab */}
-            {activeTab === "posts" && (
-              <View style={styles.postsContainer}>
-                {/* Create Post - Only show for own profile */}
-                {isOwnProfile && (
-                  <View style={styles.createPostCard}>
-                    <View style={styles.createPostHeader}>
-                      <Image source={{ uri: profileUser?.avatarUrl || DEFAULT_AVATAR }} style={styles.createPostAvatar} />
-                      <TouchableOpacity style={styles.createPostInput} onPress={handleCreatePost}>
-                        <Text style={styles.createPostPlaceholder}>Bạn đang nghĩ gì?</Text>
-                      </TouchableOpacity>
-                    </View>
-                    <View style={styles.createPostActions}>
-                      <TouchableOpacity style={styles.createPostAction} onPress={handleCreatePost}>
-                        <Ionicons name="image-outline" size={20} color={COLORS.green} />
-                        <Text style={styles.createPostActionText}>Ảnh</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity style={styles.createPostAction} onPress={handleCreatePost}>
-                        <Ionicons name="location-outline" size={20} color={COLORS.blue} />
-                        <Text style={styles.createPostActionText}>Check in</Text>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                )}
-
-                {/* Posts */}
-                <FlatList
-                  data={posts}
-                  renderItem={renderPost}
-                  keyExtractor={(item) => item.id}
-                  scrollEnabled={false}
-                />
-              </View>
-            )}
-
-            {activeTab === "about" && (
-              <View style={styles.aboutContainer}>
-                <View style={styles.aboutCard}>
-                  <Text style={styles.aboutTitle}>Thông tin cá nhân</Text>
-
-                  <View style={styles.aboutItem}>
-                    <Ionicons name="person-outline" size={20} color={COLORS.primary} style={styles.aboutIcon} />
-                    <View>
-                      <Text style={styles.aboutLabel}>Username</Text>
-                      <Text style={styles.aboutText}>{profileUser?.userName}</Text>
-                    </View>
-                    {isOwnProfile && (
-                      <TouchableOpacity style={styles.aboutEditButton}>
-                        <Ionicons name="pencil-outline" size={18} color={COLORS.primary} />
-                      </TouchableOpacity>
-                    )}
-                  </View>
-                  <View style={styles.aboutItem}>
-                    <Ionicons name="mail-outline" size={20} color={COLORS.primary} style={styles.aboutIcon} />
-                    <View>
-                      <Text style={styles.aboutLabel}>Email</Text>
-                      <Text style={styles.aboutText}>{profileUser?.email}</Text>
-                    </View>
-                  </View>
-                  <View style={styles.aboutItem}>
-                    <Ionicons name="person-circle-outline" size={20} color={COLORS.primary} style={styles.aboutIcon} />
-                    <View>
-                      <Text style={styles.aboutLabel}>Full Name</Text>
-                      <Text style={styles.aboutText}>{profileUser?.fullName}</Text>
-                    </View>
-                    {isOwnProfile && (
-                      <TouchableOpacity style={styles.aboutEditButton}>
-                        <Ionicons name="pencil-outline" size={18} color={COLORS.primary} />
-                      </TouchableOpacity>
-                    )}
-                  </View>
-
-                  <View style={styles.aboutItem}>
-                    <Ionicons name="call-outline" size={20} color={COLORS.primary} style={styles.aboutIcon} />
-                    <View>
-                      <Text style={styles.aboutLabel}>Số điện thoại</Text>
-                      <Text style={styles.aboutText}>{profileUser?.phone}</Text>
-                    </View>
-                    {isOwnProfile && (
-                      <TouchableOpacity style={styles.aboutEditButton}>
-                        <Ionicons name="pencil-outline" size={18} color={COLORS.primary} />
-                      </TouchableOpacity>
-                    )}
-                  </View>
-
-                  <View style={styles.aboutItem}>
-                    <Ionicons name="bonfire-outline" size={20} color={COLORS.primary} style={styles.aboutIcon} />
-                    <View>
-                      <Text style={styles.aboutLabel}>Bio</Text>
-                      <Text style={styles.aboutText}>{profileUser?.bio}</Text>
-                    </View>
-                    {isOwnProfile && (
-                      <TouchableOpacity style={styles.aboutEditButton}>
-                        <Ionicons name="pencil-outline" size={18} color={COLORS.primary} />
-                      </TouchableOpacity>
-                    )}
-                  </View>
-                </View>
-              </View>
-            )}
-
-            {activeTab === "friends" && (
-              <View style={{ padding: 16 }}>
-                <Text style={{ fontWeight: "bold", fontSize: 18, marginBottom: 12 }}>Danh sách bạn bè</Text>
-                {friends && friends.length > 0 ? (
-                  <FlatList
-                    data={friends}
-                    keyExtractor={(item) => item.id}
-                    renderItem={({ item }) => (
-                      <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 16 }}>
-                       {item.avatarUrl ? (
-                        <Image
-                          source={{ uri: item.avatarUrl }}
-                          style={{ width: 48, height: 48, borderRadius: 24, marginRight: 12, backgroundColor: '#eee' }}
-                        />
-                       ) : (
-                        <View style={{ width: 48, height: 48, borderRadius: 24, marginRight: 12, backgroundColor: '#eee', alignItems: 'center', justifyContent: 'center' }}>
-                          <Ionicons name="person-outline" size={24} color={COLORS.primary} />
-                        </View>
-                       )}
-                        <Text style={{ fontSize: 16, fontWeight: "500" }}>{item.userName}</Text>
-                      </View>
-                    )}
-                    ListEmptyComponent={<Text>Chưa có bạn bè nào.</Text>}
-                    scrollEnabled={false}
-                  />
-                ) : (
-                  <Text>Chưa có bạn bè nào.</Text>
-                )}
-              </View>
-            )}
+            {renderContent()}
           </View>
         )}
         keyExtractor={() => "profile"}
