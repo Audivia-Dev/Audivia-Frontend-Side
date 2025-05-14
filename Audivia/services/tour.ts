@@ -27,4 +27,14 @@ export const getToursByTypeId = async (typeId: string) => {
     throw error;
   }
 }
+export const getTourAudioById = async () => {
+  try {
+    const response = await apiClient.get(`/checkpoint-audios`);
+    return response.data;
+  } catch (error) {
+    console.error('Lỗi khi lấy tour audio:', error);
+    throw error;
+  }
+}
+
 

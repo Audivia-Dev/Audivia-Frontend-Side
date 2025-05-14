@@ -19,7 +19,6 @@ export default function TourDetailScreen() {
   useEffect(() => {
     const fetchTourById = async () => {
       const response = await getTourById(tourId as string)
-      console.log("HEHE", response.response)
       setTour(response.response)
     }
     fetchTourById()
@@ -35,7 +34,7 @@ export default function TourDetailScreen() {
 
   const startTour = () => {
     // Xử lý bắt đầu tour
-    // router.push(`/tour-start?id=${tourId}`)
+    router.push(`/tour_audio?tourId=${tourId}`)
   }
 
   return (
