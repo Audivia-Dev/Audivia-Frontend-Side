@@ -14,7 +14,7 @@ import { Ionicons, FontAwesome } from "@expo/vector-icons"
 import { useLocalSearchParams, useRouter } from "expo-router"
 import { styles } from "@/styles/filter_tour.styles"
 import { getToursByTypeId } from "@/services/tour"
-import { useUser } from "../hooks/useUser"
+import { useUser } from "@/hooks/useUser"
 import { COLORS } from "@/constants/theme"
 import { createSaveTour } from "@/services/save_tour"
 
