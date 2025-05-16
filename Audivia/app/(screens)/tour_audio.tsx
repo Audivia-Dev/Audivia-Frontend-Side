@@ -30,6 +30,9 @@ export default function TourAudioScreen() {
   const handleBack = () => {
     router.back()
   }
+  const handleAudioPlay =() => {
+    router.push('/audio_player')
+  }
   return (
     <SafeAreaView style={styles.container}>
         {/* Header */}
@@ -70,7 +73,7 @@ export default function TourAudioScreen() {
           </View>
 
           {tour?.checkpoints.map((stop) => (
-            <TouchableOpacity key={stop.id} style={styles.stopItem}>
+            <TouchableOpacity key={stop.id} style={styles.stopItem} onPress={handleAudioPlay}>
               <View style={[styles.stopNumber, { backgroundColor: COLORS.secondary }]}>
               </View>
               <View style={styles.stopInfo}>
