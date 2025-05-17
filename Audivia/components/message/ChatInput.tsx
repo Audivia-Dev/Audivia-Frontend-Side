@@ -1,35 +1,161 @@
-import React from "react";
-import { View, TextInput, TouchableOpacity } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import { styles } from "@/styles/chatbox.styles";
+import React, { useState, useEffect } from 'react';
+import { View, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { createMessage } from '@/services/chat';
+import { useUser } from '@/hooks/useUser';
+import { signalRService } from '@/services/signalR';
+import { Message } from '@/models';
+//import { styles } from "@/styles/chatbox.styles";
 
 interface ChatInputProps {
-  value: string;
-  onChangeText: (text: string) => void;
-  onSend: () => void;
+  onSend: (message: Message) => void;
+  onTyping?: (isTyping: boolean) => void;
+  chatRoomId: string;
 }
 
-export const ChatInput = ({ value, onChangeText, onSend }: ChatInputProps) => {
+export const ChatInput = ({ onSend, onTyping, chatRoomId }: ChatInputProps) => {
+  const [message, setMessage] = useState('');
+  const [typingTimeout, setTypingTimeout] = useState<NodeJS.Timeout | null>(null);
+  const { user } = useUser();
+
+  const handleTyping = (text: string) => {
+    setMessage(text);
+    
+    if (onTyping) {
+      // Clear existing timeout
+      if (typingTimeout) {
+        clearTimeout(typingTimeout);
+      }
+
+      // Set typing status to true
+      onTyping(true);
+
+      // Set new timeout to set typing status to false after 1.5 seconds
+      const timeout = setTimeout(() => {
+        onTyping(false);
+      }, 1500);
+
+      setTypingTimeout(timeout);
+    }
+  };
+
+  const handleSend = async () => {
+    if (message.trim() && user?.id) {
+      try {
+        // Tạo tin nhắn mới
+        const newMessage: Message = {
+          id: String(Date.now()),
+          content: message.trim(),
+          senderId: user.id,
+          type: 'text',
+          status: 'sent',
+          chatRoomId: chatRoomId,
+          createdAt: new Date(),
+        };
+
+        // Gửi tin nhắn qua SignalR để hiển thị ngay lập tức
+        await signalRService.sendMessage(newMessage);
+        
+        // Gửi tin nhắn qua API để lưu vào database
+        await createMessage({
+          content: message.trim(),
+          senderId: user.id,
+          chatRoomId: chatRoomId,
+          type: 'text',
+          status: 'sent'
+        });
+
+        onSend(newMessage);
+        setMessage('');
+        if (onTyping) {
+          onTyping(false);
+        }
+      } catch (error) {
+        console.error('Error sending message:', error);
+      }
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (typingTimeout) {
+        clearTimeout(typingTimeout);
+      }
+    };
+  }, [typingTimeout]);
+
   return (
-    <View style={styles.inputContainer}>
-      <TextInput
-        style={styles.input}
-        placeholder="Nhập tin nhắn..."
-        value={value}
-        onChangeText={onChangeText}
-        multiline
-      />
+    <View style={styles.container}>
+      <View style={styles.inputContainer}>
+        <TouchableOpacity style={styles.button}>
+          <Ionicons name="add-circle-outline" size={24} color="#007AFF" />
+        </TouchableOpacity>
+        
+        <TextInput
+          style={styles.input}
+          placeholder="Nhập tin nhắn..."
+          value={message}
+          onChangeText={handleTyping}
+          multiline
+        />
+
+        <TouchableOpacity style={styles.button}>
+          <Ionicons name="happy-outline" size={24} color="#666666" />
+        </TouchableOpacity>
+      </View>
+
       <TouchableOpacity
-        style={[styles.sendButton]}
-        onPress={onSend}
-        disabled={!value.trim()}
+        style={[styles.sendButton, message.trim() ? styles.sendButtonActive : {}]}
+        onPress={handleSend}
+        disabled={!message.trim()}
       >
-        <Ionicons
-          name="send"
-          size={24}
-          color={value.trim() ? "#007AFF" : "#999"}
+        <Ionicons 
+          name="send" 
+          size={20} 
+          color={message.trim() ? '#FFFFFF' : '#999999'} 
         />
       </TouchableOpacity>
     </View>
   );
-}; 
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 8,
+    backgroundColor: '#FFFFFF',
+    borderTopWidth: 1,
+    borderTopColor: '#E8E8E8',
+  },
+  inputContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F2F2F7',
+    borderRadius: 20,
+    marginRight: 8,
+    paddingHorizontal: 8,
+  },
+  input: {
+    flex: 1,
+    minHeight: 36,
+    maxHeight: 100,
+    paddingHorizontal: 8,
+    fontSize: 16,
+  },
+  button: {
+    padding: 8,
+  },
+  sendButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#E8E8E8',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  sendButtonActive: {
+    backgroundColor: '#007AFF',
+  },
+}); 

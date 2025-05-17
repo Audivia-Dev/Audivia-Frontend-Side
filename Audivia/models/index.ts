@@ -60,3 +60,32 @@ export interface Post {
   likes: number;
   comments: number;
 }
+
+export interface ChatRoom {
+  id: string;
+  name: string;
+  createdBy: string;
+  isActive: boolean;
+  type: string;
+  members: ChatRoomMember
+}
+
+export interface Message {
+  id: string;
+  content: string;
+  senderId: string;
+  type: string;
+  status: string; 
+  chatRoomId: string;
+  sender?: User;
+  createdAt: Date;
+}
+
+export interface ChatRoomMember {
+  id: string;
+  chatRoomId: string;
+  userId: string;
+  nickname: string;
+  isHost: boolean;
+  user: User
+}

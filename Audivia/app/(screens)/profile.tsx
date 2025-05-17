@@ -15,6 +15,7 @@ import { ProfileTabs } from "@/components/profile/ProfileTabs"
 import { ProfileAbout } from "@/components/profile/ProfileAbout"
 import { ProfileFriends } from "@/components/profile/ProfileFriends"
 import { ProfilePosts } from "@/components/profile/ProfilePosts"
+import { createChatRoom, createChatRoomMember, getPrivateRoom } from "@/services/chat"
 
 export default function ProfileScreen() {
   const [activeTab, setActiveTab] = useState("posts")
@@ -264,6 +265,48 @@ export default function ProfileScreen() {
     router.back()
   }
 
+  const handleMessage = async () => {
+    if (!user?.id || !profileUser?.id) return;
+
+    try {
+      // Kiểm tra xem đã có chat room giữa 2 người chưa
+      const existingRoom = await getPrivateRoom(user.id, profileUser.id);
+      if (existingRoom) {
+        // Nếu đã có chat room thì chuyển đến message detail
+        router.push(`/message_detail?id=${existingRoom.id}`);
+      } else {
+        // Nếu chưa có thì tạo mới chat room
+        const newChatRoom = await createChatRoom({
+          name: "Chat riêng tư",
+          createdBy: user.id,
+          type: "private",
+        });
+        
+        // Thêm người dùng hiện tại vào là member
+        await createChatRoomMember({
+          chatRoomId: newChatRoom.id,
+          isHost: true,
+          nickname: "",
+          userId: user.id
+        });
+        
+        // Thêm người dùng được chọn vào là member
+        await createChatRoomMember({
+          chatRoomId: newChatRoom.id,
+          isHost: false,
+          nickname: "",
+          userId: profileUser.id
+        });
+
+        // Chuyển đến phòng chat mới
+        router.push(`/message_detail?id=${newChatRoom.id}`);
+      }
+    } catch (error) {
+      console.error("Create chat room error:", error);
+      Alert.alert("Lỗi", "Không thể tạo phòng chat. Vui lòng thử lại.");
+    }
+  };
+
   const renderContent = () => {
     switch (activeTab) {
       case "posts":
@@ -318,6 +361,7 @@ export default function ProfileScreen() {
               status={status}
               onFollow={handleCreateUserFollow}
               onUnfollow={handleDeleteUserFollow}
+              onMessage={handleMessage}
             />
 
             <ProfileTabs
