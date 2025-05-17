@@ -1,213 +1,179 @@
-import React, { useState, useRef, useEffect } from "react"
+import React, { useState, useRef, useEffect } from "react";
 import {
   FlatList,
   SafeAreaView,
   KeyboardAvoidingView,
   Platform,
   Animated,
-} from "react-native"
-import { Ionicons } from "@expo/vector-icons"
-import { useRouter } from "expo-router"
-import { COLORS } from "@/constants/theme"
-import { styles } from "@/styles/chatbox.styles"
-import { ChatHeader } from "@/components/message/ChatHeader"
-import { MessageBubble } from "@/components/message/MessageBubble"
-import { TypingIndicator } from "@/components/message/TypingIndicator"
-import { ChatInput } from "@/components/message/ChatInput"
-
-const MESSAGES = [
-  {
-    id: "1",
-    text: "Chào bạn, cuối tuần này bạn có rảnh không?",
-    time: "10:30",
-    senderId: "user2",
-    senderName: "Minh Anh",
-    senderAvatar: require("@/assets/images/avatar.jpg"),
-    isNew: false,
-  },
-  {
-    id: "2",
-    text: "Chào Minh Anh, mình rảnh đấy. Có gì không?",
-    time: "10:31",
-    senderId: "user1", // current user
-    senderName: "Tôi",
-    senderAvatar: null,
-    isNew: false,
-  },
-  {
-    id: "3",
-    text: "Mình đang nghĩ đến việc đi tham quan Nhà Văn hóa ĐHQG TP.HCM. Nghe nói ở đó có triển lãm mới, bạn có muốn đi cùng không?",
-    time: "10:32",
-    senderId: "user2",
-    senderName: "Minh Anh",
-    senderAvatar: require("@/assets/images/avatar.jpg"),
-    isNew: false,
-  },
-  {
-    id: "4",
-    text: "Nghe hay đấy! Mấy giờ và hẹn ở đâu?",
-    time: "10:33",
-    senderId: "user1", // current user
-    senderName: "Tôi",
-    senderAvatar: null,
-    isNew: false,
-  },
-  {
-    id: "5",
-    text: "Mình nghĩ khoảng 2h chiều thứ 7 nhé. Mình có thể đón bạn ở trạm xe buýt gần nhà bạn.",
-    time: "10:34",
-    senderId: "user2",
-    senderName: "Minh Anh",
-    senderAvatar: require("@/assets/images/avatar.jpg"),
-    isNew: false,
-  },
-]
-
-// Chat details - can be for 1-on-1 or group chat
-const CHAT_DETAILS = {
-  id: "chat123",
-  name: "Minh Anh", // For 1-on-1 chat, this is the friend's name
-  avatar: require("@/assets/images/avatar.jpg"), // Friend's avatar
-  isOnline: true,
-  lastSeen: "Vừa truy cập",
-  isGroup: false, // Set to true for group chat
-  // For group chats, you can add:
-  // members: [{id: "user1", name: "Name 1"}, {id: "user2", name: "Name 2"}],
-}
+  ActivityIndicator,
+} from "react-native";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { styles } from "@/styles/chatbox.styles";
+import { ChatHeader } from "@/components/message/ChatHeader";
+import { MessageBubble } from "@/components/message/MessageBubble";
+import { TypingIndicator } from "@/components/message/TypingIndicator";
+import { ChatInput } from "@/components/message/ChatInput";
+import { getChatRoomById, getMessagesByChatRoom } from "@/services/chat"; // <-- Import API
+//import { getChatRoomById } from "@/services/chat"; // <-- Nếu muốn lấy thêm info phòng chat
+import { useUser } from "@/hooks/useUser";
+import { signalRService } from "@/services/signalR";
+import { Message } from "@/models";
 
 export default function MessageDetailScreen() {
-  const [messages, setMessages] = useState(MESSAGES)
-  const [inputText, setInputText] = useState("")
-  const [isTyping, setIsTyping] = useState(false)
-  const flatListRef = useRef<FlatList<any>>(null)
-  const typingAnimation = useRef(new Animated.Value(0)).current
-  const router = useRouter()
-  const currentUserId = "user1" // This would normally come from authentication
+  const { id: chatRoomId } = useLocalSearchParams(); // <-- Lấy id từ route
+  const router = useRouter();
+  const { user } = useUser();
+  const currentUserId = user?.id;
+  
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [inputText, setInputText] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [chatRoom, setChatRoom] = useState<any>(null); // Optional: để lấy tên, avatar
+
+  const flatListRef = useRef<FlatList<any>>(null);
+  const typingAnimation = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    // Auto-scroll to the latest message
-    if (flatListRef.current) {
-      flatListRef.current.scrollToEnd({ animated: true })
-    }
-  }, [messages])
+    if (!chatRoomId || typeof chatRoomId !== "string") return;
 
-  useEffect(() => {
-    // Typing indicator animation
-    if (isTyping) {
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(typingAnimation, {
-            toValue: 1,
-            duration: 500,
-            useNativeDriver: true,
-          }),
-          Animated.timing(typingAnimation, {
-            toValue: 0,
-            duration: 500,
-            useNativeDriver: true,
-          }),
-        ]),
-      ).start()
-    } else {
-      typingAnimation.setValue(0)
-    }
-  }, [isTyping])
+    const fetchMessages = async () => {
+      try {
+        setLoading(true);
+        const [msgs, room] = await Promise.all([
+          getMessagesByChatRoom(chatRoomId),
+          getChatRoomById(chatRoomId), // <-- Nếu muốn lấy avatar, tên nhóm
+        ]);
 
-  // Simulate the other person typing occasionally
-  useEffect(() => {
-    const randomTyping = () => {
-      if (Math.random() > 0.7) {
-        setIsTyping(true)
-        setTimeout(() => setIsTyping(false), 2000 + Math.random() * 3000)
+        setMessages(msgs);
+        setChatRoom(room);
+      } catch (error) {
+        console.error("Lỗi khi tải tin nhắn:", error);
+      } finally {
+        setLoading(false);
       }
+    };
+
+    fetchMessages();
+  }, [chatRoomId]);
+
+  useEffect(() => {
+    if (flatListRef.current) {
+      flatListRef.current.scrollToEnd({ animated: true });
     }
-    
-    const typingInterval = setInterval(randomTyping, 10000)
-    return () => clearInterval(typingInterval)
-  }, [])
+  }, [messages]);
+
+  useEffect(() => {
+    if (!chatRoomId) return;
+
+    // Tham gia vào phòng chat khi component mount
+    signalRService.joinRoom(chatRoomId as string);
+
+    const handleReceiveMessage = (message: Message) => {
+      // Chỉ xử lý tin nhắn của phòng chat hiện tại
+      if (message.chatRoomId === chatRoomId) {
+        setMessages(prev => {
+          const messageExists = prev.some(msg => msg.id === message.id);
+          if (messageExists) return prev;
+          return [...prev, message];
+        });
+      }
+    };
+
+    const handleUpdateMessage = (message: Message) => {
+      if (message.chatRoomId === chatRoomId) {
+        setMessages(prev => prev.map(msg => 
+          msg.id === message.id ? message : msg
+        ));
+      }
+    };
+
+    const handleDeleteMessage = (message: Message) => {
+      if (message.chatRoomId === chatRoomId) {
+        setMessages(prev => prev.filter(msg => msg.id !== message.id));
+      }
+    };
+
+    // Đăng ký các event handlers
+    signalRService.onReceiveMessage(handleReceiveMessage);
+    signalRService.onMessageUpdated(handleUpdateMessage);
+    signalRService.onMessageDeleted(handleDeleteMessage);
+
+    // Cleanup khi unmount
+    return () => {
+      signalRService.leaveRoom(chatRoomId as string);
+      signalRService.removeMessageCallback(handleReceiveMessage);
+      signalRService.removeMessageUpdatedCallback(handleUpdateMessage);
+      signalRService.removeMessageDeletedCallback(handleDeleteMessage);
+    };
+  }, [chatRoomId]);
 
   const goBack = () => {
-    router.back()
-  }
+    router.back();
+  };
 
-  const sendMessage = () => {
-    if (inputText.trim() === "") return
+  const sendMessage = (newMsg: Message) => {
+    if (!chatRoomId) return;
+    
+    // Thêm tin nhắn vào state ngay lập tức
+    setMessages(prev => [...prev, newMsg]);
+  };
 
-    // Add user's message
-    const newUserMessage = {
-      id: String(Date.now()),
-      text: inputText,
-      time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-      senderId: currentUserId,
-      senderName: "Tôi",
-      senderAvatar: null,
-      isNew: true,
-    }
-
-    setMessages([...messages, newUserMessage])
-    setInputText("")
-
-    // Simulate friend typing (only sometimes)
-    if (Math.random() > 0.3) {
-      setIsTyping(true)
-      
-      // Simulate friend's response after a random delay
-      setTimeout(() => {
-        setIsTyping(false)
-        
-        const friendResponses = [
-          "Được đấy! Mình sẽ chuẩn bị trước nhé.",
-          "Tuyệt vời! Mình đang rất háo hức.",
-          "Ok bạn, vậy hẹn gặp lại nhé!",
-          "Mình sẽ mang theo máy ảnh để chụp hình.",
-          "Bạn có muốn rủ thêm ai không?",
-        ]
-        
-        const randomResponse = friendResponses[Math.floor(Math.random() * friendResponses.length)]
-        
-        const newFriendMessage = {
-          id: String(Date.now() + 1),
-          text: randomResponse,
-          time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-          senderId: "user2",
-          senderName: CHAT_DETAILS.name,
-          senderAvatar: CHAT_DETAILS.avatar,
-          isNew: true,
-        }
-        
-        setMessages(prev => [...prev, newFriendMessage])
-      }, 1000 + Math.random() * 3000)
-    }
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <ActivityIndicator size="large" color="#007AFF" style={{ marginTop: 40 }} />
+      </SafeAreaView>
+    );
   }
 
   return (
     <SafeAreaView style={styles.container}>
       <ChatHeader
-        avatar={CHAT_DETAILS.avatar}
-        name={CHAT_DETAILS.name}
-        isOnline={CHAT_DETAILS.isOnline}
-        lastSeen={CHAT_DETAILS.lastSeen}
+        type={chatRoom?.type}
+        avatar={
+          chatRoom?.type === "private"
+            ? chatRoom?.members?.find((m: any) => m.userId !== currentUserId)?.user?.avatarUrl
+            : undefined
+        }
+        title={
+          chatRoom?.type === "private"
+            ? chatRoom?.members?.find((m: any) => m.userId !== currentUserId)?.user?.fullName
+            : chatRoom?.name
+        }
+        isOnline={true}
         onBack={goBack}
+        members={chatRoom?.type === "group" ? chatRoom?.members : undefined}
       />
 
       <FlatList
         ref={flatListRef}
         data={messages}
-        renderItem={({ item }) => (
-          <MessageBubble
-            message={item}
-            isCurrentUser={item.senderId === currentUserId}
-            isGroupChat={CHAT_DETAILS.isGroup}
-          />
-        )}
+        renderItem={({ item }) => {
+          const isOwnMessage = String(item.senderId) === String(currentUserId);
+          const senderMember = chatRoom?.members?.find((m: any) => String(m.userId) === String(item.senderId));
+          const avatar = senderMember?.user?.avatarUrl || null;
+          const senderName = senderMember?.user?.fullName || item.senderName;
+          
+          return (
+            <MessageBubble
+              message={{
+                ...item,
+                senderName: chatRoom?.type === "group" ? senderName : item.senderName
+              }}
+              isOwnMessage={isOwnMessage}
+              avatar={!isOwnMessage ? avatar : null}
+            />
+          )
+        }}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.messagesContainer}
         showsVerticalScrollIndicator={false}
       />
 
-      {isTyping && (
+      {isTyping && messages.length > 0 && String(messages[messages.length - 1].senderId) === String(currentUserId) && (
         <TypingIndicator
-          avatar={CHAT_DETAILS.avatar}
+          avatar={chatRoom?.members?.find((m: any) => m.userId !== currentUserId)?.user?.avatarUrl}
           animation={typingAnimation}
         />
       )}
@@ -217,11 +183,11 @@ export default function MessageDetailScreen() {
         keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
       >
         <ChatInput
-          value={inputText}
-          onChangeText={setInputText}
           onSend={sendMessage}
+          onTyping={setIsTyping}
+          chatRoomId={chatRoomId as string}
         />
       </KeyboardAvoidingView>
     </SafeAreaView>
-  )
+  );
 }

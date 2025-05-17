@@ -10,6 +10,7 @@ interface ProfileInfoProps {
   status: string
   onFollow: () => void
   onUnfollow: () => void
+  onMessage: () => void
 }
 
 export const ProfileInfo = ({
@@ -17,7 +18,8 @@ export const ProfileInfo = ({
   isOwnProfile,
   status,
   onFollow,
-  onUnfollow
+  onUnfollow,
+  onMessage
 }: ProfileInfoProps) => {
   return (
     <View style={styles.profileInfo}>
@@ -54,7 +56,10 @@ export const ProfileInfo = ({
               <Text style={styles.primaryActionText}>Thêm bạn</Text>
             </TouchableOpacity>
           )}
-          <TouchableOpacity style={[styles.profileActionButton, styles.secondaryActionButton]}>
+          <TouchableOpacity 
+            style={[styles.profileActionButton, styles.secondaryActionButton]}
+            onPress={onMessage}
+          >
             <Ionicons name="chatbubble-outline" size={20} color={COLORS.primary} />
             <Text style={[styles.secondaryActionText, { color: COLORS.primary }]}>Nhắn tin</Text>
           </TouchableOpacity>

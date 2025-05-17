@@ -11,7 +11,7 @@ export const Header = ({ onBack, onSearch }: HeaderProps) => {
   return (
     <View style={styles.header}>
       <View style={styles.headerInfo}>
-        <TouchableOpacity style={styles.backButton} onPress={onBack}>
+        <TouchableOpacity onPress={onBack}>
           <Ionicons name="arrow-back" size={24} color="#000" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Tin nhắn</Text>

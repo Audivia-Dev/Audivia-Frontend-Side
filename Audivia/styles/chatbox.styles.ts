@@ -213,5 +213,18 @@ export const styles = StyleSheet.create({
     sendButtonActive: {
       backgroundColor: COLORS.primary,
     },
-  })
+    loading: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    keyboardAvoidingView: {
+      flex: 1,
+    },
+    messagesList: {
+      paddingHorizontal: 16,
+      paddingTop: 16,
+      paddingBottom: 16,
+    },
+});
   
