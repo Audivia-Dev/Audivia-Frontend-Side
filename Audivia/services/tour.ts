@@ -36,5 +36,31 @@ export const getTourAudioById = async () => {
     throw error;
   }
 }
-
+export const getTourAudioByCheckpointId = async (checkpointId: string) => {
+  try {
+    const response = await apiClient.get(`/checkpoint-audios/checkpointId/${checkpointId}`)
+    return response.data
+  } catch (error) {
+    console.error('Lỗi lấy tour audio:', error)
+    throw error
+  }
+}
+export const getNextAudioByCheckpointId = async(checkpointId: string) => {
+  try {
+    const response = await apiClient.get(`/checkpoint-audios/next/${checkpointId}`)
+    return response.data
+  } catch (error) {
+    console.error('Lỗi lấy tour audio:', error)
+    throw error
+  }
+}
+export const getPrevAudioByCheckpointId = async(checkpointId: string) => {
+  try {
+    const response = await apiClient.get(`/checkpoint-audios/prev/${checkpointId}`)
+    return response.data
+  } catch (error) {
+    console.error('Lỗi lấy tour audio:', error)
+    throw error
+  }
+}
 
