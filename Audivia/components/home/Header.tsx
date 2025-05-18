@@ -5,7 +5,11 @@ import { router } from 'expo-router';
 import { useUser } from '@/hooks/useUser';
 import styles from '@/styles/home.styles';
 
-export const Header = () => {
+interface HeaderProps {
+  locationAddress: string | null;
+}
+
+export const Header = ({ locationAddress }: HeaderProps) => {
   const { user } = useUser();
 
   return (
@@ -33,7 +37,7 @@ export const Header = () => {
 
       <View style={styles.locationContainer}>
         <Ionicons name="location-outline" size={18} color="#000" />
-        <Text style={styles.locationText}>Thu Duc, HCM</Text>
+        <Text style={styles.locationText}>{locationAddress || 'Đang tìm vị trí...'}</Text>
       </View>
     </View>
   );

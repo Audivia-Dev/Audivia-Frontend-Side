@@ -7,12 +7,14 @@ interface UserLocationMapProps {
   height?: number;
   width?: number;
   showMarker?: boolean;
+  onLocationChange?: (address: string | null) => void;
 }
 
-export default function UserLocationMap({ 
-  height = 200, 
+export default function UserLocationMap({
+  height = 200,
   width = Dimensions.get('window').width,
-  showMarker = true 
+  showMarker = true,
+  onLocationChange
 }: UserLocationMapProps) {
   const [location, setLocation] = useState<Location.LocationObject | null>(null)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
@@ -22,13 +24,39 @@ export default function UserLocationMap({
       let { status } = await Location.requestForegroundPermissionsAsync()
       if (status !== 'granted') {
         setErrorMsg('Permission to access location was denied')
+        if (onLocationChange) {
+          onLocationChange(null);
+        }
         return
       }
 
-      let location = await Location.getCurrentPositionAsync({})
-      setLocation(location)
+      let fetchedLocation = await Location.getCurrentPositionAsync({}) // current location
+      setLocation(fetchedLocation)
+
+      if (onLocationChange) {
+        if (fetchedLocation) {
+          try {
+            const reverseGeocode = await Location.reverseGeocodeAsync({
+              latitude: fetchedLocation.coords.latitude,
+              longitude: fetchedLocation.coords.longitude,
+            });
+            if (reverseGeocode.length > 0) {
+              const { street, city } = reverseGeocode[0];
+              const address = [street, city].filter(Boolean).join(', ');
+              onLocationChange(address);
+            } else {
+              onLocationChange('Không tìm thấy địa chỉ');
+            }
+          } catch (e) {
+            console.error("Reverse geocoding error:", e);
+            onLocationChange('Lỗi tìm địa chỉ');
+          }
+        } else {
+          onLocationChange(null);
+        }
+      }
     })()
-  }, [])
+  }, [onLocationChange])
 
   if (!location) {
     return (
