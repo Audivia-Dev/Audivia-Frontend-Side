@@ -14,6 +14,7 @@ import styles from "@/styles/home.styles"
 export default function Index() {
   const [top3Tours, setTop3Tours] = useState<Tour[]>([])
   const [tourTypes, setTourTypes] = useState<TourType[]>([])
+  const [currentLocationAddress, setCurrentLocationAddress] = useState<string | null>(null);
 
   useEffect(() => {
     getTop3Tours().then((res) => {
@@ -29,7 +30,7 @@ export default function Index() {
 
   return (
     <View style={styles.container}>
-      <Header />
+      <Header locationAddress={currentLocationAddress} />
      
       <ScrollView showsVerticalScrollIndicator={false}>
         <ImageCarousel />
@@ -37,7 +38,10 @@ export default function Index() {
         
         {/* Google Map View */}
         <View style={{ alignItems: 'center', width: '100%' }}>
-          <UserLocationMap width={Dimensions.get('window').width - 40} />
+          <UserLocationMap 
+            width={Dimensions.get('window').width - 40} 
+            onLocationChange={setCurrentLocationAddress} 
+          />
         </View>
 
         <SuggestedTours />
