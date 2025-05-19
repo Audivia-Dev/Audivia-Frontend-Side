@@ -7,7 +7,7 @@ interface UserLocationMapProps {
   height?: number;
   width?: number;
   showMarker?: boolean;
-  onLocationChange?: (address: string | null) => void;
+  onLocationChange?: (address: string | null, coordinates?: { latitude: number; longitude: number } | null) => void;
 }
 
 export default function UserLocationMap({
@@ -25,7 +25,7 @@ export default function UserLocationMap({
       if (status !== 'granted') {
         setErrorMsg('Permission to access location was denied')
         if (onLocationChange) {
-          onLocationChange(null);
+          onLocationChange(null, null);
         }
         return
       }
@@ -35,6 +35,10 @@ export default function UserLocationMap({
 
       if (onLocationChange) {
         if (fetchedLocation) {
+          const coordinates = {
+            latitude: fetchedLocation.coords.latitude,
+            longitude: fetchedLocation.coords.longitude
+          };
           try {
             const reverseGeocode = await Location.reverseGeocodeAsync({
               latitude: fetchedLocation.coords.latitude,
@@ -43,16 +47,16 @@ export default function UserLocationMap({
             if (reverseGeocode.length > 0) {
               const { street, city } = reverseGeocode[0];
               const address = [street, city].filter(Boolean).join(', ');
-              onLocationChange(address);
+              onLocationChange(address, coordinates);
             } else {
-              onLocationChange('Không tìm thấy địa chỉ');
+              onLocationChange('Không tìm thấy địa chỉ', coordinates);
             }
           } catch (e) {
             console.error("Reverse geocoding error:", e);
-            onLocationChange('Lỗi tìm địa chỉ');
+            onLocationChange('Lỗi tìm địa chỉ', coordinates);
           }
         } else {
-          onLocationChange(null);
+          onLocationChange(null, null);
         }
       }
     })()
