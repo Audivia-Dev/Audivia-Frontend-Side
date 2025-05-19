@@ -33,6 +33,9 @@ export default function TourAudioScreen() {
   const handleAudioPlay =(checkpointId: string) => {
     router.push(`/audio_player?checkpointId=${checkpointId}`)
   }
+  const handleEndtour = () => {
+    router.push(`/(screens)/end_tour_confirm?tourId=${tourId}`)
+  }
   return (
     <SafeAreaView style={styles.container}>
         {/* Header */}
@@ -82,6 +85,25 @@ export default function TourAudioScreen() {
             </TouchableOpacity>
           ))}
         </View>
+        <TouchableOpacity style={{ marginHorizontal: 20, marginVertical: 15 }} onPress={handleEndtour}>
+          <View style={{
+            backgroundColor: COLORS.primary,
+            paddingVertical: 15,
+            paddingHorizontal: 20,
+            borderRadius: 12,
+            alignItems: "center",
+            shadowColor: "#000",
+            shadowOpacity: 0.25,
+            shadowRadius: 3.84,
+            elevation: 5,
+          }}>
+            <Text style={{
+              color: "white",
+              fontSize: 16,
+              fontWeight: "600",
+            }}>End Tour</Text>
+          </View>
+        </TouchableOpacity>
         {/* Bottom spacing for fixed details panel */}
         <View style={{ height: 220 }} />
       </ScrollView>
