@@ -8,21 +8,44 @@ import {
   TextInput, 
   SafeAreaView,
   ScrollView,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
+import { writeReviewTour } from '@/services/review_tour';
+import { useUser } from '@/hooks/useUser';
 
 const WriteReviewScreen = () => {
   const [rating, setRating] = useState(5);
   const [title, setTitle] = useState('');
   const [review, setReview] = useState('');
-  const tourId = useLocalSearchParams()
-
-  const handleSubmitReview = () => {
-    // Submit review logic
-    console.log('Submitting review:', { rating, title, review });
+  const {tourId} = useLocalSearchParams()
+  const {user} = useUser()
+  
+  const handleSubmitReview = async () => {
+    if (!tourId) {
+      console.error('Tour ID is missing');
+      return;
+    }
+    if (!user?.id) {
+      console.error('User ID is missing');
+      return;
+    }
+    try {
+      const response = await writeReviewTour(
+        title,
+        rating,
+        review,
+        tourId as string,
+        user.id
+      );
+      console.log('Review submitted successfully:', response);
+      Alert.alert('Success', 'Your review has been submitted successfully!');
+      router.back();
+    } catch (error: any) {
+      console.error('Error submitting review:', error.response?.data || error.message);
+    }
   };
-
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView}>

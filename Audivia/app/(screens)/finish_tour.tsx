@@ -12,25 +12,29 @@ const FinishTourScreen = () => {
     const [suggestedTours, setSuggestedTours] = useState<Tour[]>([])
     const [userCoordinates, setUserCoordinates] = useState<{ latitude: number; longitude: number } | null>(null);
     const [currentLocationAddress, setCurrentLocationAddress] = useState<string | null>(null);
-    const tourId = useLocalSearchParams()
+    const {tourId} = useLocalSearchParams()
+    const [hasFetchedTours, setHasFetchedTours] = useState(false);
     
     useEffect(() => {
-        if (userCoordinates) {
+        if (userCoordinates && !hasFetchedTours) {
           getSuggestedTours(
             userCoordinates.longitude,
             userCoordinates.latitude,
             3 // 3km radius
           ).then((res) => {
             setSuggestedTours(res.response.data)
+            setHasFetchedTours(true);
           }).catch((error) => {
             console.error('Error fetching suggested tours:', error);
           });
         }
-      }, [userCoordinates]);
+      }, [userCoordinates, hasFetchedTours]);
       
     const handleLocationChange = (address: string | null, coordinates?: { latitude: number; longitude: number } | null) => {
         setCurrentLocationAddress(address);
-        setUserCoordinates(coordinates || null);
+        if (coordinates && !userCoordinates) {
+            setUserCoordinates(coordinates);
+        }
     };
 
     const handleReview = () => {

@@ -89,3 +89,15 @@ export interface ChatRoomMember {
   isHost: boolean;
   user: User
 }
+
+export interface Review {
+  id: string
+  title: string
+  content: string
+  rating: number
+  createdAt: string
+  tourId: string
+  createdBy: string
+  userName: string
+  avatarUrl: string
+}

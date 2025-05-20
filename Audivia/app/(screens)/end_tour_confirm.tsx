@@ -7,8 +7,8 @@ import { router, useLocalSearchParams } from 'expo-router';
 const { width } = Dimensions.get('window');
 
 const EndTourScreen = () => {
-  const tourId = useLocalSearchParams()
-
+  const { tourId } = useLocalSearchParams()
+  
   const onFinish = () => {
     router.push(`/(screens)/finish_tour?tourId=${tourId}`)
   }

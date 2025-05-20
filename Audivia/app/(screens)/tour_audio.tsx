@@ -18,7 +18,6 @@ export default function TourAudioScreen() {
     const router = useRouter()
     const { tourId } = useLocalSearchParams()
     const [tour, setTour] = useState<Tour>()
-    
     useEffect(() => {
         const fetchTourById = async () => {
           const response = await getTourById(tourId as string)
