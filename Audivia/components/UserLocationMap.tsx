@@ -1,6 +1,6 @@
 import { View, StyleSheet, Dimensions, Text } from 'react-native'
 import React, { useState, useEffect } from 'react'
-import MapView, { Marker } from 'react-native-maps'
+import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps'
 import * as Location from 'expo-location'
 
 interface UserLocationMapProps {
@@ -75,6 +75,7 @@ export default function UserLocationMap({
   return (
     <View style={[styles.container, { height, width }]}>
       <MapView
+        provider={PROVIDER_GOOGLE}
         style={styles.map}
         initialRegion={{
           latitude: location.coords.latitude,

@@ -5,21 +5,7 @@ import { getAllPosts } from "@/services/post";
 import { ForumHeader } from "@/components/forum/ForumHeader";
 import { ForumTabs } from "@/components/forum/ForumTabs";
 import { PostsList } from "@/components/forum/PostsList";
-
-interface Post {
-  id: string;
-  user: {
-    id: string;
-    userName: string;
-    avatarUrl?: string;
-  };
-  location: string;
-  images: string[];
-  likes: number;
-  content: string;
-  comments: number;
-  time: string;
-}
+import { Post } from "@/models";
 
 export default function ForumScreen() {
   const [activeTab, setActiveTab] = useState("Popular");

@@ -59,6 +59,29 @@ export interface Post {
   time: string;
   likes: number;
   comments: number;
+  user: {
+    id: string;
+    userName: string;
+    avatarUrl?: string;
+  };
+}
+
+export interface Comment {
+  id: string;
+  content: string;
+  postId: string;
+  userName: string;
+  createdAt: string;
+  updatedAt: string;
+  createdBy: string;
+}
+
+export interface Reaction {
+  id: string;
+  type: number;
+  postId: string;
+  createdBy: string;
+  createdAt: string;
 }
 
 export interface ChatRoom {
@@ -75,7 +98,7 @@ export interface Message {
   content: string;
   senderId: string;
   type: string;
-  status: string; 
+  status: string;
   chatRoomId: string;
   sender?: User;
   createdAt: Date;
