@@ -18,7 +18,6 @@ export default function TourAudioScreen() {
     const router = useRouter()
     const { tourId } = useLocalSearchParams()
     const [tour, setTour] = useState<Tour>()
-    
     useEffect(() => {
         const fetchTourById = async () => {
           const response = await getTourById(tourId as string)
@@ -33,12 +32,15 @@ export default function TourAudioScreen() {
   const handleAudioPlay =(checkpointId: string) => {
     router.push(`/audio_player?checkpointId=${checkpointId}`)
   }
+  const handleEndtour = () => {
+    router.push(`/(screens)/end_tour_confirm?tourId=${tourId}`)
+  }
   return (
     <SafeAreaView style={styles.container}>
         {/* Header */}
       <View style={styles.headerContainer}>
         <Image source={{
-            uri: "https://images.unsplash.com/photo-1577083288073-40892c0860a4?q=80&w=1000&auto=format&fit=crop",
+            uri: tour?.thumbnailUrl,
           }}
           style={styles.headerImage}
         />
@@ -59,15 +61,15 @@ export default function TourAudioScreen() {
         <View
           style={styles.titleContainer}
         >
-          <Text style={styles.title}>VNUHCM Cultural House</Text>
+          <Text style={styles.title}>{tour?.title}</Text>
         </View>
 
         {/* Tour Stops */}
         <View style={styles.stopsContainer}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Tour Stops</Text>
+            <Text style={styles.sectionTitle}>Các trạm</Text>
             <TouchableOpacity style={styles.viewAllButton}>
-              <Text style={styles.viewAllText}>View on Map</Text>
+              <Text style={styles.viewAllText}>Xem bản đồ</Text>
               <Ionicons name="map-outline" size={16} color={COLORS.primary} />
             </TouchableOpacity>
           </View>
@@ -82,6 +84,25 @@ export default function TourAudioScreen() {
             </TouchableOpacity>
           ))}
         </View>
+        <TouchableOpacity style={{ marginHorizontal: 20, marginVertical: 15 }} onPress={handleEndtour}>
+          <View style={{
+            backgroundColor: COLORS.primary,
+            paddingVertical: 15,
+            paddingHorizontal: 20,
+            borderRadius: 12,
+            alignItems: "center",
+            shadowColor: "#000",
+            shadowOpacity: 0.25,
+            shadowRadius: 3.84,
+            elevation: 5,
+          }}>
+            <Text style={{
+              color: "white",
+              fontSize: 16,
+              fontWeight: "600",
+            }}>Kết thúc</Text>
+          </View>
+        </TouchableOpacity>
         {/* Bottom spacing for fixed details panel */}
         <View style={{ height: 220 }} />
       </ScrollView>
@@ -89,39 +110,39 @@ export default function TourAudioScreen() {
       {/* Fixed Experience Details */}
       <View style={styles.fixedDetailsContainer}>
         <View style={styles.detailsHeader}>
-          <Text style={styles.detailsTitle}>Experience Details</Text>
+          <Text style={styles.detailsTitle}>Kinh nghiệm thực tế</Text>
         </View>
 
         <View style={styles.detailsGrid}>
           <View style={styles.detailItem}>
             <Ionicons name="time-outline" size={20} color={COLORS.primary} style={styles.detailIcon} />
             <View>
-              <Text style={styles.detailLabel}>Total Duration</Text>
-              <Text style={styles.detailValue}>2-3 hours</Text>
+              <Text style={styles.detailLabel}>Tổng thời gian</Text>
+              <Text style={styles.detailValue}>{tour?.duration} giờ</Text>
             </View>
           </View>
 
           <View style={styles.detailItem}>
             <Ionicons name="sunny-outline" size={20} color={COLORS.primary} style={styles.detailIcon} />
             <View>
-              <Text style={styles.detailLabel}>Best Time</Text>
-              <Text style={styles.detailValue}>Morning</Text>
+              <Text style={styles.detailLabel}>THời gian tuyệt nhất</Text>
+              <Text style={styles.detailValue}>Buổi sáng</Text>
             </View>
           </View>
 
           <View style={styles.detailItem}>
             <Ionicons name="walk-outline" size={20} color={COLORS.primary} style={styles.detailIcon} />
             <View>
-              <Text style={styles.detailLabel}>Difficulty</Text>
-              <Text style={styles.detailValue}>Easy</Text>
+              <Text style={styles.detailLabel}>Độ khó</Text>
+              <Text style={styles.detailValue}>Dễ</Text>
             </View>
           </View>
 
           <View style={styles.detailItem}>
             <Ionicons name="cash-outline" size={20} color={COLORS.primary} style={styles.detailIcon} />
             <View>
-              <Text style={styles.detailLabel}>Price Range</Text>
-              <Text style={styles.detailValue}>Free</Text>
+              <Text style={styles.detailLabel}>Giá</Text>
+              <Text style={styles.detailValue}>{tour?.price} VND</Text>
             </View>
           </View>
         </View>

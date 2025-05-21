@@ -7,6 +7,7 @@ import { User } from '@/models'
 interface JwtPayload {
   userId: string;
   email: string;
+  userName: string;
 }
 
 export const useUser = () => {

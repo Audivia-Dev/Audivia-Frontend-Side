@@ -1,20 +1,6 @@
 import { FlatList } from "react-native";
 import { ForumPost } from "./ForumPost";
-
-interface Post {
-  id: string;
-  user: {
-    id: string;
-    userName: string;
-    avatarUrl?: string;
-  };
-  location: string;
-  images: string[];
-  likes: number;
-  content: string;
-  comments: number;
-  time: string;
-}
+import { Post } from "@/models";
 
 interface PostsListProps {
   posts: Post[];

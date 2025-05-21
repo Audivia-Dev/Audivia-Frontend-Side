@@ -73,4 +73,3 @@ export const getSuggestedTours = async (long: number, lat: number, radius: numbe
     throw error
   }
 }
-
