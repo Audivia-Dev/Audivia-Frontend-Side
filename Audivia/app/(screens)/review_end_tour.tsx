@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   View, 
   Text, 
@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { writeReviewTour } from '@/services/review_tour';
 import { useUser } from '@/hooks/useUser';
+import { getTourById } from '@/services/tour';
 
 const WriteReviewScreen = () => {
   const [rating, setRating] = useState(5);
@@ -21,7 +22,21 @@ const WriteReviewScreen = () => {
   const [review, setReview] = useState('');
   const {tourId} = useLocalSearchParams()
   const {user} = useUser()
-  
+  const [tourInfor, setTourInfor] = useState()
+
+  useEffect(() => {
+    const fetchTourData = async () => {
+        try {
+            const response = await getTourById(tourId as string)
+            setTourInfor(response.response)
+        } catch (error) {
+            console.error('Error fetching tour:', error)
+        }
+    }
+
+    fetchTourData()
+  },[])
+
   const handleSubmitReview = async () => {
     if (!tourId) {
       console.error('Tour ID is missing');
@@ -57,7 +72,7 @@ const WriteReviewScreen = () => {
             <Ionicons name="arrow-back" size={24} color="#000" />
           </TouchableOpacity>
           
-          <Text style={styles.headerTitle}>Write a Review</Text>
+          <Text style={styles.headerTitle}>Viết đánh giá</Text>
           
           <TouchableOpacity 
             style={styles.closeButton}
@@ -69,18 +84,18 @@ const WriteReviewScreen = () => {
 
         <View style={styles.tourInfo}>
           <Image 
-            source={require('@/assets/images/avatar.jpg')} 
+            source={{uri: tourInfor?.thumbnailUrl}} 
             style={styles.tourImage}
           />
           <View style={styles.tourDetails}>
-            <Text style={styles.tourName}>VNUHCM Cultural House</Text>
-            <Text style={styles.tourDuration}>Duration: 2 hours</Text>
-            <Text style={styles.tourCompletion}>Completed on Jan 16, 2025</Text>
+            <Text style={styles.tourName}>{tourInfor?.title}</Text>
+            <Text style={styles.tourDuration}>{tourInfor?.duration} giờ</Text>
+            <Text style={styles.tourCompletion}>{tourInfor?.price} VND</Text>
           </View>
         </View>
 
         <View style={styles.ratingSection}>
-          <Text style={styles.ratingTitle}>Rate your experience</Text>
+          <Text style={styles.ratingTitle}>Đưa ra trải nghiệm của bạn</Text>
           <View style={styles.starsContainer}>
             {[1, 2, 3, 4, 5].map((star) => (
               <TouchableOpacity 
@@ -96,27 +111,27 @@ const WriteReviewScreen = () => {
               </TouchableOpacity>
             ))}
           </View>
-          <Text style={styles.ratingText}>{rating} out of 5</Text>
+          <Text style={styles.ratingText}>{rating} trên 5</Text>
         </View>
 
         <View style={styles.inputSection}>
-          <Text style={styles.inputLabel}>Title your review</Text>
+          <Text style={styles.inputLabel}>Tựa đề đánh giá của bạn</Text>
           <TextInput
             style={styles.titleInput}
             value={title}
             onChangeText={setTitle}
-            placeholder="Great historical insights!"
+            placeholder="1 nơi tuyệt vời !"
             placeholderTextColor="#999"
           />
         </View>
 
         <View style={styles.inputSection}>
-          <Text style={styles.inputLabel}>Write your review</Text>
+          <Text style={styles.inputLabel}>VIết đánh giá</Text>
           <TextInput
             style={styles.reviewInput}
             value={review}
             onChangeText={setReview}
-            placeholder="Share your experience with this audio tour..."
+            placeholder="Chia sẻ trải nghiệm của bản thân về chuyến đi này..."
             placeholderTextColor="#999"
             multiline
             numberOfLines={5}
@@ -128,7 +143,7 @@ const WriteReviewScreen = () => {
           style={styles.submitButton}
           onPress={handleSubmitReview}
         >
-          <Text style={styles.submitButtonText}>Submit Review</Text>
+          <Text style={styles.submitButtonText}>Đăng đánh giá</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>

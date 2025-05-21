@@ -3,7 +3,7 @@ import { View, Text, Image, StyleSheet, TouchableOpacity, SafeAreaView, ScrollVi
 import { Ionicons } from '@expo/vector-icons';
 import { SuggestedTours } from '@/components/home/SuggestedTours';
 import { Tour } from '@/models';
-import { getSuggestedTours } from '@/services/tour';
+import { getSuggestedTours, getTourById } from '@/services/tour';
 import UserLocationMap from '@/components/UserLocationMap';
 import { COLORS } from '@/constants/theme';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -14,8 +14,20 @@ const FinishTourScreen = () => {
     const [currentLocationAddress, setCurrentLocationAddress] = useState<string | null>(null);
     const {tourId} = useLocalSearchParams()
     const [hasFetchedTours, setHasFetchedTours] = useState(false);
-    
+    const [tourInfor, setTourInfor] = useState()
+
     useEffect(() => {
+        const fetchTourData = async () => {
+            try {
+                const response = await getTourById(tourId as string)
+                setTourInfor(response.response)
+            } catch (error) {
+                console.error('Error fetching tour:', error)
+            }
+        }
+
+        fetchTourData()
+
         if (userCoordinates && !hasFetchedTours) {
           getSuggestedTours(
             userCoordinates.longitude,
@@ -48,30 +60,30 @@ const FinishTourScreen = () => {
         <TouchableOpacity style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>End Tour</Text>
+        <Text style={styles.headerTitle}>Kết thúc tour</Text>
         <View style={{width: 24}} />
       </View>
 
       <ScrollView style={styles.scrollView}>
         {/* Main Image */}
         <Image 
-          source={{uri: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-zEaDXmHHhxErAr5UwBChrZPkJ1qZTs.png'}}
+          source={{uri: tourInfor?.thumbnailUrl}}
           style={styles.mainImage}
           resizeMode="cover"
         />
 
         {/* Tour Card */}
         <View style={styles.tourCard}>
-          <Text style={styles.tourName}>VNUHCM Cultural House</Text>
+          <Text style={styles.tourName}>{tourInfor?.title}</Text>
           
           <Text style={styles.congratsText}>
-            Congratulations! You have just completed the audio tour! We hope that you have had many impressive experiences during this trip!
+          Xin chúc mừng! Bạn vừa hoàn thành chuyến tham quan bằng âm thanh! Chúng tôi hy vọng bạn đã có nhiều trải nghiệm ấn tượng trong chuyến đi này!
           </Text>
           
           {/* Rating */}
           <TouchableOpacity onPress={handleReview}>
           <View style={styles.ratingSection}>
-            <Text style={styles.rateText}>Rate your experience</Text>
+            <Text style={styles.rateText}>Đánh giá trải nghiệm của bạn</Text>
             <View style={styles.starsContainer}>
               <Ionicons name="star" size={24} color={COLORS.grey} />
               <Ionicons name="star" size={24} color={COLORS.grey} />
@@ -79,13 +91,13 @@ const FinishTourScreen = () => {
               <Ionicons name="star" size={24} color={COLORS.grey} />
               <Ionicons name="star" size={24} color={COLORS.grey} />
             </View>
-            <Text style={styles.ratingText}>5 out of 5</Text>
+            <Text style={styles.ratingText}>5 trên 5</Text>
           </View>
           
           </TouchableOpacity>
           {/* Funny Quiz Button */}
           <TouchableOpacity style={styles.quizButton}>
-            <Text style={styles.quizButtonText}>Funny Quiz</Text>
+            <Text style={styles.quizButtonText}>Câu đố vui</Text>
           </TouchableOpacity>
           
           {/* Discover More Tours */}

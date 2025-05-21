@@ -19,17 +19,17 @@ const EndTourScreen = () => {
           <Ionicons name="checkmark" size={40} color="#fff" />
         </View>
         
-        <Text style={styles.endTourText}>END TOUR</Text>
+        <Text style={styles.endTourText}>Kết thúc tour</Text>
         
         <View style={styles.contentContainer}>
-          <Text style={styles.congratsText}>Congratulations!</Text>
+          <Text style={styles.congratsText}>Chúc mừng!</Text>
           <Text style={styles.messageText}>
-            You have successfully completed our tour
+            Bạn vừa hoàn thành chuyến tham quan 
           </Text>
         </View>
 
         <TouchableOpacity style={styles.button} onPress={onFinish}>
-          <Text style={styles.buttonText}>Continue</Text>
+          <Text style={styles.buttonText}>Tiếp tục</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
