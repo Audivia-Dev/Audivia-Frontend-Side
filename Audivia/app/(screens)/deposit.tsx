@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react"
+import React, { useRef, useState, useEffect } from "react"
 import {
   View,
   Text,
@@ -9,20 +9,24 @@ import {
   Linking,
 } from "react-native"
 import { Ionicons } from "@expo/vector-icons"
-import { useRouter } from "expo-router"
+import { useLocalSearchParams, useRouter } from "expo-router"
 import { COLORS } from "@/constants/theme"
 import styles from "@/styles/deposit.styles"
-import { createPaymentIntent } from "@/services/payment"
+import { createPaymentIntent, checkPaymentStatus } from "@/services/payment"
 import QRCode from "react-native-qrcode-svg"
 import ViewShot from "react-native-view-shot"
 import * as MediaLibrary from "expo-media-library"
 
 export default function DepositScreen() {
-  const [amount, setAmount] = useState("")
+  const params = useLocalSearchParams()
+  const [amount, setAmount] = useState(params.amount ? String(params.amount) : "")
   const [isProcessing, setIsProcessing] = useState(false)
   const [qrInfo, setQrInfo] = useState<any>(null)
+  const [paymentStatus, setPaymentStatus] = useState<'PENDING' | 'PAID' | 'failed'>('PENDING')
   const qrRef = useRef(null)
   const router = useRouter()
+ 
+
 
   const goBack = () => router.back()
 
@@ -45,15 +49,57 @@ export default function DepositScreen() {
         returnUrl,
         cancelUrl,
         Number(amount),
-        "Nạp tiền vào ví"
+        "Nạp tiền vào ví" 
       )
       setQrInfo(response.qrCode)
+      setPaymentStatus('PENDING')
     } catch (error) {
       Alert.alert("Lỗi", "Không thể tạo mã QR. Vui lòng thử lại.")
     } finally {
       setIsProcessing(false)
     }
   }
+ 
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout;
+
+    const checkStatus = async () => {
+      if (!qrInfo?.paymentLinkId) return;
+
+      try {    
+        //b7e91ef899c5495ba6c4dc4b1701e761
+       // const response = await checkPaymentStatus("b7e91ef899c5495ba6c4dc4b1701e761")    
+        const response = await checkPaymentStatus(qrInfo?.paymentLinkId)       
+
+        const status = response.status
+
+        if (status === 'PAID') {
+          setPaymentStatus('PAID')
+          router.push(`/(screens)/payment_success?tourId=${params.tourId}&redirect=${params.redirect}`)
+          clearInterval(intervalId)
+        } else if (status === 'CANCELLED' || status === 'EXPIRED') {
+          setPaymentStatus('failed')
+          Alert.alert("Thất bại", "Thanh toán không thành công")
+          clearInterval(intervalId)
+        }
+      } catch (error) {
+        console.error('lỗi rồi:', error)
+      }
+    }
+
+    if (qrInfo?.paymentLinkId && paymentStatus === 'PENDING') {
+      // Kiểm tra trạng thái mỗi 5 giây
+      intervalId = setInterval(checkStatus, 5000)
+    }
+
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId)
+      }
+    }
+  }, [qrInfo?.paymentLinkId, paymentStatus])
+
+
 
   const formatCurrency = (value: string) => {
     if (!value) return ""
@@ -127,15 +173,16 @@ export default function DepositScreen() {
 
         {qrInfo && (
           <View style={styles.qrInfoContainer}>
+            <Text style={{color: 'red'}}>Lưu ý: Chỉ chuyển khoản qua app ngân hàng (không chuyển qua ví điện tử)</Text>
             <Text style={styles.infoText}>Ngân hàng (BIN): {qrInfo.bin}</Text>
             <Text style={styles.infoText}>Số tài khoản: {qrInfo.accountNumber}</Text>
             <Text style={styles.infoText}>Chủ tài khoản: {qrInfo.accountName}</Text>
             <Text style={styles.infoText}>Số tiền: {formatCurrency(String(qrInfo.amount))}</Text>
             <Text style={styles.infoText}>Nội dung: {qrInfo.description}</Text>
 
-            <TouchableOpacity onPress={() => Linking.openURL(qrInfo.checkoutUrl)}>
+            {/* <TouchableOpacity onPress={() => Linking.openURL(qrInfo.checkoutUrl)}>
               <Text style={styles.linkText}>Mở trang thanh toán</Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
 
             <View style={{ alignItems: "center", marginTop: 12 }}>
               <ViewShot ref={qrRef} options={{ format: "png", quality: 1.0 }}>
