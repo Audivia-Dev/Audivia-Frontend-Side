@@ -174,8 +174,7 @@ export const styles = StyleSheet.create({
   },
   postButton: {
     color: COLORS.primary,
-    fontWeight: "600",
-    fontSize: 14,
+    fontWeight: "bold",
   },
   icon: {
     marginRight: 16,
@@ -193,5 +192,79 @@ export const styles = StyleSheet.create({
   avatarImage: {
     width: "100%",
     height: "100%",
+  },
+  commentsSection: {
+    marginTop: 8,
+    paddingHorizontal: 15,
+  },
+  commentItem: {
+    flexDirection: "row",
+    marginBottom: 4,
+  },
+  commentUser: {
+    fontWeight: "bold",
+    marginRight: 5,
+  },
+  commentText: {
+    flex: 1,
+  },
+  // Styles for Comments Modal
+  modalOverlay: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.5)",
+  },
+  modalView: {
+    margin: 20,
+    backgroundColor: "white",
+    borderRadius: 20,
+    padding: 35,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+    width: '90%',
+    maxHeight: '80%',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 15,
+  },
+  modalCommentItem: {
+    flexDirection: "row",
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.lightGrey,
+    width: '100%',
+  },
+  modalCommentUser: {
+    fontWeight: "bold",
+    marginRight: 8,
+    color: COLORS.dark, // Or your preferred color
+  },
+  modalCommentText: {
+    flex: 1,
+    color: COLORS.darkGrey, // Or your preferred color
+  },
+  button: {
+    borderRadius: 20,
+    padding: 10,
+    elevation: 2,
+    marginTop: 15,
+  },
+  buttonClose: {
+    backgroundColor: COLORS.primary,
+  },
+  textStyle: {
+    color: "white",
+    fontWeight: "bold",
+    textAlign: "center",
   },
 })
