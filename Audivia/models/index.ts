@@ -40,7 +40,7 @@ export interface User {
   email: string;
   avatarUrl: string;
   phone: string;
-  balanceWallet: string;
+  balanceWallet: number;
   bio: string;
   coverPhoto: string;
   followers: string;
@@ -88,4 +88,15 @@ export interface ChatRoomMember {
   nickname: string;
   isHost: boolean;
   user: User
+}
+
+export interface TransactionHistory {
+  id: string;
+  userId: string;
+  tourId: string;
+  amount: number;
+  description: string;
+  type: string;
+  status: string;
+  createdAt: Date;
 }

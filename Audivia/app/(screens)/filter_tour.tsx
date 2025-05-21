@@ -43,7 +43,7 @@ export default function FilterTourScreen() {
   }
   const handleSaveTour = async (tourId: string) => {
     try {
-      await createSaveTour(user?.id, tourId)
+      await createSaveTour(user?.id as string, tourId)
       Alert.alert("Đã lưu tour", "Tour đã được thêm vào danh sách yêu thích.")
     } catch (error) {
       Alert.alert("Lỗi", "Không thể lưu tour.")

@@ -1,67 +1,53 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, StatusBar, ScrollView, FlatList } from "react-native"
 import { Ionicons, MaterialIcons, FontAwesome5 } from "@expo/vector-icons"
 import { COLORS } from "@/constants/theme"
 import { useRouter } from "expo-router"
 import styles from "@/styles/history_transaction.styles"
 import { useUser } from "@/hooks/useUser"
-// Dữ liệu mẫu cho lịch sử giao dịch
-const TRANSACTIONS = [
-  {
-    id: "1",
-    type: "deposit",
-    amount: 500000,
-    date: "15/04/2025",
-    time: "10:30",
-    description: "Nạp tiền vào ví",
-    status: "completed",
-  },
-  {
-    id: "2",
-    type: "payment",
-    amount: -350000,
-    date: "10/04/2025",
-    time: "14:15",
-    description: "Thanh toán Tour Vịnh Hạ Long",
-    status: "completed",
-  },
-  {
-    id: "3",
-    type: "refund",
-    amount: 150000,
-    date: "05/04/2025",
-    time: "09:45",
-    description: "Hoàn tiền từ hủy tour",
-    status: "completed",
-  },
-  {
-    id: "4",
-    type: "payment",
-    amount: -200000,
-    date: "01/04/2025",
-    time: "16:20",
-    description: "Thanh toán Tour Hội An",
-    status: "completed",
-  },
-  {
-    id: "5",
-    type: "refund",
-    amount: 150000,
-    date: "05/04/2025",
-    time: "09:45",
-    description: "Hoàn tiền từ hủy tour",
-    status: "completed",
-  },
-]
+import apiClient from "@/utils/apiClient"
+import { getHistoryTransactionByUserId, getPaymentTransactionHistory } from "@/services/historyTransaction"
+
 
 export default function WalletScreen() {
   const [activeTab, setActiveTab] = useState("all")
   const router = useRouter()
   const { user } = useUser()
+  const [paymentHistories, setPaymentHistories] = useState()
+  const [purchasedHistories, setPurchasedHistories] = useState()
 
   const goBack = () => {
     router.back()
   }
+
+  const getPaymentHistories = async () => {
+    try{
+      const response = await getPaymentTransactionHistory(user?.id as string)
+      setPaymentHistories(response)
+    } catch (error)
+    {
+      console.error("Fetching payment histories", error);
+      
+    }
+  } 
+
+  const getPurchasedHistories = async () => {
+    try {
+      const response = await getHistoryTransactionByUserId(user?.id as string)
+      setPurchasedHistories(response)
+    } catch (error) {
+      console.error("Fetching purchased histories", error);
+    }
+  }
+
+  useEffect(() => {
+    if (user?.id){
+      getPaymentHistories()
+      getPurchasedHistories()
+    }
+
+  }, [user?.id])
+
 
   const navigateToDeposit = () => {
     router.push("/deposit")
@@ -87,21 +73,47 @@ export default function WalletScreen() {
     }).format(amount)
   }
 
+  const formatDateTime = (isoString: string) => {
+    const date = new Date(isoString)
+    const day = String(date.getDate()).padStart(2, '0')
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const year = date.getFullYear()
+    const hours = String(date.getHours()).padStart(2, '0')
+    const minutes = String(date.getMinutes()).padStart(2, '0')
+    const seconds = String(date.getSeconds()).padStart(2, '0')
+    return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`
+  }
+
   const renderTransaction = ({ item }: { item: any }) => (
     <TouchableOpacity style={styles.transactionItem}>
-      <View style={styles.transactionIconContainer}>{getTransactionIcon(item.type)}</View>
+      <View style={styles.transactionIconContainer}>{getTransactionIcon("deposit")}</View>
       <View style={styles.transactionDetails}>
         <Text style={styles.transactionDescription}>{item.description}</Text>
+        {/* {item.tourName && <Text style={styles.transactionTourName}>{item.tourName}</Text>} */}
         <Text style={styles.transactionDateTime}>
-          {item.date} • {item.time}
+          {formatDateTime(item.paymentTime)}
         </Text>
       </View>
       <Text style={[styles.transactionAmount, { color: item.amount >= 0 ? COLORS.green : COLORS.red }]}>
-        {formatCurrency(item.amount)}
+        +{formatCurrency(item.amount)}
       </Text>
     </TouchableOpacity>
   )
 
+  const renderPurchasedTransaction = ({ item }: { item: any }) => (
+    <TouchableOpacity style={styles.transactionItem}>
+      <View style={styles.transactionIconContainer}>{getTransactionIcon("payment")}</View>
+      <View style={styles.transactionDetails}>
+        <Text style={styles.transactionDescription}>{item.tour?.title || item.description}</Text>
+        <Text style={styles.transactionDateTime}>
+          {formatDateTime(item.createdAt)}
+        </Text>
+      </View>
+      <Text style={[styles.transactionAmount, { color: COLORS.red }]}>
+        -{formatCurrency(item.amount)}
+      </Text>
+    </TouchableOpacity>
+  )
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={COLORS.primary} />
@@ -150,16 +162,16 @@ export default function WalletScreen() {
               style={[styles.transactionTab, activeTab === "all" && styles.activeTransactionTab]}
               onPress={() => setActiveTab("all")}
             >
-              <Text style={[styles.transactionTabText, activeTab === "all" && styles.activeTransactionTabText]}>
+              {/* <Text style={[styles.transactionTabText, activeTab === "all" && styles.activeTransactionTabText]}>
                 Tất cả
-              </Text>
+              </Text> */}
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.transactionTab, activeTab === "in" && styles.activeTransactionTab]}
               onPress={() => setActiveTab("in")}
             >
               <Text style={[styles.transactionTabText, activeTab === "in" && styles.activeTransactionTabText]}>
-                Tiền vào
+                Nạp tiền
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -167,17 +179,26 @@ export default function WalletScreen() {
               onPress={() => setActiveTab("out")}
             >
               <Text style={[styles.transactionTabText, activeTab === "out" && styles.activeTransactionTabText]}>
-                Tiền ra
+                Mua tour
               </Text>
             </TouchableOpacity>
           </View>
 
-          <FlatList
-            data={TRANSACTIONS}
-            renderItem={renderTransaction}
-            keyExtractor={(item) => item.id}
-            scrollEnabled={false}
-          />
+          {activeTab === "out" ? (
+            <FlatList
+              data={purchasedHistories}
+              renderItem={renderPurchasedTransaction}
+              keyExtractor={(item) => item.id}
+              scrollEnabled={false}
+            />
+          ) : (
+            <FlatList
+              data={paymentHistories}
+              renderItem={renderTransaction}
+              keyExtractor={(item) => item.id}
+              scrollEnabled={false}
+            />
+          )}
         </View>
 
         {/* Bottom spacing */}
@@ -187,4 +208,3 @@ export default function WalletScreen() {
     </SafeAreaView>
   )
 }
-
