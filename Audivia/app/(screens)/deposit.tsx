@@ -16,6 +16,7 @@ import { createPaymentIntent, checkPaymentStatus } from "@/services/payment"
 import QRCode from "react-native-qrcode-svg"
 import ViewShot from "react-native-view-shot"
 import * as MediaLibrary from "expo-media-library"
+import { useUser } from "@/hooks/useUser"
 
 export default function DepositScreen() {
   const params = useLocalSearchParams()
@@ -25,7 +26,7 @@ export default function DepositScreen() {
   const [paymentStatus, setPaymentStatus] = useState<'PENDING' | 'PAID' | 'failed'>('PENDING')
   const qrRef = useRef(null)
   const router = useRouter()
- 
+  const {user} = useUser()
 
 
   const goBack = () => router.back()
@@ -43,9 +44,11 @@ export default function DepositScreen() {
 
     try {
       setIsProcessing(true)
-      const returnUrl = "audivia://payment_success"
-      const cancelUrl = "audivia://payment_cancel"
+      const userId = user?.id as string
+      const returnUrl = "audivia://payment_success" 
+      const cancelUrl = "audivia://payment_cancel" 
       const response = await createPaymentIntent(
+        userId,
         returnUrl,
         cancelUrl,
         Number(amount),
