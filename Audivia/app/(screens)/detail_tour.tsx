@@ -47,7 +47,7 @@ export default function TourDetailScreen() {
   }
 
   const startTour = () => {
-    router.push(`/tour_audio?tourId=${tourId}`)
+    router.push(`/character_selection?tourId=${tourId}`)
   }
 
   const handlePurchase = () => {

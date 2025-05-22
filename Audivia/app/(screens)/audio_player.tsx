@@ -12,12 +12,14 @@ import { getNextAudioByCheckpointId, getPrevAudioByCheckpointId, getTourAudioByC
 export default function AudioPlayerScreen() {
   const [isPlaying, setIsPlaying] = useState(false)
   const [sound, setSound] = useState<Audio.Sound | null>(null)
-  const checkpointId = useLocalSearchParams().checkpointId
+  const {checkpointId } = useLocalSearchParams()
+  const { characterId } = useLocalSearchParams()
   const [audioData, setAudioData] = useState(null)
 
   useEffect(() => {
     const fetchAudioData = async () => {
-      const response = await getTourAudioByCheckpointId(checkpointId as string)
+      const response = await getTourAudioByCheckpointId(checkpointId as string, characterId as string)
+      console.log('AUDIO', response.response)
       if (response) setAudioData(response.response)
     }
     fetchAudioData()
