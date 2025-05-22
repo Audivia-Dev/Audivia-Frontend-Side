@@ -133,15 +133,15 @@ export default function TourDetailScreen() {
             </View>
 
             <View style={styles.paymentMethodHeader}>
-              <Text style={styles.paymentMethodTitle}>Payment Method</Text>
+              <Text style={styles.paymentMethodTitle}>Phương thức thanh toán</Text>
               {/* <TouchableOpacity>
                 <Text style={styles.changeText}>Change</Text>
               </TouchableOpacity> */}
             </View>
             <View style={styles.walletBox}>
               <View style={styles.walletLeft}>
-                <Text style={styles.walletName}>Audivia Wallet</Text>
-                <Text style={styles.walletBalance}>Balance: {user?.balanceWallet} VNĐ</Text>
+                <Text style={styles.walletName}>Ví Audivia</Text>
+                <Text style={styles.walletBalance}>Số dư: {user?.balanceWallet} VNĐ</Text>
               </View>
               {/* <TouchableOpacity>
                 <Text style={styles.changeText}>Change</Text>
@@ -149,7 +149,7 @@ export default function TourDetailScreen() {
             </View>
 
             <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>Total</Text>
+              <Text style={styles.totalLabel}>Tổng tiền: </Text>
               <Text style={styles.totalAmount}>{tour?.price} VNĐ</Text>
             </View>
 
@@ -157,11 +157,11 @@ export default function TourDetailScreen() {
               style={styles.purchaseButton} 
               onPress={handleConfirmPurchase}
             >
-              <Text style={styles.purchaseButtonText}>Confirm & Play Now</Text>
+              <Text style={styles.purchaseButtonText}>Xác nhận thanh toán</Text>
             </TouchableOpacity>
 
             <View style={styles.secureRow}>
-              <Text style={styles.secureText}>Secure payment processed by Audivia</Text>
+              <Text style={styles.secureText}>Giao dịch được bảo mật bởi Audivia</Text>
             </View>
           </View>
         </View>
