@@ -1,13 +1,26 @@
 import { View, TouchableOpacity, Text } from "react-native"
 import { Ionicons } from "@expo/vector-icons"
 import styles from "@/styles/audio_player"
+import { useRoute } from "@react-navigation/native"
+import { useRouter } from "expo-router"
 
 interface AudioHeaderProps {
+  checkpointId: string
   onBackPress?: () => void
   onMenuPress?: () => void
 }
 
-export default function AudioHeader({ onBackPress, onMenuPress }: AudioHeaderProps) {
+export default function AudioHeader({checkpointId, onBackPress, onMenuPress }: AudioHeaderProps) {
+  
+  const router = useRouter()
+
+  const handleDetail = () => {
+    router.push(`/tour_checkpoint_detail?checkpointId=${checkpointId}`);
+  }
+  
+  
+  
+  
   return (
     <View style={styles.header}>
       <TouchableOpacity style={styles.backButton} onPress={onBackPress}>
@@ -16,7 +29,7 @@ export default function AudioHeader({ onBackPress, onMenuPress }: AudioHeaderPro
       <View style={styles.headerTitle}>
         <Text style={styles.headerText}>Audio Player</Text>
       </View>
-      <TouchableOpacity style={styles.menuButton} onPress={onMenuPress}>
+      <TouchableOpacity style={styles.menuButton} onPress={handleDetail}>
         <Ionicons name="ellipsis-vertical" size={24} color="#fff" />
       </TouchableOpacity>
     </View>

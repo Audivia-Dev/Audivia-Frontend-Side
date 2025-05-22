@@ -5,7 +5,6 @@ import { COLORS } from "@/constants/theme"
 import { useRouter } from "expo-router"
 import styles from "@/styles/history_transaction.styles"
 import { useUser } from "@/hooks/useUser"
-import apiClient from "@/utils/apiClient"
 import { getHistoryTransactionByUserId, getPaymentTransactionHistory } from "@/services/historyTransaction"
 
 
@@ -13,8 +12,8 @@ export default function WalletScreen() {
   const [activeTab, setActiveTab] = useState("all")
   const router = useRouter()
   const { user } = useUser()
-  const [paymentHistories, setPaymentHistories] = useState()
-  const [purchasedHistories, setPurchasedHistories] = useState()
+  const [paymentHistories, setPaymentHistories] = useState<any[]>([])
+  const [purchasedHistories, setPurchasedHistories] = useState<any[]>([])
 
   const goBack = () => {
     router.back()
@@ -84,6 +83,59 @@ export default function WalletScreen() {
     return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`
   }
 
+  const getAllTransactions = () => {
+    const allTransactions = [
+      ...(paymentHistories || []).map(item => ({
+        ...item,
+        type: 'payment',
+        displayTime: item.paymentTime
+      })),
+      ...(purchasedHistories || []).map(item => ({
+        ...item,
+        type: 'purchase',
+        displayTime: item.createdAt
+      }))
+    ];
+    
+    return allTransactions.sort((a, b) => 
+      new Date(b.displayTime).getTime() - new Date(a.displayTime).getTime()
+    );
+  }
+
+  const renderAllTransaction = ({ item }: { item: any }) => {
+    if (item.type === 'payment') {
+      return (
+        <TouchableOpacity style={styles.transactionItem}>
+          <View style={styles.transactionIconContainer}>{getTransactionIcon("deposit")}</View>
+          <View style={styles.transactionDetails}>
+            <Text style={styles.transactionDescription}>{item.description}</Text>
+            <Text style={styles.transactionDateTime}>
+              {formatDateTime(item.paymentTime)}
+            </Text>
+          </View>
+          <Text style={[styles.transactionAmount, { color: item.amount >= 0 ? COLORS.green : COLORS.red }]}>
+            +{formatCurrency(item.amount)}
+          </Text>
+        </TouchableOpacity>
+      );
+    } else {
+      return (
+        <TouchableOpacity style={styles.transactionItem}>
+          <View style={styles.transactionIconContainer}>{getTransactionIcon("payment")}</View>
+          <View style={styles.transactionDetails}>
+            <Text style={styles.transactionDescription}>{item.tour?.title || item.description}</Text>
+            <Text style={styles.transactionDateTime}>
+              {formatDateTime(item.createdAt)}
+            </Text>
+          </View>
+          <Text style={[styles.transactionAmount, { color: COLORS.red }]}>
+            -{formatCurrency(item.amount)}
+          </Text>
+        </TouchableOpacity>
+      );
+    }
+  }
+
   const renderTransaction = ({ item }: { item: any }) => (
     <TouchableOpacity style={styles.transactionItem}>
       <View style={styles.transactionIconContainer}>{getTransactionIcon("deposit")}</View>
@@ -100,7 +152,7 @@ export default function WalletScreen() {
     </TouchableOpacity>
   )
 
-  const renderPurchasedTransaction = ({ item }: { item: any }) => (
+  const renderPurchasedTransaction: ({ item }: { item: any }) => JSX.Element = ({ item }) => (
     <TouchableOpacity style={styles.transactionItem}>
       <View style={styles.transactionIconContainer}>{getTransactionIcon("payment")}</View>
       <View style={styles.transactionDetails}>
@@ -162,9 +214,9 @@ export default function WalletScreen() {
               style={[styles.transactionTab, activeTab === "all" && styles.activeTransactionTab]}
               onPress={() => setActiveTab("all")}
             >
-              {/* <Text style={[styles.transactionTabText, activeTab === "all" && styles.activeTransactionTabText]}>
+              <Text style={[styles.transactionTabText, activeTab === "all" && styles.activeTransactionTabText]}>
                 Tất cả
-              </Text> */}
+              </Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.transactionTab, activeTab === "in" && styles.activeTransactionTab]}
@@ -184,7 +236,14 @@ export default function WalletScreen() {
             </TouchableOpacity>
           </View>
 
-          {activeTab === "out" ? (
+          {activeTab === "all" ? (
+            <FlatList
+              data={getAllTransactions()}
+              renderItem={renderAllTransaction}
+              keyExtractor={(item) => item.id}
+              scrollEnabled={false}
+            />
+          ) : activeTab === "out" ? (
             <FlatList
               data={purchasedHistories}
               renderItem={renderPurchasedTransaction}

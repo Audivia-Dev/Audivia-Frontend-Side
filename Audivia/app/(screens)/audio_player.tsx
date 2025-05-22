@@ -76,7 +76,7 @@ export default function AudioPlayerScreen() {
   if (!audioData) {
     return (
       <SafeAreaView style={styles.container}>
-        <AudioHeader onBackPress={handleBack} />
+        <AudioHeader onBackPress={handleBack} checkpointId={checkpointId as string}/>
        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <ActivityIndicator size="large" color="#007AFF" />
       </View>
@@ -86,15 +86,15 @@ export default function AudioPlayerScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <AudioHeader onBackPress={handleBack} />
-      <AudioImage imageUrl={audioData.image} />
+      <AudioHeader onBackPress={handleBack} checkpointId={checkpointId as string}/>
+      <AudioImage imageUrl={audioData?.image} />
       <PlayerControls 
       isPlaying={isPlaying} 
       onPlayPause={togglePlayPause} 
       onNext={() => handleNextAudio()} 
       onPrevious={() => handlePrevAudio()}/>
       <ScrollView style={{ flex: 1, margin: 20 }} showsVerticalScrollIndicator={false}>
-        <Transcript text={audioData.transcript} />
+        <Transcript text={audioData?.transcript} />
       </ScrollView>
     </SafeAreaView>
   )
