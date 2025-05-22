@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   View, 
   Text, 
@@ -13,25 +13,67 @@ import { Ionicons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { COLORS } from '@/constants/theme';
 import { router } from 'expo-router';
+import { getHistoryTransactionByUserId } from '@/services/historyTransaction';
+import { useUser } from '@/hooks/useUser';
+
+interface TourType {
+  id: string;
+  tourTypeName: string;
+  isDeleted: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface Tour {
+  id: string;
+  title: string;
+  location: string | null;
+  description: string;
+  price: number;
+  duration: number;
+  typeId: string;
+  tourType: TourType;
+  thumbnailUrl: string;
+  avgRating: number;
+  startLatitude: number | null;
+  startLongitude: number | null;
+  isDeleted: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface PurchasedTour {
+  id: string;
+  userId: string;
+  tourId: string;
+  audioCharacterId: string | null;
+  amount: number;
+  description: string;
+  type: string;
+  status: string;
+  isDeleted: boolean;
+  createdAt: string;
+  updatedAt: string;
+  tour: Tour;
+}
 
 interface MucMuaProps {
-  image: ImageSourcePropType;
+  thumbnailUrl: string;
   title: string;
   date: string;
-  price: string;
-  isActive: boolean;
+  price: number;
   onStartTour: () => void;
 }
 
-const MucMua: React.FC<MucMuaProps> = ({ image, title, date, price, onStartTour }) => {
+const MucMua: React.FC<MucMuaProps> = ({ thumbnailUrl, title, date, price, onStartTour }) => {
   return (
     <View style={styles.purchaseItem}>
-      <Image source={image} style={styles.purchaseImage} />
+      <Image source={{ uri: thumbnailUrl }} style={styles.purchaseImage} />
       <View style={styles.purchaseDetails}>
         <Text style={styles.purchaseTitle}>{title}</Text>
-        <Text style={styles.purchaseDate}>Đã mua vào ngày {date}</Text>
+        <Text style={styles.purchaseDate}>Đã mua vào ngày {new Date(date).toLocaleDateString('vi-VN')}</Text>
         <View style={styles.purchaseRow}>
-          <Text style={styles.purchasePrice}>{price} đ</Text>
+          <Text style={styles.purchasePrice}>{price.toLocaleString('vi-VN')} đ</Text>
           <View style={styles.activeContainer}>
             <View style={styles.activeDot} />
             <Text style={styles.activeText}>Đang hoạt động</Text>
@@ -51,9 +93,27 @@ interface ManHinhLichSuMuaProps {
 }
 
 const PurchaseTour: React.FC<ManHinhLichSuMuaProps> = ({ navigation }) => {
+  const { user } = useUser();
+  const [purchasedTours, setPurchasedTours] = useState<PurchasedTour[]>([]);
+
+  const fetchPurchasedTour = async () => {
+    try {
+      const response = await getHistoryTransactionByUserId(user?.id as string);
+      setPurchasedTours(response as PurchasedTour[]);
+    } catch (error) {
+      console.error('Error fetching purchased tours:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (user?.id) {
+      fetchPurchasedTour();
+    }
+  }, [user?.id]);
+
   const handleStartTour = (tourId: string) => {
     console.log(`Bắt đầu tour: ${tourId}`);
-    // Navigate to tour screen
+    router.push(`/detail_tour?tourId=${tourId}`);
   };
 
   return (
@@ -73,23 +133,16 @@ const PurchaseTour: React.FC<ManHinhLichSuMuaProps> = ({ navigation }) => {
       <ScrollView style={styles.scrollView}>
         {/* Purchases List */}
         <View style={styles.purchasesList}>
-          <MucMua
-            image={require('@/assets/images/avatar.jpg')}
-            title="Chợ Bến Thành"
-            date="05/03/2025"
-            price="35.000"
-            isActive={true}
-            onStartTour={() => handleStartTour('ben-thanh')}
-          />
-          
-          <MucMua
-            image={require('@/assets/images/avatar.jpg')}
-            title="Dinh Độc Lập"
-            date="05/03/2025"
-            price="45.000"
-            isActive={true}
-            onStartTour={() => handleStartTour('independence-palace')}
-          />
+          {purchasedTours.map((purchasedTour) => (
+            <MucMua
+              key={purchasedTour.id}
+              thumbnailUrl={purchasedTour.tour.thumbnailUrl}
+              title={purchasedTour.tour.title}
+              date={purchasedTour.createdAt}
+              price={purchasedTour.amount}
+              onStartTour={() => handleStartTour(purchasedTour.tourId)}
+            />
+          ))}
         </View>
 
       </ScrollView>
