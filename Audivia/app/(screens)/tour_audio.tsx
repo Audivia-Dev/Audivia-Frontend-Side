@@ -13,24 +13,41 @@ import styles from "@/styles/tour_audio.styles"
 import { useEffect, useState } from "react"
 import { Tour } from "@/models"
 import { getTourById } from "@/services/tour"
+import { useUser } from "@/hooks/useUser"
+import { checkUserPurchasedTour } from "@/services/historyTransaction"
 
 export default function TourAudioScreen() {
     const router = useRouter()
     const { tourId } = useLocalSearchParams()
     const [tour, setTour] = useState<Tour>()
+    const {user} = useUser()
+    const [characterId, setCharacterId] = useState(null)
     useEffect(() => {
         const fetchTourById = async () => {
           const response = await getTourById(tourId as string)
           setTour(response.response)
         }
         fetchTourById()
-      }, [])
-    
+        if (user?.id) {
+          checkIfUserPurchasedTour()
+        }
+      }, [user?.id, tourId])
+
+  const checkIfUserPurchasedTour = async () => {
+        if (!user?.id) return
+        const response = await checkUserPurchasedTour(user?.id, tourId as string)
+        console.log('HHUHU',response)
+        setCharacterId(response.audioCharacterId)
+      }
   const handleBack = () => {
     router.back()
   }
-  const handleAudioPlay =(checkpointId: string) => {
-    router.push(`/audio_player?checkpointId=${checkpointId}`)
+  const handleAudioPlay = (checkpointId: string) => {
+    if (!characterId) {
+      console.error('No character ID found. Please select a character first.')
+      return
+    }
+    router.push(`/audio_player?checkpointId=${checkpointId}&characterId=${characterId}`)
   }
   const handleEndtour = () => {
     router.push(`/(screens)/end_tour_confirm?tourId=${tourId}`)

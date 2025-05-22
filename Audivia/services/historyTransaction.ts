@@ -24,7 +24,7 @@ export const checkUserPurchasedTour = async (userId: string, tourId: string) => 
   try{
     console.warn(userId);
     console.warn(tourId);
-    
+    console.log(userId, tourId)
     const response = await apiClient.get(`/transaction-histories/user/${userId}/tour/${tourId}`);
     console.warn(response.data);
     
@@ -51,5 +51,15 @@ export const getPaymentTransactionHistory = async (userId: string) => {
     return response.data.response
   } catch (error) {
     console.error('Error fetching payment transaction histories:', error)
+  }
+}
+export const updateAudioCharacterId = async (id: string, audioCharacterId: string) => {
+  try {
+    const response = await apiClient.put(`/transaction-histories/character/${id}`, {
+      audioCharacterId
+    })
+    return response.data.response
+  } catch (error) {
+    console.error('Error updating audio character ID:', error)
   }
 }

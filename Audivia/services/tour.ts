@@ -36,9 +36,9 @@ export const getTourAudioById = async () => {
     throw error;
   }
 }
-export const getTourAudioByCheckpointId = async (checkpointId: string) => {
+export const getTourAudioByCheckpointId = async (checkpointId: string, characterId: string) => {
   try {
-    const response = await apiClient.get(`/checkpoint-audios/checkpointId/${checkpointId}`)
+    const response = await apiClient.get(`/checkpoint-audios/checkpoint/${checkpointId}/character/${characterId}`)
     return response.data
   } catch (error) {
     console.error('Lỗi lấy tour audio:', error)

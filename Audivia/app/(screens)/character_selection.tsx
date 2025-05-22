@@ -1,53 +1,68 @@
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import {
   View,
   Text,
   TouchableOpacity,
   Image,
-  Dimensions,
-  StyleSheet,
   Animated,
   ActivityIndicator,
 } from "react-native"
 import { Audio } from "expo-av"
 import { Ionicons } from "@expo/vector-icons"
 import { COLORS } from "@/constants/theme"
-
-const { width } = Dimensions.get("window")
-const CARD_WIDTH = width * 0.8
+import { getCharacters } from "@/services/character"
+import { updateAudioCharacterId } from "@/services/historyTransaction"
+import styles from "@/styles/character_selection"
+import { router, useLocalSearchParams } from "expo-router"
+import { useUser } from "@/hooks/useUser"
+import { checkUserPurchasedTour } from "@/services/historyTransaction"
 
 const CharacterSelectionScreen = () => {
-  const [selectedCharacter, setSelectedCharacter] = useState<number>(1)
+  const [selectedCharacter, setSelectedCharacter] = useState<string>("")
   const [isPlaying, setIsPlaying] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const [currentSlide, setCurrentSlide] = useState(1)
+  const [currentSlide, setCurrentSlide] = useState(0)
+  const [characters, setCharacters] = useState<any[]>([])
+  const [isLoadingData, setIsLoadingData] = useState(true)
   const soundRef = useRef<Audio.Sound | null>(null)
   const scaleAnim = useRef(new Animated.Value(1)).current
+  const {user} = useUser()
+  const {tourId} = useLocalSearchParams()
+  const [userTourId, setUserTourId] = useState(null)
 
-  const characters = [
-    {
-      id: 0,
-      name: "Viking",
-      image: "https://res.cloudinary.com/dgzn2ix8w/image/upload/v1747814934/Audivia/y8yrmmdevcpgwiqsw4xz.png",
-      color: "#FF6B6B",
-      previewAudio: "https://example.com/viking-preview.mp3",
-    },
-    {
-      id: 1,
-      name: "Musician",
-      image: "https://res.cloudinary.com/dgzn2ix8w/image/upload/v1747814934/Audivia/y8yrmmdevcpgwiqsw4xz.png",
-      color: "#4ECDC4",
-      previewAudio: "https://example.com/musician-preview.mp3",
-    },
-    {
-      id: 2,
-      name: "Surfer",
-      image: "https://res.cloudinary.com/dgzn2ix8w/image/upload/v1747814934/Audivia/y8yrmmdevcpgwiqsw4xz.png",
-      color: "#C7F464",
-      previewAudio: "https://example.com/surfer-preview.mp3",
-    },
-  ]
+  useEffect(() => {
+    const fetchCharacters = async () => {
+      try {
+        setIsLoadingData(true)
+        const response = await getCharacters()
+        if (response) {
+          setCharacters(response)
+          if (response.length > 0) {
+            setSelectedCharacter(response[0].id)
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching characters:", error)
+      } finally {
+        setIsLoadingData(false)
+      }
+    }
+    fetchCharacters()
+    if (user?.id && tourId) {
+      checkIfUserPurchasedTour()
+    }
+  }, [user, tourId])
 
+  const checkIfUserPurchasedTour = async () => {
+    if (!user?.id) return
+    console.log('USER', user.id, 'TOUR', tourId)
+    const response = await checkUserPurchasedTour(user?.id, tourId as string)
+    console.log('HEHE',response)
+    setUserTourId(response.id)
+  }
+  const handleBack = () => {
+    router.back()
+  }
   const stopAudio = async () => {
     if (soundRef.current) {
       await soundRef.current.stopAsync()
@@ -57,11 +72,11 @@ const CharacterSelectionScreen = () => {
     setIsPlaying(false)
   }
 
-  const playPreview = async (character: typeof characters[0]) => {
+  const playPreview = async (character: any) => {
     try {
       setIsLoading(true)
       await stopAudio()
-      const { sound } = await Audio.Sound.createAsync({ uri: character.previewAudio }, { shouldPlay: true })
+      const { sound } = await Audio.Sound.createAsync({ uri: character.audioUrl }, { shouldPlay: true })
       soundRef.current = sound
       setIsPlaying(true)
       setIsLoading(false)
@@ -72,7 +87,9 @@ const CharacterSelectionScreen = () => {
     }
   }
 
-  const handleSelectCharacter = (index: number) => {
+  const handleSelectCharacter = async (index: number) => {
+    if (index < 0 || index >= characters.length) return
+
     Animated.sequence([
       Animated.timing(scaleAnim, {
         toValue: 0.95,
@@ -86,21 +103,40 @@ const CharacterSelectionScreen = () => {
       }),
     ]).start()
 
-    setSelectedCharacter(index)
+    const characterId = characters[index].id
+    setSelectedCharacter(characterId)
     setCurrentSlide(index)
+    setIsPlaying(false)
+  }
+
+  const handleConfirmSelection = async () => {
+    try {
+      if (!userTourId) {
+        console.error("No user tour ID found")
+        return
+      }
+      const characterId = characters[currentSlide].id
+      console.log('Updating character:', { userTourId, characterId })
+      await updateAudioCharacterId(userTourId, characterId)
+      router.push(`/tour_audio?tourId=${tourId}`)
+    } catch (error) {
+      console.error("Error updating audio character:", error)
+    }
   }
 
   const handleNext = () => {
+    if (characters.length === 0) return
     const nextIndex = (currentSlide + 1) % characters.length
     handleSelectCharacter(nextIndex)
   }
 
   const handlePrevious = () => {
+    if (characters.length === 0) return
     const prevIndex = (currentSlide - 1 + characters.length) % characters.length
     handleSelectCharacter(prevIndex)
   }
 
-  const handleAudioToggle = async (character: typeof characters[0]) => {
+  const handleAudioToggle = async (character: any) => {
     if (isPlaying && selectedCharacter === character.id) {
       await stopAudio()
     } else {
@@ -109,13 +145,32 @@ const CharacterSelectionScreen = () => {
     }
   }
 
+  if (isLoadingData) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <ActivityIndicator size="large" color={COLORS.dark} />
+      </View>
+    )
+  }
+
+  if (characters.length === 0) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <Text style={styles.errorText}>Không có nhân vật nào</Text>
+      </View>
+    )
+  }
+
   const currentCharacter = characters[currentSlide]
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Choose Your Guide</Text>
-        <Text style={styles.subtitle}>Select a voice companion for your journey</Text>
+        <TouchableOpacity style={styles.backButton} onPress={handleBack}>
+          <Ionicons name="arrow-back" size={24} color={COLORS.white} />
+        </TouchableOpacity>
+        <Text style={styles.title}>Chọn nhân vật</Text>
+        <Text style={styles.subtitle}>Chọn nhân vật bạn muốn cùng đồng hành</Text>
       </View>
 
       <View style={styles.cardContainer}>
@@ -124,39 +179,39 @@ const CharacterSelectionScreen = () => {
         </TouchableOpacity>
 
         <Animated.View
-          style={[styles.card, { width: CARD_WIDTH }, { transform: [{ scale: scaleAnim }] }]}
+          style={[styles.card, { transform: [{ scale: scaleAnim }] }]}
         >
-          <View style={[styles.characterContainer, { backgroundColor: `${currentCharacter.color}30` }]}>
-            <Image source={{ uri: currentCharacter.image }} style={styles.characterImage} resizeMode="contain" />
+          <View style={[styles.characterContainer, { backgroundColor: `${COLORS.primary}30` }]}>
+            <Image source={{ uri: currentCharacter.avatarUrl }} style={styles.characterImage} resizeMode="contain" />
 
             <TouchableOpacity
-              style={[styles.audioButton, { backgroundColor: currentCharacter.color }]}
+              style={[styles.audioButton, { backgroundColor: COLORS.primary }]}
               onPress={() => handleAudioToggle(currentCharacter)}
               activeOpacity={0.8}
             >
               {isLoading ? (
-                <ActivityIndicator size="small" color="#FFFFFF" />
+                <ActivityIndicator size="small" color={COLORS.white} />
               ) : isPlaying && selectedCharacter === currentCharacter.id ? (
-                <Ionicons name="pause" size={24} color="#FFFFFF" />
+                <Ionicons name="pause" size={24} color={COLORS.white} />
               ) : (
-                <Ionicons name="play" size={24} color="#FFFFFF" />
+                <Ionicons name="play" size={24} color={COLORS.white} />
               )}
             </TouchableOpacity>
           </View>
 
-          <Text style={styles.characterLabel}>Choose personality</Text>
-
+          <Text style={styles.characterName}>{currentCharacter.name}</Text>
+          <Text style={styles.characterDescription}>{currentCharacter.description}</Text>
           <TouchableOpacity
-            style={[styles.selectButton, { backgroundColor: currentCharacter.color }]}
-            onPress={() => handleSelectCharacter(currentCharacter.id)}
+            style={[styles.selectButton, { backgroundColor: COLORS.primary }]}
+            onPress={handleConfirmSelection}
             activeOpacity={0.8}
           >
-            <Text style={styles.selectButtonText}>This one</Text>
+            <Text style={styles.selectButtonText}>Chọn</Text>
           </TouchableOpacity>
         </Animated.View>
 
         <TouchableOpacity style={styles.arrowButton} onPress={handleNext}>
-          <Ionicons name="chevron-forward" size={32} color="#FFFFFF" />
+          <Ionicons name="chevron-forward" size={32} color={COLORS.dark} />
         </TouchableOpacity>
       </View>
 
@@ -173,122 +228,5 @@ const CharacterSelectionScreen = () => {
   )
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.lightGrey,
-    padding: 16,
-  },
-  header: {
-    alignItems: "center",
-    marginVertical: 20,
-  },
-  title: {
-    fontSize: 30,
-    fontWeight: "bold",
-    color: COLORS.dark,
-    marginTop: 50,
-  },
-  subtitle: {
-    fontSize: 20,
-    color: COLORS.dark,
-    opacity: 0.8,
-  },
-  cardContainer: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 5,
-  },
-  arrowButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 22,
-    backgroundColor: "rgba(102, 142, 185, 0.2)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  card: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 20,
-    padding: 18,
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 5,
-    width: CARD_WIDTH,
-    aspectRatio: 0.8,
-  },
-  characterContainer: {
-    width: "100%",
-    aspectRatio: 1.2,
-    borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 20,
-    position: "relative",
-    padding: 10,
-  },
-  characterImage: {
-    width: "100%",
-    height: "100%",
-    borderRadius: 15,
-  },
-  audioButton: {
-    position: "absolute",
-    bottom: 0,
-    right: 0,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  characterLabel: {
-    fontSize: 18,
-    fontWeight: "500",
-    color: "#4B5563",
-    marginBottom: 24,
-  },
-  selectButton: {
-    width: "100%",
-    paddingVertical: 12,
-    borderRadius: 30,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  selectButtonText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  pagination: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 20,
-    marginBottom: 10,
-  },
-  paginationDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: "#D1D5DB",
-    marginHorizontal: 4,
-  },
-  paginationDotActive: {
-    width: 16,
-    backgroundColor: "#38BDF8",
-  },
-})
 
 export default CharacterSelectionScreen
