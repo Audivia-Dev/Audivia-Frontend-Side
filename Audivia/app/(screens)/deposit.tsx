@@ -17,6 +17,8 @@ import QRCode from "react-native-qrcode-svg"
 import ViewShot from "react-native-view-shot"
 import * as MediaLibrary from "expo-media-library"
 import { useUser } from "@/hooks/useUser"
+import { createNotification } from "@/services/notification"
+import { useNotificationCount } from "@/hooks/useNotificationCount"
 
 export default function DepositScreen() {
   const params = useLocalSearchParams()
@@ -27,7 +29,7 @@ export default function DepositScreen() {
   const qrRef = useRef(null)
   const router = useRouter()
   const {user} = useUser()
-
+  const { refreshCount, updateCount } = useNotificationCount()
 
   const goBack = () => router.back()
 
@@ -44,6 +46,8 @@ export default function DepositScreen() {
 
     try {
       setIsProcessing(true)
+      console.log(user?.id);
+      
       const userId = user?.id as string
       const returnUrl = "audivia://payment_success" 
       const cancelUrl = "audivia://payment_cancel" 
@@ -54,10 +58,12 @@ export default function DepositScreen() {
         Number(amount),
         "Nạp tiền vào ví" 
       )
+      console.log(response);
+      
       setQrInfo(response.qrCode)
       setPaymentStatus('PENDING')
     } catch (error) {
-      Alert.alert("Lỗi", "Không thể tạo mã QR. Vui lòng thử lại.")
+      Alert.alert("Lỗi", "Không thể tạo mã QR. Vui lòng thử lại." + error)
     } finally {
       setIsProcessing(false)
     }
@@ -70,14 +76,20 @@ export default function DepositScreen() {
       if (!qrInfo?.paymentLinkId) return;
 
       try {    
-        //b7e91ef899c5495ba6c4dc4b1701e761
-       // const response = await checkPaymentStatus("b7e91ef899c5495ba6c4dc4b1701e761")    
         const response = await checkPaymentStatus(qrInfo?.paymentLinkId)       
 
         const status = response.status
 
         if (status === 'PAID') {
           setPaymentStatus('PAID')
+          const notificationParams = {
+            userId: user?.id as string,
+            content: `Bạn đã nạp thành công ${response.amount} VNĐ vào ví!`,
+            type: "Nạp ví Audivia",
+            isRead: false,
+          }
+          await createNotification(notificationParams)
+          updateCount(1);
           router.push(`/(screens)/payment_success?tourId=${params.tourId}&redirect=${params.redirect}`)
           clearInterval(intervalId)
         } else if (status === 'CANCELLED' || status === 'EXPIRED') {
@@ -101,8 +113,6 @@ export default function DepositScreen() {
       }
     }
   }, [qrInfo?.paymentLinkId, paymentStatus])
-
-
 
   const formatCurrency = (value: string) => {
     if (!value) return ""

@@ -4,6 +4,7 @@ import { useRouter } from "expo-router"
 import { COLORS } from "@/constants/theme"
 import styles from "@/styles/save_tour.styles"
 import { useUser } from "@/hooks/useUser"
+import { NotificationButton } from "@/components/common/NotificationButton"
 
 export const SaveTourHeader = () => {
   const router = useRouter()
@@ -13,7 +14,9 @@ export const SaveTourHeader = () => {
     <View style={styles.header}>
       <Text style={styles.headerTitle}>Tour Yêu Thích</Text>
       <View style={styles.headerIcons}>
-        <Ionicons name="notifications-outline" size={22} color={COLORS.dark} style={styles.icon} />
+      <View style={styles.icon}>
+            <NotificationButton />
+      </View>
         <TouchableOpacity onPress={() => router.push('/(screens)/message_inbox')}>
           <Ionicons name="chatbubble-ellipses-outline" size={22} color={COLORS.dark} style={styles.icon} />
         </TouchableOpacity>

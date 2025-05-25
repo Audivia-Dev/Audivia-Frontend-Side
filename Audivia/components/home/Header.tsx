@@ -4,6 +4,7 @@ import { COLORS } from '@/constants/theme';
 import { router } from 'expo-router';
 import { useUser } from '@/hooks/useUser';
 import styles from '@/styles/home.styles';
+import { NotificationButton } from '@/components/common/NotificationButton';
 
 interface HeaderProps {
   locationAddress: string | null;
@@ -17,7 +18,9 @@ export const Header = ({ locationAddress }: HeaderProps) => {
       <View style={styles.header}>
         <Text style={styles.title}>Trang chủ</Text>
         <View style={styles.headerIcons}>
-          <Ionicons name="notifications-outline" size={22} color={COLORS.dark} style={styles.icon} />
+        <View style={styles.icon}>
+            <NotificationButton />
+        </View>
           <TouchableOpacity onPress={() => router.push('/(screens)/message_inbox')}>
             <Ionicons name="chatbubble-ellipses-outline" size={22} color={COLORS.dark} style={styles.icon} />
           </TouchableOpacity>
