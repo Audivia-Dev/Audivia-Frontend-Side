@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { HubConnectionState } from '@microsoft/signalr';
-import { signalRService } from '@/services/signalR';
+import { signalRService } from '@/services/chat_signalR';
 import { Ionicons } from '@expo/vector-icons';
 
 export const ConnectionStatus = () => {

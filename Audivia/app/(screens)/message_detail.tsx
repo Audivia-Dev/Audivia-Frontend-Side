@@ -6,6 +6,7 @@ import {
   Platform,
   Animated,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { styles } from "@/styles/chatbox.styles";
@@ -16,7 +17,7 @@ import { ChatInput } from "@/components/message/ChatInput";
 import { getChatRoomById, getMessagesByChatRoom } from "@/services/chat"; // <-- Import API
 //import { getChatRoomById } from "@/services/chat"; // <-- Nếu muốn lấy thêm info phòng chat
 import { useUser } from "@/hooks/useUser";
-import { signalRService } from "@/services/signalR";
+import { chatSignalRService } from "@/services/chat_signalR";
 import { Message } from "@/models";
 
 export default function MessageDetailScreen() {
@@ -67,15 +68,25 @@ export default function MessageDetailScreen() {
     if (!chatRoomId) return;
 
     // Tham gia vào phòng chat khi component mount
-    signalRService.joinRoom(chatRoomId as string);
+    console.log(`${user?.fullName} Joining chat room:`, chatRoomId);
+    chatSignalRService.joinRoom(chatRoomId as string)
+      .then(() => console.log('Successfully joined room:', chatRoomId))
+      .catch(error => console.error('Error joining room:', error));
 
-    const handleReceiveMessage = (message: Message) => {
+    const handleReceiveMessage = (message: any) => {
+      console.log("Received message:", message);
+      const actualMessage = message.response;
+      
       // Chỉ xử lý tin nhắn của phòng chat hiện tại
-      if (message.chatRoomId === chatRoomId) {
+      if (String(actualMessage.chatRoomId) === String(chatRoomId)) {
+        console.log('Adding message to state:', actualMessage);
         setMessages(prev => {
-          const messageExists = prev.some(msg => msg.id === message.id);
-          if (messageExists) return prev;
-          return [...prev, message];
+          const messageExists = prev.some(msg => msg.id === actualMessage.id);
+          if (messageExists) {
+            console.log('Message already exists in state');
+            return prev;
+          }
+          return [...prev, actualMessage];
         });
       }
     };
@@ -95,16 +106,16 @@ export default function MessageDetailScreen() {
     };
 
     // Đăng ký các event handlers
-    signalRService.onReceiveMessage(handleReceiveMessage);
-    signalRService.onMessageUpdated(handleUpdateMessage);
-    signalRService.onMessageDeleted(handleDeleteMessage);
+    chatSignalRService.onReceiveMessage(handleReceiveMessage); //khi server gửi sự kiện ReceiveMessage thì client sẽ gọi hàm handleReceiveMessage
+    chatSignalRService.onMessageUpdated(handleUpdateMessage);
+    chatSignalRService.onMessageDeleted(handleDeleteMessage);
 
     // Cleanup khi unmount
     return () => {
-      signalRService.leaveRoom(chatRoomId as string);
-      signalRService.removeMessageCallback(handleReceiveMessage);
-      signalRService.removeMessageUpdatedCallback(handleUpdateMessage);
-      signalRService.removeMessageDeletedCallback(handleDeleteMessage);
+      chatSignalRService.leaveRoom(chatRoomId as string);
+      chatSignalRService.removeMessageCallback(handleReceiveMessage);
+      chatSignalRService.removeMessageUpdatedCallback(handleUpdateMessage);
+      chatSignalRService.removeMessageDeletedCallback(handleDeleteMessage);
     };
   }, [chatRoomId]);
 
@@ -114,9 +125,10 @@ export default function MessageDetailScreen() {
 
   const sendMessage = (newMsg: Message) => {
     if (!chatRoomId) return;
-    
-    // Thêm tin nhắn vào state ngay lập tức
-    setMessages(prev => [...prev, newMsg]);
+        // Thêm tin nhắn vào state ngay lập tức
+        // setMessages(prev => [...prev, newMsg]);
+    // Không thêm tin nhắn vào state ở đây nữa
+    // Tin nhắn sẽ được thêm vào state khi nhận từ SignalR
   };
 
   if (loading) {

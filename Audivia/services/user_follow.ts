@@ -14,7 +14,7 @@ export const createUserFollow = async (followerId: string, followingId: string )
 export const getUserFollows = async (currentUserId: string, targetUserId: string ) => {
     try {
         const response = await apiClient.get(`/user-follows/status?CurrentUserId=${currentUserId}&TargetUserId=${targetUserId}`)
-        console.log('Danh sách bạn bè:', response.data)
+      //  console.log('Danh sách bạn bè:', response.data)
         return response.data
         } catch (error) {
             console.error('Lỗi lấy danh sách bạn bè:', error)
@@ -24,7 +24,7 @@ export const getUserFollows = async (currentUserId: string, targetUserId: string
 export const getUserFriends = async (userId: string) => {
     try {
         const response = await apiClient.get(`/user-follows/friends?userId=${userId}`)
-        console.log('Danh sách bạn bè:', response.data)
+     //   console.log('Danh sách bạn bè:', response.data)
         return response.data
     } catch (error) {
         console.error('Lỗi lấy danh sách bạn bè:', error)

@@ -107,14 +107,9 @@ class SignalRService {
         });
     }
 
-    // async sendTypingStatus(userId: string, chatRoomId: string, isTyping: boolean) {
-    //     try {
-    //         await this.connection?.invoke('SendTypingStatus', userId, chatRoomId, isTyping);
-    //     } catch (error) {
-    //         console.error('Error sending typing status:', error);
-    //     }
-    // }
-//đăng kí callback
+//đăng kí callback để Cho phép nhiều phần của UI "đăng ký" hàm xử lý
+//ví dụ
+//là 1 cái là bắt sự kiện hiện tin nhắn trong doạn chat 1 cái bắt sự kiện thông báo tin nhắn
     onReceiveMessage(callback: (message: Message) => void) {
         this.messageCallbacks.push(callback);
     }
@@ -171,37 +166,18 @@ class SignalRService {
         this.messageDeletedCallbacks = this.messageDeletedCallbacks.filter(cb => cb !== callback);
     }
 
-    async stopConnection() {
-        try {
-            await this.connection?.stop();
-            this.connection = null;
-        } catch (error) {
-            console.error('Error stopping connection:', error);
-        }
-    }
-    //phát realtime đến mọi client
-    async sendMessage(message: Message) {
-        try {
-            await this.connection?.invoke('SendMessage', message);
-        } catch (error) {
-            console.error('Error sending message:', error);
-        }
-    }
-    async joinRoom(roomId: string) {
-        try {
-            await this.connection?.invoke('JoinRoom', roomId);
-        } catch (error) {
-            console.error('Error joining room:', error);
-        }
-    }
-
-    async leaveRoom(roomId: string) {
-        try {
-            await this.connection?.invoke('LeaveRoom', roomId);
-        } catch (error) {
-            console.error('Error leaving room:', error);
-        }
-    }
+ 
+    //hàm để vào nhóm để biết ở nhóm nào để gửi tin nhắn
+    async joinRoom(chatRoomId: string) {
+        if (!this.connection) throw new Error('SignalR connection not started');
+        await this.connection.invoke('JoinRoom', chatRoomId);
+      }
+    
+      async leaveRoom(chatRoomId: string) {
+        if (!this.connection) throw new Error('SignalR connection not started');
+        await this.connection.invoke('LeaveRoom', chatRoomId);
+      }
+    
 }
 
-export const signalRService = new SignalRService(); 
+export const chatSignalRService = new SignalRService(); 

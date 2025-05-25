@@ -3,7 +3,7 @@ import { View, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { createMessage } from '@/services/chat';
 import { useUser } from '@/hooks/useUser';
-import { signalRService } from '@/services/signalR';
+import { chatSignalRService } from '@/services/chat_signalR';
 import { Message } from '@/models';
 //import { styles } from "@/styles/chatbox.styles";
 
@@ -53,11 +53,12 @@ export const ChatInput = ({ onSend, onTyping, chatRoomId }: ChatInputProps) => {
           createdAt: new Date(),
         };
 
-        // Gửi tin nhắn qua SignalR để hiển thị ngay lập tức
-        await signalRService.sendMessage(newMessage);
+        // Gửi tin nhắn qua SignalR để hiển thị ngay lập tức -  ở controller có rồi
+       // await chatSignalRService.sendMessage(newMessage);
         
         // Gửi tin nhắn qua API để lưu vào database
-        await createMessage({
+        // Server sẽ tự động gửi tin nhắn qua SignalR cho tất cả client trong phòng
+        const response = await createMessage({
           content: message.trim(),
           senderId: user.id,
           chatRoomId: chatRoomId,
@@ -65,6 +66,8 @@ export const ChatInput = ({ onSend, onTyping, chatRoomId }: ChatInputProps) => {
           status: 'sent'
         });
 
+        // Cập nhật tin nhắn với ID từ server
+        newMessage.id = response.id;
         onSend(newMessage);
         setMessage('');
         if (onTyping) {

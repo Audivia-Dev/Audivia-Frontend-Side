@@ -22,7 +22,7 @@ import { createChatRoom, createChatRoomMember, getChatRoomsByUserId, getPrivateR
 import { CreateGroupModal } from "@/components/message/CreateGroupModal";
 import { getUserFriends } from "@/services/user_follow";
 import { GroupAvatar } from "@/components/message/GroupAvatar";
-import { signalRService } from "@/services/signalR";
+import { chatSignalRService } from "@/services/chat_signalR";
 
 
 
@@ -113,13 +113,22 @@ export default function MessagingInboxScreen() {
   useEffect(() => {
     // Lắng nghe tin nhắn mới
     const handleReceiveMessage = (message: any) => {
+      console.log("Received message in inbox:", message);
+      const actualMessage = message.response || message;
+      console.log("Actual message:", actualMessage);
+     
+      
       setChatRooms(prev => {
         return prev.map(room => {
-          if (room.id === message.chatRoomId) {
+          if (String(room.id) === String(actualMessage.chatRoomId)) {
             return {
               ...room,
-              lastMessage: message.content,
-              time: new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+              lastMessage: actualMessage.content,
+              lastMessageTime: actualMessage.createdAt,
+              time: new Date(actualMessage.createdAt).toLocaleTimeString([], { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+              })
             };
           }
           return room;
@@ -141,13 +150,13 @@ export default function MessagingInboxScreen() {
     };
 
     // Đăng ký các event handlers
-    signalRService.onReceiveMessage(handleReceiveMessage);
-    signalRService.onMessageDeleted(handleDeleteMessage);
+    chatSignalRService.onReceiveMessage(handleReceiveMessage);
+    chatSignalRService.onMessageDeleted(handleDeleteMessage);
 
     // Cleanup khi unmount
     return () => {
-      signalRService.removeMessageCallback(handleReceiveMessage);
-      signalRService.removeMessageDeletedCallback(handleDeleteMessage);
+     // chatSignalRService.removeMessageCallback(handleReceiveMessage);
+      chatSignalRService.removeMessageDeletedCallback(handleDeleteMessage);
     };
   }, []);
 
@@ -206,8 +215,6 @@ export default function MessagingInboxScreen() {
           createdBy: user?.id as string,
           type: "private",
         });
-        console.warn(newChatRoom);
-        console.warn(newChatRoom.id);
         
         // thêm bạn vào là member
         var rs = await createChatRoomMember({
@@ -336,7 +343,6 @@ export default function MessagingInboxScreen() {
           createdBy: user?.id as string,
           type: "group",
         });
-        console.log(newChatRoom);
         
         // Thêm người tạo vào phòng với quyền host
         await createChatRoomMember({
