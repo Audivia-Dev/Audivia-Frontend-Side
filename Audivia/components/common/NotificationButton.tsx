@@ -3,18 +3,32 @@ import { Ionicons } from "@expo/vector-icons";
 import { COLORS } from "@/constants/theme";
 import { router } from "expo-router";
 import { useNotificationCount } from "@/hooks/useNotificationCount";
-
-
+import { useEffect, useState, useCallback } from "react";
 
 export const NotificationButton = () => {
-    const { unreadCount } = useNotificationCount();
+    const { unreadCount, loadUnreadCount } = useNotificationCount();
+    const [count, setCount] = useState(0);
+
+    // Force reload count when component mounts
+    useEffect(() => {
+        loadUnreadCount();
+    }, []);
+
+    // Update local state when unreadCount changes
+    useEffect(() => {
+        console.log('NotificationButton received unreadCount:', unreadCount);
+        setCount(unreadCount);
+    }, [unreadCount]);
+
+    const handlePress = useCallback(() => {
+        console.log('Notification button pressed');
+        loadUnreadCount(); // Reload count before navigating
+        router.push("/(screens)/notifications");
+    }, [loadUnreadCount]);
 
     return (
         <TouchableOpacity
-            onPress={() => {
-                console.log('Notification button pressed');
-                router.push("/(screens)/notifications");
-            }}
+            onPress={handlePress}
         >
             <View style={{ position: 'relative' }}>
                 <Ionicons
@@ -23,7 +37,7 @@ export const NotificationButton = () => {
                     color={COLORS.dark}
                     style={{ position: 'relative' }}
                 />
-                {unreadCount > 0 && (
+                {count > 0 && (
                     <View style={{
                         position: 'absolute',
                         top: -4,
@@ -41,7 +55,7 @@ export const NotificationButton = () => {
                             fontSize: 11,
                             fontWeight: 'bold',
                         }}>
-                            {unreadCount > 99 ? '99+' : unreadCount}
+                            {count > 99 ? '99+' : count}
                         </Text>
                     </View>
                 )}

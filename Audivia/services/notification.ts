@@ -13,6 +13,7 @@ interface Notification {
 
 interface UpdateNotificationParams {
     notificationId: string;
+    userId: string
     isRead: boolean;
 }
 
@@ -34,9 +35,9 @@ export const getNotificationsByUser = async (userId: string) => {
     }
 }
 
-export const updateStatusNotification = async ({ notificationId, isRead }: UpdateNotificationParams) => {
+export const updateStatusNotification = async ({ notificationId, userId, isRead }: UpdateNotificationParams) => {
     try {
-        const response = await apiClient.put(`/notifications/${notificationId}`, { isRead })
+        const response = await apiClient.put(`/notifications/${notificationId}`, { userId,isRead })
         return response.data
     } catch (error) {
         console.log('Error updating notification status: ', error)
@@ -51,5 +52,15 @@ export const createNotification = async (notification: CreateNotificationParams)
     } catch (error) {
         console.log('Error creating notification: ', error)
         throw error
+    }
+}
+
+
+export const countUnreadNotifications = async (userId: string) => {
+    try {
+        const response = await apiClient.get(`/notifications/unread-count/${userId}`)
+        return response.data
+    } catch (error) {
+        console.log('Error counting unread notification: ', error)
     }
 }

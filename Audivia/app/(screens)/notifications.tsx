@@ -14,6 +14,7 @@ interface Notification {
     createdAt: Date
     tourId: string
     timeAgo: string
+    userId: string
 }
 
 interface NotificationItemProps extends Notification {
@@ -33,8 +34,9 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ content, type, isRe
 export default function Notifications() {
     const [notifications, setNotifications] = useState<Notification[]>([])
     const [isLoading, setIsLoading] = useState(true)
-    const {user} = useUser()
-    const { refreshCount, updateCount } = useNotificationCount()
+    const { user } = useUser()
+    const { unreadCount, loadUnreadCount } = useNotificationCount()
+
     useEffect(() => {
         if (user?.id) {
             fetchNotificationsByUser(user.id)
@@ -54,32 +56,46 @@ export default function Notifications() {
     }
 
     const handleNotificationPress = async (item: Notification) => {
-        // Update local state immediately for better UX
-        setNotifications(prevNotifications => 
-            prevNotifications.map(notification => 
-                notification.id === item.id 
-                    ? { ...notification, isRead: true }
-                    : notification
-            )
-        );
+        if (!item.isRead) {
+            setNotifications(prevNotifications => 
+                prevNotifications.map(notification => 
+                    notification.id === item.id 
+                        ? { ...notification, isRead: true }
+                        : notification
+                )
+            );
 
-        // Update count immediately
-        updateCount(-1);
+            if (item.tourId) {
+                router.push(`/detail_tour?tourId=${item.tourId}`)
+            } else {
+                router.push('/history_transaction')
+            }
 
-        // Navigate immediately
-        if (item.tourId) {
-            router.push(`/detail_tour?tourId=${item.tourId}`)
+            try {
+                await updateStatusNotification({ 
+                    notificationId: item.id, 
+                    userId: user?.id as string, 
+                    isRead: true 
+                });
+                
+           //     await loadUnreadCount();
+            } catch (error) {
+                console.log("Error updating notification status:", error);
+                setNotifications(prevNotifications => 
+                    prevNotifications.map(notification => 
+                        notification.id === item.id 
+                            ? { ...notification, isRead: false }
+                            : notification
+                    )
+                );
+              //  await loadUnreadCount();
+            }
         } else {
-            router.push('/history_transaction')
-        }
-
-        // Perform async operations in the background
-        try {
-            await updateStatusNotification({ notificationId: item.id, isRead: true });
-        } catch (error) {
-            console.log("Error updating notification status:", error);
-            // Revert count if update fails
-            updateCount(1);
+            if (item.tourId) {
+                router.push(`/detail_tour?tourId=${item.tourId}`)
+            } else {
+                router.push('/history_transaction')
+            }
         }
     };
 
