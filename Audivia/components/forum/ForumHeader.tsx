@@ -4,6 +4,7 @@ import { COLORS } from "@/constants/theme";
 import { styles } from "@/styles/forum.styles";
 import { useUser } from "@/hooks/useUser";
 import { router } from "expo-router";
+import { NotificationButton } from "@/components/common/NotificationButton";
 
 export const ForumHeader = () => {
   const { user } = useUser();
@@ -12,14 +13,14 @@ export const ForumHeader = () => {
     <View style={styles.header}>
       <Text style={styles.headerTitle}>Diễn đàn</Text>
       <View style={styles.headerIcons}>
-        <Ionicons
-          name="notifications-outline"
-          size={22}
-          color={COLORS.dark}
-          style={styles.icon}
-        />
+      <View style={styles.icon}>
+            <NotificationButton />
+        </View>
         <TouchableOpacity
-          onPress={() => router.push("/(screens)/message_inbox")}
+          onPress={() => {
+            console.log('Message button pressed');
+            router.push("/(screens)/message_inbox");
+          }}
         >
           <Ionicons
             name="chatbubble-ellipses-outline"

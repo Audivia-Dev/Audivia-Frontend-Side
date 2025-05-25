@@ -13,6 +13,9 @@ import { TourTabs } from "@/components/detail_tour/TourTabs"
 import { useUser } from "@/hooks/useUser"
 import { COLORS } from "@/constants/theme"
 import { createTransactionHistory } from "@/services/historyTransaction"
+import { createNotification } from "@/services/notification"
+import { useNotificationCount } from "@/hooks/useNotificationCount"
+
 export default function TourDetailScreen() {
   const [activeTab, setActiveTab] = useState("about")
   const router = useRouter()
@@ -21,6 +24,7 @@ export default function TourDetailScreen() {
   const { user } = useUser()
   const [transaction, setTransaction] = useState<any>()
   const [showPurchaseModal, setShowPurchaseModal] = useState(false)
+  const { refreshCount, updateCount } = useNotificationCount()
 
   useEffect(() => {
     const fetchTourById = async () => {
@@ -62,14 +66,26 @@ export default function TourDetailScreen() {
     }
   }
 
+ 
   const amountToDeposit = Math.max((tour?.price ?? 0) - (user?.balanceWallet ?? 0), 0)
-  const handleConfirmPurchase = () => {
+  
+  const handleConfirmPurchase = async () => {
     if (user?.balanceWallet as number < (tour?.price as number) ){
       router.push(`/deposit?tourId=${tourId}&redirect=detail&amount=${amountToDeposit}`)
     } else {
-      createNewTransactionHistory()
+      await createNewTransactionHistory()
+      
+      const notificationParams = {
+        userId: user?.id as string,
+        tourId: tourId as string,
+        content: `Bạn đã mua thành công tour: ${tour?.title}.\nHãy bắt đầu trải nghiệm ngay bây giờ!`,
+        type: "Thanh toán tour",
+        isRead: false,
+      }
+      await createNotification(notificationParams)
+      updateCount(1)
+      
       router.push(`/detail_tour?tourId=${tourId}`)
-     // startTour()
     }
   }
 
@@ -84,6 +100,8 @@ export default function TourDetailScreen() {
     }
     const response = await createTransactionHistory(params)
     console.log(response)
+
+
   }
 
   return (
