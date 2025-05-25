@@ -29,7 +29,7 @@ export default function DepositScreen() {
   const qrRef = useRef(null)
   const router = useRouter()
   const {user} = useUser()
-  const { refreshCount, updateCount } = useNotificationCount()
+  const { refreshCount, updateCount, loadUnreadCount } = useNotificationCount()
 
   const goBack = () => router.back()
 
@@ -73,23 +73,31 @@ export default function DepositScreen() {
     let intervalId: NodeJS.Timeout;
 
     const checkStatus = async () => {
-      if (!qrInfo?.paymentLinkId) return;
+      console.log("status 1");
+      console.log(qrInfo?.paymentLinkId);
+      
+   //   if (!qrInfo?.paymentLinkId) return;
 
       try {    
-        const response = await checkPaymentStatus(qrInfo?.paymentLinkId)       
-
+        const response = await checkPaymentStatus(qrInfo.paymentLinkId)       
+        console.log(response);
+        
         const status = response.status
 
         if (status === 'PAID') {
           setPaymentStatus('PAID')
-          const notificationParams = {
-            userId: user?.id as string,
-            content: `Bạn đã nạp thành công ${response.amount} VNĐ vào ví!`,
-            type: "Nạp ví Audivia",
-            isRead: false,
+          try {
+            const notificationParams = {
+              userId: user?.id as string,
+              content: `Bạn đã nạp thành công ${response.amount} VNĐ vào ví!`,
+              type: "Nạp ví Audivia",
+              isRead: false,
+            }
+            await createNotification(notificationParams)
+            await loadUnreadCount()
+          } catch (error) {
+            console.error('Lỗi khi tạo thông báo:', error)
           }
-          await createNotification(notificationParams)
-          updateCount(1);
           router.push(`/(screens)/payment_success?tourId=${params.tourId}&redirect=${params.redirect}`)
           clearInterval(intervalId)
         } else if (status === 'CANCELLED' || status === 'EXPIRED') {
@@ -98,17 +106,25 @@ export default function DepositScreen() {
           clearInterval(intervalId)
         }
       } catch (error) {
-        console.error('lỗi rồi:', error)
+        console.error('Lỗi khi kiểm tra trạng thái thanh toán:', error)
       }
     }
+
+    console.log('Debug interval setup:', {
+      qrInfoPaymentLinkId: qrInfo?.paymentLinkId,
+      paymentStatus,
+      shouldSetInterval: qrInfo?.paymentLinkId && paymentStatus === 'PENDING'
+    });
 
     if (qrInfo?.paymentLinkId && paymentStatus === 'PENDING') {
       // Kiểm tra trạng thái mỗi 5 giây
       intervalId = setInterval(checkStatus, 5000)
+      console.log('Interval set successfully');
     }
 
     return () => {
       if (intervalId) {
+        console.log('Cleaning up interval');
         clearInterval(intervalId)
       }
     }
