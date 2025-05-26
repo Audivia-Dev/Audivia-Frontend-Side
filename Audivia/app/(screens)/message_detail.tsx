@@ -29,6 +29,7 @@ export default function MessageDetailScreen() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [typingUsers, setTypingUsers] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [chatRoom, setChatRoom] = useState<any>(null); // Optional: để lấy tên, avatar
 
@@ -105,10 +106,31 @@ export default function MessageDetailScreen() {
       }
     };
 
+    const handleUserTyping = (data: { userId: string, chatRoomId: string }) => {
+        if (data.chatRoomId === chatRoomId && data.userId !== currentUserId) {
+        setTypingUsers(prev =>
+        {
+          const newSet = new Set(prev);
+          newSet.add(data.userId);
+          return newSet;
+        });
+        
+        // Tự động xóa typing status sau 3 giây
+        setTimeout(() => {
+          setTypingUsers(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(data.userId);
+            return newSet;
+          });
+        }, 3000);
+      }
+    };
+
     // Đăng ký các event handlers
-    chatSignalRService.onReceiveMessage(handleReceiveMessage); //khi server gửi sự kiện ReceiveMessage thì client sẽ gọi hàm handleReceiveMessage
+    chatSignalRService.onReceiveMessage(handleReceiveMessage);
     chatSignalRService.onMessageUpdated(handleUpdateMessage);
     chatSignalRService.onMessageDeleted(handleDeleteMessage);
+    chatSignalRService.onUserTyping(handleUserTyping);
 
     // Cleanup khi unmount
     return () => {
@@ -116,6 +138,7 @@ export default function MessageDetailScreen() {
       chatSignalRService.removeMessageCallback(handleReceiveMessage);
       chatSignalRService.removeMessageUpdatedCallback(handleUpdateMessage);
       chatSignalRService.removeMessageDeletedCallback(handleDeleteMessage);
+      chatSignalRService.removeTypingCallback(handleUserTyping);
     };
   }, [chatRoomId]);
 
@@ -123,13 +146,7 @@ export default function MessageDetailScreen() {
     router.back();
   };
 
-  const sendMessage = (newMsg: Message) => {
-    if (!chatRoomId) return;
-        // Thêm tin nhắn vào state ngay lập tức
-        // setMessages(prev => [...prev, newMsg]);
-    // Không thêm tin nhắn vào state ở đây nữa
-    // Tin nhắn sẽ được thêm vào state khi nhận từ SignalR
-  };
+
 
   if (loading) {
     return (
@@ -183,9 +200,9 @@ export default function MessageDetailScreen() {
         showsVerticalScrollIndicator={false}
       />
 
-      {isTyping && messages.length > 0 && String(messages[messages.length - 1].senderId) === String(currentUserId) && (
+      {typingUsers.size > 0 && (
         <TypingIndicator
-          avatar={chatRoom?.members?.find((m: any) => m.userId !== currentUserId)?.user?.avatarUrl}
+          avatar={chatRoom?.members?.find((m: any) => m.userId === Array.from(typingUsers)[0])?.user?.avatarUrl}
           animation={typingAnimation}
         />
       )}
@@ -195,8 +212,10 @@ export default function MessageDetailScreen() {
         keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
       >
         <ChatInput
-          onSend={sendMessage}
-          onTyping={setIsTyping}
+         // onSend={sendMessage}
+          onTyping={() => {
+            chatSignalRService.sendTypingStatus(chatRoomId as string, user?.id as string);
+          }}
           chatRoomId={chatRoomId as string}
         />
       </KeyboardAvoidingView>

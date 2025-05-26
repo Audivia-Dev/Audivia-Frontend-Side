@@ -26,7 +26,7 @@ export default function RootLayout() {
         console.log('Initializing both SignalR services...');
         await Promise.all([
           notificationSignalRService.start(token),
-          chatSignalRService.startConnection(),
+          chatSignalRService.startConnection(token),
         ])
        
         console.log('SignalR chat and notification initialized in root layout');

@@ -5,7 +5,7 @@ const API_URL = 'https://audivia-backend.azurewebsites.net'; // Replace with you
 class SignalRService {
     private connection: HubConnection | null = null;
     private messageCallbacks: ((message: Message) => void)[] = [];
-    private typingCallbacks: ((data: { userId: string, chatRoomId: string, isTyping: boolean }) => void)[] = [];
+    private typingCallbacks: ((data: { userId: string, chatRoomId: string }) => void)[] = [];
     private userJoinedCallbacks: ((member: ChatRoomMember) => void)[] = [];
     private userLeftCallbacks: ((member: ChatRoomMember) => void)[] = [];
     private userUpdatedCallbacks: ((member: ChatRoomMember) => void)[] = [];
@@ -13,10 +13,12 @@ class SignalRService {
     private messageDeletedCallbacks: ((message: Message) => void)[] = [];
     private connectionStateCallbacks: ((state: HubConnectionState) => void)[] = [];
 
-    async startConnection() {
+    async startConnection(token: string) {
         try {
             this.connection = new HubConnectionBuilder()
-                .withUrl(`${API_URL}/chatHub`)
+                .withUrl(`${API_URL}/chatHub`, {
+                    accessTokenFactory: () => token,
+                  })
                 .withAutomaticReconnect()
                 .build();
 
@@ -78,13 +80,15 @@ class SignalRService {
             this.notifyConnectionState(HubConnectionState.Connected);
         });
 
+        this.connection.on('UserTyping', (data : { chatRoomId: string, userId: string }) => {
+            this.typingCallbacks.forEach(callback => callback(data));
+        });
+
         this.connection.on('ReceiveMessage', (message: Message) => {
             this.messageCallbacks.forEach(callback => callback(message));
         });
 
-        this.connection.on('UserTyping', (data: { userId: string, chatRoomId: string, isTyping: boolean }) => {
-            this.typingCallbacks.forEach(callback => callback(data));
-        });
+
 
         this.connection.on('UserJoined', (member: ChatRoomMember) => {
             this.userJoinedCallbacks.forEach(callback => callback(member));
@@ -114,7 +118,7 @@ class SignalRService {
         this.messageCallbacks.push(callback);
     }
 
-    onUserTyping(callback: (data: { userId: string, chatRoomId: string, isTyping: boolean }) => void) {
+    onUserTyping(callback: (data: { userId: string, chatRoomId: string}) => void) {
         this.typingCallbacks.push(callback);
     }
 
@@ -142,7 +146,7 @@ class SignalRService {
         this.messageCallbacks = this.messageCallbacks.filter(cb => cb !== callback);
     }
 
-    removeTypingCallback(callback: (data: { userId: string, chatRoomId: string, isTyping: boolean }) => void) {
+    removeTypingCallback(callback: (data: { userId: string, chatRoomId: string }) => void) {
         this.typingCallbacks = this.typingCallbacks.filter(cb => cb !== callback);
     }
 
@@ -178,6 +182,10 @@ class SignalRService {
         await this.connection.invoke('LeaveRoom', chatRoomId);
       }
     
+    async sendTypingStatus(chatRoomId: string, userId: string) {
+        if (!this.connection) throw new Error('SignalR connection not started');
+        await this.connection.invoke('SendTyping', chatRoomId, userId);
+    }
 }
 
 export const chatSignalRService = new SignalRService(); 
