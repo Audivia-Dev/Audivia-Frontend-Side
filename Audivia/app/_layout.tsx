@@ -9,6 +9,7 @@ import { useUser } from '@/hooks/useUser';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { notificationSignalRService } from '@/services/notificationSignalR';
 import { AppState } from 'react-native';
+import { chatSignalRService } from '@/services/chat_signalR';
 
 export default function RootLayout() {
   const { user } = useUser();
@@ -16,23 +17,34 @@ export default function RootLayout() {
   useEffect(() => {
     const initializeSignalR = async () => {
       try {
+        console.log('Starting SignalR initialization...');
         const token = await AsyncStorage.getItem('accessToken');
+        console.log('Token exists:', !!token);
         if (!token) return;
 
-        await notificationSignalRService.start(token);
-        console.log('SignalR initialized in root layout');
+        //khởi tạo song song 2 signal r
+        console.log('Initializing both SignalR services...');
+        await Promise.all([
+          notificationSignalRService.start(token),
+          chatSignalRService.startConnection(token),
+        ])
+       
+        console.log('SignalR chat and notification initialized in root layout');
       } catch (error) {
         console.error('Error initializing SignalR in root layout:', error);
       }
     };
 
     if (user?.id) {
+      console.log('User ID exists, initializing SignalR...');
       initializeSignalR();
+    } else {
+      console.log('No user ID found, skipping SignalR initialization');
     }
 
     // Lắng nghe trạng thái app để xử lý khi app chuyển background/foreground
     const subscription = AppState.addEventListener('change', async (nextAppState) => {
-   //   if (nextAppState === 'active') {
+      if (nextAppState === 'active') {
         // Khi app chuyển sang foreground, kiểm tra và reconnect nếu cần
         try {
           const token = await AsyncStorage.getItem('accessToken');
@@ -47,7 +59,7 @@ export default function RootLayout() {
           console.error('Error checking SignalR connection:', error);
         }
       }
-   // }
+    }
   );
 
     return () => {

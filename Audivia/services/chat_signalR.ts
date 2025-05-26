@@ -5,7 +5,7 @@ const API_URL = 'https://audivia-backend.azurewebsites.net'; // Replace with you
 class SignalRService {
     private connection: HubConnection | null = null;
     private messageCallbacks: ((message: Message) => void)[] = [];
-    private typingCallbacks: ((data: { userId: string, chatRoomId: string, isTyping: boolean }) => void)[] = [];
+    private typingCallbacks: ((data: { userId: string, chatRoomId: string }) => void)[] = [];
     private userJoinedCallbacks: ((member: ChatRoomMember) => void)[] = [];
     private userLeftCallbacks: ((member: ChatRoomMember) => void)[] = [];
     private userUpdatedCallbacks: ((member: ChatRoomMember) => void)[] = [];
@@ -13,10 +13,12 @@ class SignalRService {
     private messageDeletedCallbacks: ((message: Message) => void)[] = [];
     private connectionStateCallbacks: ((state: HubConnectionState) => void)[] = [];
 
-    async startConnection() {
+    async startConnection(token: string) {
         try {
             this.connection = new HubConnectionBuilder()
-                .withUrl(`${API_URL}/chatHub`)
+                .withUrl(`${API_URL}/chatHub`, {
+                    accessTokenFactory: () => token,
+                  })
                 .withAutomaticReconnect()
                 .build();
 
@@ -78,13 +80,15 @@ class SignalRService {
             this.notifyConnectionState(HubConnectionState.Connected);
         });
 
+        this.connection.on('UserTyping', (data : { chatRoomId: string, userId: string }) => {
+            this.typingCallbacks.forEach(callback => callback(data));
+        });
+
         this.connection.on('ReceiveMessage', (message: Message) => {
             this.messageCallbacks.forEach(callback => callback(message));
         });
 
-        this.connection.on('UserTyping', (data: { userId: string, chatRoomId: string, isTyping: boolean }) => {
-            this.typingCallbacks.forEach(callback => callback(data));
-        });
+
 
         this.connection.on('UserJoined', (member: ChatRoomMember) => {
             this.userJoinedCallbacks.forEach(callback => callback(member));
@@ -107,19 +111,14 @@ class SignalRService {
         });
     }
 
-    // async sendTypingStatus(userId: string, chatRoomId: string, isTyping: boolean) {
-    //     try {
-    //         await this.connection?.invoke('SendTypingStatus', userId, chatRoomId, isTyping);
-    //     } catch (error) {
-    //         console.error('Error sending typing status:', error);
-    //     }
-    // }
-//đăng kí callback
+//đăng kí callback để Cho phép nhiều phần của UI "đăng ký" hàm xử lý
+//ví dụ
+//là 1 cái là bắt sự kiện hiện tin nhắn trong doạn chat 1 cái bắt sự kiện thông báo tin nhắn
     onReceiveMessage(callback: (message: Message) => void) {
         this.messageCallbacks.push(callback);
     }
 
-    onUserTyping(callback: (data: { userId: string, chatRoomId: string, isTyping: boolean }) => void) {
+    onUserTyping(callback: (data: { userId: string, chatRoomId: string}) => void) {
         this.typingCallbacks.push(callback);
     }
 
@@ -147,7 +146,7 @@ class SignalRService {
         this.messageCallbacks = this.messageCallbacks.filter(cb => cb !== callback);
     }
 
-    removeTypingCallback(callback: (data: { userId: string, chatRoomId: string, isTyping: boolean }) => void) {
+    removeTypingCallback(callback: (data: { userId: string, chatRoomId: string }) => void) {
         this.typingCallbacks = this.typingCallbacks.filter(cb => cb !== callback);
     }
 
@@ -171,37 +170,22 @@ class SignalRService {
         this.messageDeletedCallbacks = this.messageDeletedCallbacks.filter(cb => cb !== callback);
     }
 
-    async stopConnection() {
-        try {
-            await this.connection?.stop();
-            this.connection = null;
-        } catch (error) {
-            console.error('Error stopping connection:', error);
-        }
-    }
-    //phát realtime đến mọi client
-    async sendMessage(message: Message) {
-        try {
-            await this.connection?.invoke('SendMessage', message);
-        } catch (error) {
-            console.error('Error sending message:', error);
-        }
-    }
-    async joinRoom(roomId: string) {
-        try {
-            await this.connection?.invoke('JoinRoom', roomId);
-        } catch (error) {
-            console.error('Error joining room:', error);
-        }
-    }
-
-    async leaveRoom(roomId: string) {
-        try {
-            await this.connection?.invoke('LeaveRoom', roomId);
-        } catch (error) {
-            console.error('Error leaving room:', error);
-        }
+ 
+    //hàm để vào nhóm để biết ở nhóm nào để gửi tin nhắn
+    async joinRoom(chatRoomId: string) {
+        if (!this.connection) throw new Error('SignalR connection not started');
+        await this.connection.invoke('JoinRoom', chatRoomId);
+      }
+    
+      async leaveRoom(chatRoomId: string) {
+        if (!this.connection) throw new Error('SignalR connection not started');
+        await this.connection.invoke('LeaveRoom', chatRoomId);
+      }
+    
+    async sendTypingStatus(chatRoomId: string, userId: string) {
+        if (!this.connection) throw new Error('SignalR connection not started');
+        await this.connection.invoke('SendTyping', chatRoomId, userId);
     }
 }
 
-export const signalRService = new SignalRService(); 
+export const chatSignalRService = new SignalRService(); 
