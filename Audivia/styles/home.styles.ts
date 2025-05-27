@@ -16,6 +16,7 @@ const styles = StyleSheet.create({
     title: {
       fontSize: 22,
       fontWeight: 'bold',
+      fontFamily: 'Merriweather-Bold'
     },
     locationContainer: {
       flexDirection: "row",

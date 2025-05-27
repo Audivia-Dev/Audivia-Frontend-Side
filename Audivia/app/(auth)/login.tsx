@@ -7,10 +7,27 @@ import { useRouter } from "expo-router";
 import { login } from "@/services/user";
 import { useAuth } from "@/contexts/AuthContext";
 import AuthForm from "@/components/AuthForm";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useEffect } from "react";
 
 export default function Login() {
   const router = useRouter();
   const { login: authLogin } = useAuth();
+
+  useEffect(() => {
+    checkOnboardingStatus();
+  }, []);
+
+  const checkOnboardingStatus = async () => {
+    try {
+      const hasSeenOnboarding = await AsyncStorage.getItem('hasSeenOnboarding');
+      if (!hasSeenOnboarding) {
+        router.replace('/(auth)/onboarding');
+      }
+    } catch (error) {
+      console.error('Error checking onboarding status:', error);
+    }
+  };
 
   const handleLogin = async (email: string, password: string, _username: string) => {
     try {
