@@ -32,14 +32,21 @@ export default function MessageDetailScreen() {
   const [typingUsers, setTypingUsers] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [chatRoom, setChatRoom] = useState<any>(null); // Optional: để lấy tên, avatar
+  const scrollTimeoutRef = useRef<NodeJS.Timeout>();
 
   const flatListRef = useRef<FlatList<any>>(null);
   const typingAnimation = useRef(new Animated.Value(0)).current;
 
   const scrollToBottom = () => {
-    if (flatListRef.current && messages.length > 0) {
-      flatListRef.current.scrollToEnd({ animated: true });
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current);
     }
+    
+    scrollTimeoutRef.current = setTimeout(() => {
+      if (flatListRef.current && messages.length > 0) {
+        flatListRef.current.scrollToEnd({ animated: true });
+      }
+    }, 100);
   };
 
   useEffect(() => {
@@ -55,8 +62,7 @@ export default function MessageDetailScreen() {
 
         setMessages(msgs);
         setChatRoom(room);
-        // Scroll to bottom after messages are loaded
-        setTimeout(scrollToBottom, 100);
+        scrollToBottom();
       } catch (error) {
         console.error("Lỗi khi tải tin nhắn:", error);
       } finally {
@@ -67,10 +73,14 @@ export default function MessageDetailScreen() {
     fetchMessages();
   }, [chatRoomId]);
 
-  // Scroll to bottom when new messages arrive
+  // Cleanup timeout on unmount
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    return () => {
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (!chatRoomId) return;
@@ -206,7 +216,6 @@ export default function MessageDetailScreen() {
         contentContainerStyle={styles.messagesContainer}
         showsVerticalScrollIndicator={false}
         onContentSizeChange={scrollToBottom}
-        onLayout={scrollToBottom}
         maintainVisibleContentPosition={{
           minIndexForVisible: 0,
           autoscrollToTopThreshold: 10

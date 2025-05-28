@@ -70,15 +70,21 @@ export default function Notifications() {
     useEffect(() => {
         if (user?.id) {
             fetchNotificationsByUser(user.id)
-            notificationSignalRService.onDeleteNotification(handleDeleteFromSignalR)
         }
     }, [user?.id])
 
+    // Tách riêng useEffect cho việc đăng ký SignalR event
+    useEffect(() => {
+        // Đăng ký event handler
+        notificationSignalRService.onDeleteNotification(handleDeleteFromSignalR)
 
-
+        // Cleanup function để hủy đăng ký khi component unmount
+        return () => {
+            notificationSignalRService.removeDeleteNotificationCallback(handleDeleteFromSignalR)
+        }
+    }, []) // Empty dependency array vì handleDeleteFromSignalR là stable function
 
     const fetchNotificationsByUser = async (userId: string) => {
-        notificationSignalRService.onDeleteNotification(handleDeleteFromSignalR)
         try {
             setIsLoading(true)
             const response = await getNotificationsByUser(userId)

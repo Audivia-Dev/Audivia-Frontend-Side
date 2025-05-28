@@ -7,6 +7,9 @@ import {
   SafeAreaView,
   Alert,
   Linking,
+  Image,
+  StyleSheet,
+  ScrollView,
 } from "react-native"
 import { Ionicons } from "@expo/vector-icons"
 import { useLocalSearchParams, useRouter } from "expo-router"
@@ -14,7 +17,7 @@ import { COLORS } from "@/constants/theme"
 import styles from "@/styles/deposit.styles"
 import { createPaymentIntent, checkPaymentStatus } from "@/services/payment"
 import QRCode from "react-native-qrcode-svg"
-import ViewShot from "react-native-view-shot"
+import ViewShot, { captureRef } from "react-native-view-shot"
 import * as MediaLibrary from "expo-media-library"
 import { useUser } from "@/hooks/useUser"
 import { createNotification } from "@/services/notification"
@@ -26,10 +29,10 @@ export default function DepositScreen() {
   const [isProcessing, setIsProcessing] = useState(false)
   const [qrInfo, setQrInfo] = useState<any>(null)
   const [paymentStatus, setPaymentStatus] = useState<'PENDING' | 'PAID' | 'failed'>('PENDING')
-  const qrRef = useRef(null)
+  const qrRef = useRef<ViewShot>(null)
   const router = useRouter()
   const {user} = useUser()
-  const { refreshCount, updateCount, loadUnreadCount } = useNotificationCount()
+  const { unreadCount, loadUnreadCount } = useNotificationCount()
 
   const goBack = () => router.back()
 
@@ -146,11 +149,18 @@ export default function DepositScreen() {
         return
       }
 
-      const uri = await qrRef.current.capture()
-      const asset = await MediaLibrary.createAssetAsync(uri)
-      await MediaLibrary.createAlbumAsync("QR Codes", asset, false)
+      if (qrRef.current) {
+        const qrCodeImage = qrRef.current as ViewShot;
+        // @ts-ignore: Linter incorrectly flags qrCodeImage as possibly undefined here
+        const uri = await qrCodeImage.capture() as string;
+        const asset = await MediaLibrary.createAssetAsync(uri);
+        await MediaLibrary.createAlbumAsync("QR Codes", asset, false);
 
-      Alert.alert("Thành công", "Đã lưu mã QR vào thư viện ảnh")
+        Alert.alert("Thành công", "Đã lưu mã QR vào thư viện ảnh");
+      } else {
+        Alert.alert("Lỗi", "Không thể tạo ảnh QR: qrRef chưa sẵn sàng.")
+      }
+
     } catch (error) {
       Alert.alert("Lỗi", "Không thể lưu ảnh")
       console.error(error)
@@ -163,10 +173,10 @@ export default function DepositScreen() {
         <TouchableOpacity style={styles.backButton} onPress={goBack}>
           <Ionicons name="arrow-back" size={24} color={COLORS.light} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Nạp tiền vào ví</Text>
+        <Text style={styles.headerTitle}>Mã VietQR thanh toán</Text>
       </View>
 
-      <View style={styles.content}>
+      <ScrollView style={styles.content}  showsVerticalScrollIndicator={false}>
         <View style={styles.amountInputContainer}>
           <Text style={styles.inputLabel}>Nhập số tiền muốn nạp</Text>
           <View style={styles.inputWrapper}>
@@ -201,30 +211,55 @@ export default function DepositScreen() {
         </View>
 
         {qrInfo && (
-          <View style={styles.qrInfoContainer}>
-            <Text style={{color: 'red'}}>Lưu ý: Chỉ chuyển khoản qua app ngân hàng (không chuyển qua ví điện tử)</Text>
-            <Text style={styles.infoText}>Ngân hàng (BIN): {qrInfo.bin}</Text>
-            <Text style={styles.infoText}>Số tài khoản: {qrInfo.accountNumber}</Text>
-            <Text style={styles.infoText}>Chủ tài khoản: {qrInfo.accountName}</Text>
-            <Text style={styles.infoText}>Số tiền: {formatCurrency(String(qrInfo.amount))}</Text>
-            <Text style={styles.infoText}>Nội dung: {qrInfo.description}</Text>
+          <View style={styles.vietQrContainer}>
+            <Text style={styles.vietQrInstructionText}>Mở Ứng Dụng Ngân Hàng Quét QRCode</Text>
+            <Image source={require('../../assets/images/logo-vietqr.png')} style={styles.vietQrLogo} />
 
-            {/* <TouchableOpacity onPress={() => Linking.openURL(qrInfo.checkoutUrl)}>
-              <Text style={styles.linkText}>Mở trang thanh toán</Text>
-            </TouchableOpacity> */}
-
-            <View style={{ alignItems: "center", marginTop: 12 }}>
+            <View style={styles.qrWrapperInner}>
               <ViewShot ref={qrRef} options={{ format: "png", quality: 1.0 }}>
-                <QRCode value={qrInfo.qrCode} size={200} />
+                 <QRCode 
+                    value={qrInfo.qrCode} 
+                    size={200}
+                    backgroundColor="white"
+                    color="black"
+                  />
               </ViewShot>
-
-              <TouchableOpacity onPress={saveQrToGallery} style={{ marginTop: 10 }}>
-                <Text style={{ color: COLORS.primary }}>Lưu mã QR</Text>
-              </TouchableOpacity>
             </View>
+
+            <View style={styles.napasMBLogos}>
+               <Image source={require('../../assets/images/logo_napas.png')} style={styles.napasLogo} />
+               <Image source={require('../../assets/images/mb-bank-logo.png')} style={styles.bidvLogo} />
+            </View>
+
+            <View style={styles.bankInfoGrid}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%', marginBottom: 8 }}>
+                <Text style={styles.infoLabel}>Số tiền:</Text>
+                <Text style={styles.infoValue}>{formatCurrency(String(qrInfo.amount))}</Text>
+              </View>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%', marginBottom: 8 }}>
+                <Text style={styles.infoLabel}>Tên chủ TK:</Text>
+                <Text style={styles.infoValue}>{qrInfo.accountName}</Text>
+              </View>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
+                <Text style={styles.infoLabel}>Số TK:</Text>
+                <Text style={styles.infoValue}>{qrInfo.accountNumber}</Text>
+              </View>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%', marginBottom: 8 }}>
+                <Text style={styles.infoLabel}>Nội dung chuyển khoản:</Text>
+                <Text style={styles.infoValue}>Nap tien vao vi</Text>
+              </View>
+            </View>
+
+
+            <TouchableOpacity 
+                style={styles.printButton} 
+                onPress={saveQrToGallery}
+              >
+                {/* <Text style={styles.printButtonText}>In nhanh mã</Text> */}
+            </TouchableOpacity>
           </View>
         )}
-      </View>
+      </ScrollView>
     </SafeAreaView>
   )
 }

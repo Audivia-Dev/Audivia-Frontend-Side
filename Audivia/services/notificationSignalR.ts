@@ -83,11 +83,6 @@ class NotificationSignalRService {
       this.notificationDeletedCallbacks.forEach(cb => cb(notification));
     })
 
-
-
-
-
-
     // Xử lý các sự kiện connection
     this.connection.onclose((error) => {
       console.log("SignalR connection closed:", error);
@@ -114,8 +109,13 @@ class NotificationSignalRService {
       throw error;
     }
   }
-    onDeleteNotification(callback: (notification: any) => void) {
-      this.notificationDeletedCallbacks.push(callback);
+
+  onDeleteNotification(callback: (notification: any) => void) {
+    this.notificationDeletedCallbacks.push(callback);
+  }
+
+  removeDeleteNotificationCallback(callback: (notification: any) => void) {
+    this.notificationDeletedCallbacks = this.notificationDeletedCallbacks.filter(cb => cb !== callback);
   }
 
   async stop() {

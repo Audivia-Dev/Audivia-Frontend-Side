@@ -190,5 +190,83 @@ const styles = StyleSheet.create({
       fontSize: 16,
       fontWeight: "600",
     },
+    vietQrContainer: {
+      alignItems: 'center',
+      marginTop: 20,
+      backgroundColor: '#eaf4ff', // Light blue background
+      padding: 20,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: '#b3d7ff', // Slightly darker blue border
+      marginBottom: 20
+    },
+    vietQrInstructionText: {
+      fontSize: 16,
+      color: COLORS.dark,
+      marginBottom: 12,
+    },
+    vietQrLogo: {
+      width: 100,
+      height: 40,
+      resizeMode: 'contain',
+      marginBottom: 6,
+    },
+    qrWrapperInner: {
+      backgroundColor: 'white',
+      padding: 10,
+      borderRadius: 8,
+    //  marginBottom: 6,
+    },
+    napasMBLogos: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginBottom: 11,
+      marginTop: 0,
+    },
+    napasLogo: {
+      width: 120,
+      height: 120,
+      resizeMode: 'contain',
+      marginRight: 10,
+    },
+    bidvLogo: {
+      width: 60,
+      height: 80,
+      resizeMode: 'contain',
+    },
+    bankInfoGrid: {
+      width: '100%',
+      marginBottom: 20,
+    },
+    infoLabel: {
+      fontSize: 15,
+      color: COLORS.grey,
+      marginBottom: 8,
+      width: '40%', // Allocate space for label
+    },
+    infoValue: {
+      fontSize: 15,
+      fontWeight: 'bold',
+      color: COLORS.dark,
+      marginBottom: 8,
+      width: '60%', // Allocate space for value
+    },
+    sapoText: {
+      fontSize: 12,
+      color: COLORS.grey,
+      marginBottom: 20,
+    },
+    printButton: {
+      backgroundColor: '#f0f7ff',
+      paddingHorizontal: 24,
+      paddingVertical: 12,
+      borderRadius: 24,
+    },
+    printButtonText: {
+      color: COLORS.primary,
+      fontSize: 16,
+      fontWeight: 'bold',
+    },
   })
   export default styles;

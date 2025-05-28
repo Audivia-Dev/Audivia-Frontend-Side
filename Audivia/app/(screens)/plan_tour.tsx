@@ -20,22 +20,49 @@ export default function PlanTourScreen() {
   const [planDate, setPlanDate] = useState("");
   const router = useRouter();
   const searchParams = useLocalSearchParams();
-  const tourId = searchParams.id;
+  const tourId = searchParams.id as string;
   const [tourInfor, setTour] = useState<SaveTour>();
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>();
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
   const goBack = () => {
     router.back();
   };
+
   useEffect(() => {
-    getSaveTourById(tourId).then((res) => {
-      setTour(res.response);
-    });
+    if (tourId) {
+      getSaveTourById(tourId).then((res) => {
+        setTour(res.response);
+        // Nếu có plannedTime, chuyển đổi và hiển thị
+        if (res.response.plannedTime) {
+          const date = new Date(res.response.plannedTime);
+          const formatted = date.toLocaleDateString("vi-VN");
+          setPlanDate(formatted);
+          setSelectedDate(date);
+        }
+      });
+    }
   }, [tourId]);
 
+  const handleDateChange = (event: any, date?: Date) => {
+    setShowDatePicker(false);
+    if (date) {
+      setSelectedDate(date);
+      // Format lại ngày thành chuỗi dd/mm/yyyy cho hiển thị
+      const formatted = date.toLocaleDateString("vi-VN");
+      setPlanDate(formatted);
+    }
+  };
+
   const handleSavePlanTime = async () => {
-    await updateSaveTour(tourId, planDate);
+    if (tourId && planDate) {
+      // Chuyển đổi từ dd/mm/yyyy sang yyyy-mm-ddT00:00:00.000Z
+      const [day, month, year] = planDate.split('/');
+      const isoDate = new Date(`${year}-${month}-${day}T00:00:00.000Z`).toISOString();
+      
+      await updateSaveTour(tourId, isoDate);
+      router.back();
+    }
   };
 
   return (
@@ -123,23 +150,15 @@ export default function PlanTourScreen() {
             <Text style={styles.confirmButtonText}>Xác Nhận Lịch Trình</Text>
           </TouchableOpacity>
         </View>
-        {/* {showDatePicker && (
+        {showDatePicker && (
           <DateTimePicker
             value={selectedDate || new Date()}
             mode="date"
             display={Platform.OS === "ios" ? "spinner" : "default"}
-            onChange={(event, date) => {
-              setShowDatePicker(false);
-              if (date) {
-                setSelectedDate(date);
-
-                // Format lại ngày thành chuỗi dd/mm/yyyy
-                const formatted = date.toLocaleDateString("vi-VN");
-                setPlanDate(formatted);
-              }
-            }}
+            onChange={handleDateChange}
+            minimumDate={new Date()} // Không cho phép chọn ngày trong quá khứ
           />
-        )} */}
+        )}
 
         {/* Bottom Spacing */}
         <View style={{ height: 80 }} />
