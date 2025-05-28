@@ -1,44 +1,57 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity, Animated, Dimensions } from 'react-native';
+import React, { useState, useRef } from 'react';
+import { View, Text, Image, StyleSheet, TouchableOpacity, Dimensions, FlatList, ListRenderItem } from 'react-native';
 import { useRouter } from 'expo-router';
 import { COLORS } from '@/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import MaskedView from '@react-native-masked-view/masked-view';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import styles from '@/styles/onboarding';
 
-const { width } = Dimensions.get('window');
 
-const slides = [
+interface Slide {
+  id: string;
+  title: string;
+  description: string;
+  image: string;
+  layout: 'original' | 'new';
+}
+
+const slides: Slide[] = [
   {
+    id: '1',
     title: 'Explore the Joy of Traveling',
     description: 'Everything you can imagine, is here.',
     image: 'https://res.cloudinary.com/dgzn2ix8w/image/upload/v1748363861/Audivia/luro9pjc61fbnuots5kn.png',
+    layout: 'original',
   },
   {
+    id: '2',
     title: 'Emotional Voice Tours',
-    description: 'Enjoy real human voices full of emotion and context.',
-    image: 'https://res.cloudinary.com/dgzn2ix8w/image/upload/v1748363950/Audivia/emotion_voice.png',
+    description: 'Experience the stories of places like never before with our unique emotional voice tours. Listen to captivating narratives that bring history, culture, and local life to vivid reality.',
+    image: 'https://res.cloudinary.com/dgzn2ix8w/image/upload/v1748369792/Audivia/zn76qojhgounxregxxhq.png',
+    layout: 'new',
   },
   {
+    id: '3',
     title: 'Personalized Experience',
-    description: 'Tailor your journey to match your own interests and pace.',
-    image: 'https://res.cloudinary.com/dgzn2ix8w/image/upload/v1748364020/Audivia/personalized_tour.png',
+    description: 'Tailor your travel experience to your specific interests and pace. Whether you love history, nature, food, or art, we provide curated content and flexible itineraries just for you.',
+    image: 'https://res.cloudinary.com/dgzn2ix8w/image/upload/v1748418065/Audivia/qmobzvxg3tbobfihzcqr.png',
+    layout: 'new',
   },
 ];
 
 export default function OnboardingScreen() {
   const router = useRouter();
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const slideAnim = useRef(new Animated.Value(0)).current;
+  const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
+  const flatListRef = useRef<FlatList<Slide>>(null);
+  const { width } = Dimensions.get('window');
 
   const handleNext = async () => {
-    if (currentSlide < slides.length - 1) {
-      Animated.timing(slideAnim, {
-        toValue: -(currentSlide + 1) * width,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
-      setCurrentSlide(prev => prev + 1);
+    if (currentSlideIndex < slides.length - 1) {
+      flatListRef.current?.scrollToIndex({
+        index: currentSlideIndex + 1,
+        animated: true
+      });
     } else {
       try {
         await AsyncStorage.setItem('hasSeenOnboarding', 'true');
@@ -49,48 +62,85 @@ export default function OnboardingScreen() {
     }
   };
 
+  const renderItem: ListRenderItem<Slide> = ({ item }) => {
+    if (item.layout === 'original') {
+      return (
+        <View style={styles.slideOriginal}>
+          <MaskedView
+            maskElement={
+              <Text style={[styles.titleOriginal, { backgroundColor: 'transparent' }]}>
+                {item.title}
+              </Text>
+            }
+          >
+            <LinearGradient
+              colors={[COLORS.primary, COLORS.purpleGradient]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+            >
+              <Text style={[styles.titleOriginal, { opacity: 0 }]}>{item.title}</Text>
+            </LinearGradient>
+          </MaskedView>
+
+          <Text style={styles.descriptionOriginal}>{item.description}</Text>
+          <Image
+            source={{ uri: item.image }}
+            style={styles.imageOriginal}
+            resizeMode="contain"
+          />
+        </View>
+      );
+    } else {
+      // New layout for slides 2 and 3 based on the provided image
+      const parts = item.title.split(' ');
+      const firstPart = parts.slice(0, -1).join(' ');
+      const lastPart = parts[parts.length - 1];
+
+      return (
+        <View style={styles.slideNew}>
+          <Image
+            source={{ uri: item.image }}
+            style={styles.imageNew}
+            resizeMode="cover"
+          />
+          <View style={styles.textContainerNew}>
+            <Text style={styles.titleNew}>
+              {firstPart}
+              <Text style={styles.highlightedTextNew}>{lastPart}</Text>
+            </Text>
+            <Text style={styles.descriptionNew}>{item.description}</Text>
+          </View>
+        </View>
+      );
+    }
+  };
+
   return (
     <LinearGradient
       colors={[COLORS.light, COLORS.secondary]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 0, y: 2 }}
-      style={[StyleSheet.absoluteFillObject, styles.container]}
+      start={{ x: 0, y: 1 }}
+      end={{ x: 0, y: -6 }}
+      style={[ styles.container]}
     >
-      <Animated.View
-        style={[
-          styles.slider,
-          {
-            transform: [{ translateX: slideAnim }],
-          },
-        ]}
-      >
-        {slides.map((slide, index) => (
-          <View key={index} style={styles.slide}>
-            <MaskedView
-              maskElement={
-                <Text style={[styles.title, { backgroundColor: 'transparent' }]}>
-                  {slide.title}
-                </Text>
-              }
-            >
-              <LinearGradient
-                colors={[COLORS.primary, COLORS.purpleGradient]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-              >
-                <Text style={[styles.title, { opacity: 0 }]}>{slide.title}</Text>
-              </LinearGradient>
-            </MaskedView>
-
-            <Text style={styles.description}>{slide.description}</Text>
-            <Image
-              source={{ uri: slide.image }}
-              style={styles.image}
-              resizeMode="contain"
-            />
-          </View>
-        ))}
-      </Animated.View>
+      <FlatList
+        ref={flatListRef}
+        data={slides}
+        renderItem={renderItem}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        keyExtractor={(item) => item.id}
+        onMomentumScrollEnd={(event) => {
+          const index = Math.round(event.nativeEvent.contentOffset.x / width);
+          setCurrentSlideIndex(index);
+        }}
+        initialScrollIndex={0}
+        getItemLayout={(data, index) => ({
+          length: width,
+          offset: width * index,
+          index,
+        })}
+      />
 
       <View style={styles.indicatorContainer}>
         {slides.map((_, index) => (
@@ -98,7 +148,7 @@ export default function OnboardingScreen() {
             key={index}
             style={[
               styles.dot,
-              currentSlide === index && styles.activeDot,
+              currentSlideIndex === index && styles.activeDot,
             ]}
           />
         ))}
@@ -111,9 +161,9 @@ export default function OnboardingScreen() {
           end={{ x: 1, y: 0 }}
           style={styles.gradientButton}
         >
-          <TouchableOpacity onPress={handleNext}>
+          <TouchableOpacity onPress={handleNext} style={{ width: '100%', alignItems: 'center' }}>
             <Text style={styles.buttonText}>
-              {currentSlide === slides.length - 1 ? 'Get Started' : 'Next'}
+              {currentSlideIndex === slides.length - 1 ? 'Get Started' : 'Next'}
             </Text>
           </TouchableOpacity>
         </LinearGradient>
@@ -122,69 +172,3 @@ export default function OnboardingScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingTop: 60,
-    alignItems: 'center',
-  },
-  slider: {
-    flexDirection: 'row',
-    width: width * slides.length,
-  },
-  slide: {
-    width: width,
-    alignItems: 'center',
-    paddingHorizontal: 24,
-  },
-  title: {
-    fontSize: 40,
-    fontWeight: 'bold',
-    color: COLORS.primary,
-    textAlign: 'left',
-    marginBottom: 12,
-  },
-  description: {
-    fontSize: 18,
-    color: COLORS.grey,
-    textAlign: 'left',
-    marginBottom: 36,
-  },
-  image: {
-    width: 400,
-    height: 450,
-    marginBottom: 24,
-  },
-  buttonContainer: {
-    width: '80%',
-    marginBottom: 20,
-  },
-  gradientButton: {
-    borderRadius: 50,
-    height: 60,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  buttonText: {
-    color: COLORS.light,
-    fontWeight: '600',
-    fontSize: 16,
-  },
-  indicatorContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginBottom: 20,
-    marginTop: 10,
-  },
-  dot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: COLORS.grey,
-    marginHorizontal: 6,
-  },
-  activeDot: {
-    backgroundColor: COLORS.primary,
-    width: 20,
-  },
-});
