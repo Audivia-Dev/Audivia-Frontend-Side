@@ -73,6 +73,8 @@ export const styles = StyleSheet.create({
       paddingHorizontal: 16,
       paddingTop: 16,
       paddingBottom: 16,
+      flexGrow: 1,
+      justifyContent: 'flex-end',
     },
     cameraButton: {
       padding: 5,

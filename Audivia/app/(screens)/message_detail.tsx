@@ -36,6 +36,12 @@ export default function MessageDetailScreen() {
   const flatListRef = useRef<FlatList<any>>(null);
   const typingAnimation = useRef(new Animated.Value(0)).current;
 
+  const scrollToBottom = () => {
+    if (flatListRef.current && messages.length > 0) {
+      flatListRef.current.scrollToEnd({ animated: true });
+    }
+  };
+
   useEffect(() => {
     if (!chatRoomId || typeof chatRoomId !== "string") return;
 
@@ -44,11 +50,13 @@ export default function MessageDetailScreen() {
         setLoading(true);
         const [msgs, room] = await Promise.all([
           getMessagesByChatRoom(chatRoomId),
-          getChatRoomById(chatRoomId), // <-- Nếu muốn lấy avatar, tên nhóm
+          getChatRoomById(chatRoomId),
         ]);
 
         setMessages(msgs);
         setChatRoom(room);
+        // Scroll to bottom after messages are loaded
+        setTimeout(scrollToBottom, 100);
       } catch (error) {
         console.error("Lỗi khi tải tin nhắn:", error);
       } finally {
@@ -59,10 +67,9 @@ export default function MessageDetailScreen() {
     fetchMessages();
   }, [chatRoomId]);
 
+  // Scroll to bottom when new messages arrive
   useEffect(() => {
-    if (flatListRef.current) {
-      flatListRef.current.scrollToEnd({ animated: true });
-    }
+    scrollToBottom();
   }, [messages]);
 
   useEffect(() => {
@@ -198,6 +205,12 @@ export default function MessageDetailScreen() {
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.messagesContainer}
         showsVerticalScrollIndicator={false}
+        onContentSizeChange={scrollToBottom}
+        onLayout={scrollToBottom}
+        maintainVisibleContentPosition={{
+          minIndexForVisible: 0,
+          autoscrollToTopThreshold: 10
+        }}
       />
 
       {typingUsers.size > 0 && (

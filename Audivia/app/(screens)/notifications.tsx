@@ -1,10 +1,18 @@
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Button } from "react-native";
 import React, { useEffect, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { getNotificationsByUser, updateStatusNotification } from "@/services/notification";
+import { getNotificationsByUser, updateStatusNotification, deleteNotification } from "@/services/notification";
 import { useUser } from "@/hooks/useUser";
 import { router } from "expo-router";
 import { useNotificationCount } from "@/hooks/useNotificationCount";
+import { useNavigation } from '@react-navigation/native';
+import { navigate } from "expo-router/build/global-state/routing";
+import { Ionicons } from "@expo/vector-icons";
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import Swipeable from 'react-native-gesture-handler/Swipeable';
+import { notificationSignalRService } from "@/services/notificationSignalR";
+import Animated, { FadeOut } from 'react-native-reanimated';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface Notification {
     id: string
@@ -19,31 +27,58 @@ interface Notification {
 
 interface NotificationItemProps extends Notification {
     onPress: () => void;
+    onDelete: (notificationId: string) => void;
 }
 
-const NotificationItem: React.FC<NotificationItemProps> = ({ content, type, isRead, createdAt, tourId, timeAgo, onPress }) => (
-    <TouchableOpacity onPress={onPress}>
-        <View style={[styles.item, !isRead && styles.unreadItem]}>
-            <Text style={[styles.title, !isRead && styles.unreadText]}>{type}</Text>
-            <Text style={[styles.message, !isRead && styles.unreadText]}>{content}</Text>
-            <Text style={styles.timeAgo}>{timeAgo}</Text>
-        </View>
-    </TouchableOpacity>
-);
+const NotificationItem: React.FC<NotificationItemProps> = ({ id, content, type, isRead, createdAt, tourId, timeAgo, onPress, onDelete }) => {
+    const renderRightActions = () => {
+        return (
+            <TouchableOpacity
+                style={styles.deleteButton}
+                onPress={() => onDelete(id)}
+            >
+                <Ionicons name="trash-outline" size={24} color="white" />
+            </TouchableOpacity>
+        );
+    };
+
+    return (
+        <Swipeable
+            renderRightActions={renderRightActions}
+            rightThreshold={40}
+        >
+            <TouchableOpacity onPress={onPress}>
+                <View style={[styles.item, !isRead && styles.unreadItem]}>
+                    <Text style={[styles.title, !isRead && styles.unreadText]}>{type}</Text>
+                    <Text style={[styles.message, !isRead && styles.unreadText]}>{content}</Text>
+                    <Text style={styles.timeAgo}>{timeAgo}</Text>
+                </View>
+            </TouchableOpacity>
+        </Swipeable>
+    );
+};
 
 export default function Notifications() {
     const [notifications, setNotifications] = useState<Notification[]>([])
     const [isLoading, setIsLoading] = useState(true)
     const { user } = useUser()
     const { unreadCount, loadUnreadCount } = useNotificationCount()
-
+    const navigation = useNavigation();
+    const onGoBack = () => {
+        navigation.goBack();
+      };
     useEffect(() => {
         if (user?.id) {
             fetchNotificationsByUser(user.id)
+            notificationSignalRService.onDeleteNotification(handleDeleteFromSignalR)
         }
     }, [user?.id])
 
+
+
+
     const fetchNotificationsByUser = async (userId: string) => {
+        notificationSignalRService.onDeleteNotification(handleDeleteFromSignalR)
         try {
             setIsLoading(true)
             const response = await getNotificationsByUser(userId)
@@ -54,7 +89,28 @@ export default function Notifications() {
             setIsLoading(false)
         }
     }
-
+    const handleDeleteByUser = async (notificationId: string) => {
+        try {
+            await deleteNotification(notificationId); // gọi server để xóa
+        } catch (error) {
+            console.log("Error deleting notification:", error)
+        }
+    }
+    const handleDeleteFromSignalR = (notificationId: string) => {
+        console.log("realtime delete: ", notificationId);
+        
+        removeNotificationFromState(notificationId); // chỉ cập nhật UI
+    }
+    const removeNotificationFromState = async (notificationId: string) => {
+        setNotifications(prev => prev.filter(n => n.id !== notificationId));
+        await loadUnreadCount();
+    }
+    const navigateToProfile = (userId: string) => {
+        router.push({
+          pathname: "/profile",
+          params: { userId },
+        });
+      };
     const handleNotificationPress = async (item: Notification) => {
         if (!item.isRead) {
             setNotifications(prevNotifications => 
@@ -91,37 +147,54 @@ export default function Notifications() {
               //  await loadUnreadCount();
             }
         } else {
-            if (item.tourId) {
+            if (item.type == "Bài viết"){
+                navigateToProfile(item.userId as string)
+            }
+            else if (item.tourId) {
                 router.push(`/detail_tour?tourId=${item.tourId}`)
             } else {
                 router.push('/history_transaction')
             }
         }
+
+
     };
 
     const renderItem = ({ item }: { item: Notification }) => (
-        <NotificationItem {...item} onPress={() => handleNotificationPress(item)} />
+        <NotificationItem 
+            {...item} 
+            onPress={() => handleNotificationPress(item)}
+            onDelete={handleDeleteByUser}
+        />
     );
 
     return (
-        <SafeAreaView style={styles.container}>
-            <Text style={styles.header}>Thông báo</Text>
-            {isLoading ? (
-                <View style={styles.centerContent}>
-                    <Text>Loading...</Text>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+            <SafeAreaView style={styles.container}>
+                <View style={styles.headerContainer}>
+                    <TouchableOpacity onPress={onGoBack}>
+                        <Ionicons name="arrow-back" size={24} color="#000" />
+                    </TouchableOpacity>
+                    <Text style={styles.header}>Thông báo</Text>
                 </View>
-            ) : notifications.length === 0 ? (
-                <View style={styles.centerContent}>
-                    <Text style={styles.emptyText}>No notifications yet</Text>
-                </View>
-            ) : (
-                <FlatList
-                    data={notifications}
-                    keyExtractor={(item) => item.id}
-                    renderItem={renderItem}
-                />
-            )}
-        </SafeAreaView>
+
+                {isLoading ? (
+                    <View style={styles.centerContent}>
+                        <Text>Loading...</Text>
+                    </View>
+                ) : notifications.length === 0 ? (
+                    <View style={styles.centerContent}>
+                        <Text style={styles.emptyText}>No notifications yet</Text>
+                    </View>
+                ) : (
+                    <FlatList
+                        data={notifications}
+                        keyExtractor={(item) => item.id}
+                        renderItem={renderItem}
+                    />
+                )}
+            </SafeAreaView>
+        </GestureHandlerRootView>
     );
 }
 
@@ -131,6 +204,16 @@ const styles = StyleSheet.create({
       backgroundColor: '#f6f8fa',
       paddingHorizontal: 16,
     },
+    headerContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'flex-start', // or 'space-between' if you want spacing
+    //    paddingHorizontal: 16,
+     //   paddingTop: 20,
+      //  paddingBottom: 10,
+
+
+      },
     header: {
         fontSize: 22,
         fontWeight: "700",
@@ -185,5 +268,12 @@ const styles = StyleSheet.create({
     emptyText: {
         fontSize: 16,
         color: '#666',
+    },
+    deleteButton: {
+        backgroundColor: '#ff3b30',
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: 80,
+        height: '100%',
     },
   });

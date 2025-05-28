@@ -55,12 +55,21 @@ export const createNotification = async (notification: CreateNotificationParams)
     }
 }
 
-
 export const countUnreadNotifications = async (userId: string) => {
     try {
         const response = await apiClient.get(`/notifications/unread-count/${userId}`)
         return response.data
     } catch (error) {
         console.log('Error counting unread notification: ', error)
+    }
+}
+
+export const deleteNotification = async (notificationId: string) => {
+    try {
+        const response = await apiClient.delete(`/notifications/${notificationId}`)
+        return response.data
+    } catch (error) {
+        console.log('Error deleting notification: ', error)
+        throw error
     }
 }
