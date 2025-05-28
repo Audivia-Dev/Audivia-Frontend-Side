@@ -33,6 +33,10 @@ export default function AuthForm({
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
 
+  const [emailFocused, setEmailFocused] = useState(false);
+  const [passwordFocused, setPasswordFocused] = useState(false);
+  const [usernameFocused, setUsernameFocused] = useState(false);
+
   const handleSubmit = () => {
     if (type === "signup") {
       if (!username) {
@@ -47,12 +51,9 @@ export default function AuthForm({
 
   return (
     <View style={styles.form}>
-      <Text style={styles.formTitle}>
-        {type === "login" ? "Đăng nhập" : "Đăng ký"}
-      </Text>
-      
+
       {type === "signup" && (
-        <View style={styles.inputGroup}>
+        <View style={[styles.inputGroup, usernameFocused && { borderColor: COLORS.primary }]}>
           <Ionicons name="person-outline" size={20} color={COLORS.grey} style={styles.inputIcon} />
           <TextInput
             value={username}
@@ -60,11 +61,13 @@ export default function AuthForm({
             style={styles.input}
             placeholder="Tên người dùng"
             placeholderTextColor={COLORS.grey}
+            onFocus={() => setUsernameFocused(true)}
+            onBlur={() => setUsernameFocused(false)}
           />
         </View>
       )}
 
-      <View style={styles.inputGroup}>
+      <View style={[styles.inputGroup, emailFocused && { borderColor: COLORS.primary }]}>
         <Ionicons name="mail-outline" size={20} color={COLORS.grey} style={styles.inputIcon} />
         <TextInput
           value={email}
@@ -73,10 +76,12 @@ export default function AuthForm({
           placeholder="Email"
           placeholderTextColor={COLORS.grey}
           keyboardType="email-address"
+          onFocus={() => setEmailFocused(true)}
+          onBlur={() => setEmailFocused(false)}
         />
       </View>
 
-      <View style={styles.inputGroup}>
+      <View style={[styles.inputGroup, passwordFocused && { borderColor: COLORS.primary }]}>
         <Ionicons name="lock-closed-outline" size={20} color={COLORS.grey} style={styles.inputIcon} />
         <TextInput
           value={password}
@@ -85,6 +90,8 @@ export default function AuthForm({
           placeholder="Mật khẩu"
           secureTextEntry={!showPassword}
           placeholderTextColor={COLORS.grey}
+          onFocus={() => setPasswordFocused(true)}
+          onBlur={() => setPasswordFocused(false)}
         />
         <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
           <Ionicons
@@ -123,19 +130,24 @@ export default function AuthForm({
           {type === "login" ? "Đăng nhập" : "Đăng ký"}
         </Text>
       </TouchableOpacity>
+      {type == "login" && (
+        <View style={styles.orContainer}>
+          <View style={styles.line} />
+          <Text style={styles.orText}>Hoặc</Text>
+          <View style={styles.line} />
+        </View>
+      )}
 
-      <View style={styles.orContainer}>
-        <View style={styles.line} />
-        <Text style={styles.orText}>Hoặc</Text>
-        <View style={styles.line} />
-      </View>
-
-      <TouchableOpacity style={styles.socialButton} onPress={onGoogleAuth}>
-        <Ionicons name="logo-google" size={20} color={COLORS.primary} style={styles.socialIcon} />
-        <Text style={styles.socialText}>
-          {type === "login" ? "Đăng nhập với Google" : "Đăng ký với Google"}
-        </Text>
-      </TouchableOpacity>
+      {type === "login" && (
+        <View style={styles.social}>
+          <TouchableOpacity style={styles.socialButton} onPress={onGoogleAuth}>
+            <Ionicons name="logo-google" size={20} color={COLORS.red} style={styles.socialIcon} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.socialButton} onPress={onGoogleAuth}>
+            <Ionicons name="logo-facebook" size={20} color={COLORS.blue} style={styles.socialIcon} />
+          </TouchableOpacity>
+        </View>
+      )}
 
       <View style={styles.signupWrapper}>
         <Text>
