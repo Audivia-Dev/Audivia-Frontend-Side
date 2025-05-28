@@ -24,7 +24,6 @@ export const TourMap: React.FC<UserLocationMapProps> = ({ tour, height = 300 }) 
     const [routeCoordinates, setRouteCoordinates] = useState<{ latitude: number, longitude: number }[]>([]);
     const [routeInfo, setRouteInfo] = useState<RouteInfo>({ distance: '', duration: '' });
     const [loading, setLoading] = useState<boolean>(true);
-
     useEffect(() => {
         // Get user location
         const getUserLocation = async () => {
@@ -76,7 +75,7 @@ export const TourMap: React.FC<UserLocationMapProps> = ({ tour, height = 300 }) 
         if (checkpoints.length < 2) return;
 
         try {
-            const API_KEY = process.env.EXPO_PUBLIC_GOOGLE_ROUTE_API_KEY;
+            const API_KEY = process.env.EXPO_PUBLIC_GOOGLE_ROUTE_API_KEY || '';
             // Prepare payload for Routes API
             const payload = {
                 origin: {
@@ -110,14 +109,15 @@ export const TourMap: React.FC<UserLocationMapProps> = ({ tour, height = 300 }) 
                 languageCode: "en-US", // Language setting
             };
 
-            const url = `https://routes.googleapis.com/directions/v2:computeRoutes?key=${API_KEY}`;
+            const url = `https://routes.googleapis.com/directions/v2:computeRoutes`;
+            const prepareHeaders = {
+                'Content-Type': 'application/json', // Bắt buộc cho POST request với JSON body
+                'X-Goog-Api-Key': API_KEY,
+                'X-Goog-FieldMask': 'routes.duration,routes.distanceMeters,routes.polyline.encodedPolyline',
+            };
             const response = await fetch(url, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    // Required header for Routes API
-                    "X-Goog-FieldMask": "routes.distanceMeters,routes.duration,routes.polyline.encodedPolyline",
-                },
+                headers: prepareHeaders,
                 body: JSON.stringify(payload),
             });
 
