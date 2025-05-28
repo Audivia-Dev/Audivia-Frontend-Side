@@ -7,27 +7,10 @@ import { useRouter } from "expo-router";
 import { login } from "@/services/user";
 import { useAuth } from "@/contexts/AuthContext";
 import AuthForm from "@/components/AuthForm";
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useEffect } from "react";
 
 export default function Login() {
   const router = useRouter();
   const { login: authLogin } = useAuth();
-
-  useEffect(() => {
-    checkOnboardingStatus();
-  }, []);
-
-  const checkOnboardingStatus = async () => {
-    try {
-      const hasSeenOnboarding = await AsyncStorage.getItem('hasSeenOnboarding');
-      if (!hasSeenOnboarding) {
-        router.replace('/(auth)/onboarding');
-      }
-    } catch (error) {
-      console.error('Error checking onboarding status:', error);
-    }
-  };
 
   const handleLogin = async (email: string, password: string, _username: string) => {
     try {
@@ -35,7 +18,7 @@ export default function Login() {
       if (response.accessToken && response.refreshToken) {
         await authLogin(response.accessToken, response.refreshToken);
         alert(response.message);
-      } 
+      }
     } catch (error: any) {
       if (error.response) {
         alert(error.response.data.message);
@@ -49,23 +32,25 @@ export default function Login() {
 
   return (
     <View style={styles.container}>
+      {/* Circular Background Shape */}
+      <View style={styles.circleTopShape} />
       {/* Logo */}
       <View style={styles.logoSection}>
-        <Image source={require("@/assets/images/logo.png")} style={styles.logo} />
         <MaskedView maskElement={
           <Text style={[styles.brandTitle, { backgroundColor: 'transparent' }]}>
-            Audivia
+            Đăng Nhập
           </Text>
         }>
           <LinearGradient
-            colors={[COLORS.light, COLORS.purpleGradient]}
+            colors={[COLORS.light, COLORS.light]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}>
             <Text style={[styles.brandTitle, { opacity: 0 }]}>
-              Audivia
+              Đăng Nhập
             </Text>
           </LinearGradient>
         </MaskedView>
+        <Image source={{ uri: 'https://res.cloudinary.com/dgzn2ix8w/image/upload/v1748432785/Audivia/mwxl1jfedjmj7lc0luth.png' }} style={styles.logo} />
       </View>
 
       <AuthForm
@@ -75,11 +60,6 @@ export default function Login() {
         onForgotPassword={() => console.log("Forgot password")}
         onToggleAuth={() => router.push("/signup")}
       />
-
-      {/* Terms */}
-      <View style={styles.footer}>
-        <Text>© 2025 Audivia. All rights reserved.</Text>
-      </View>
     </View>
   );
 }
