@@ -63,8 +63,6 @@ export default function ChatScreen() {
         await AsyncStorage.setItem(CLIENT_SESSION_ID_KEY, sessionId)
       }
       setClientSessionId(sessionId)
-      console.log(sessionId, "Client Session ID")
-      console.log(clientSessionId, "Client Session ID initialized")
     }
     initSession()
 
@@ -96,9 +94,7 @@ export default function ChatScreen() {
     else setIsLoadingMore(true)
 
     try {
-      console.log(clientSessionId, "Client Session ID in loadChatHistory")
       const history = await getChatHistory(clientSessionId, page, PAGE_SIZE)
-      console.log(history)
       const uiMessages = history.map(msg => mapApiMessageToUIMessage(msg)).reverse()
 
       setMessages(prevMessages => page === 1 ? uiMessages : [...uiMessages, ...prevMessages])
@@ -134,7 +130,6 @@ export default function ChatScreen() {
     setInputText("")
 
     try {
-      console.log(`Sending user message ${userMessageText} from user ${userId} with session ID: ${clientSessionId}`)
       const botReply = await sendChatMessage(userMessageText, clientSessionId, userId)
       const newBotMessage = mapApiMessageToUIMessage(botReply, true)
 
