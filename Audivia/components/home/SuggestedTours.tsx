@@ -116,10 +116,7 @@ export const SuggestedTours = ({ suggestedTours }: SuggestedToursProps) => {
   return (
     <View style={styles.toursSection}>
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Các địa điểm được đề xuất</Text>
-        <TouchableOpacity>
-          <Text style={styles.seeAllText}>Xem tất cả</Text>
-        </TouchableOpacity>
+        <Text style={styles.sectionTitle}>Địa điểm được đề xuất</Text>
       </View>
 
       <Text style={styles.tourSubtitle}>Dựa trên sở thích và vị trí của bạn</Text>

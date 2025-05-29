@@ -1,15 +1,16 @@
-import { View, ScrollView, Dimensions } from "react-native"
+import { View, ScrollView, Dimensions, Image, TextInput } from "react-native"
 import { useEffect, useState } from "react"
 import { Tour, TourType } from "@/models"
 import { getSuggestedTours, getTop3Tours } from "@/services/tour"
 import { getTourTypes } from "@/services/tour_type"
 import UserLocationMap from "@/components/UserLocationMap"
 import { Header } from "@/components/home/Header"
-import { ImageCarousel } from "@/components/home/ImageCarousel"
 import { Categories } from "@/components/home/Categories"
 import { SuggestedTours } from "@/components/home/SuggestedTours"
 import { TopPlaces } from "@/components/home/TopPlaces"
 import styles from "@/styles/home.styles"
+import { Ionicons } from "@expo/vector-icons"
+import { COLORS } from "@/constants/theme"
 
 export default function Index() {
   const [top3Tours, setTop3Tours] = useState<Tour[]>([])
@@ -51,10 +52,31 @@ export default function Index() {
 
   return (
     <View style={styles.container}>
-      <Header locationAddress={currentLocationAddress} />
+      
+      
 
       <ScrollView showsVerticalScrollIndicator={false}>
-        <ImageCarousel />
+       
+      <View style={styles.overlayHeader}>
+         <Header locationAddress={currentLocationAddress} />
+      </View>
+        <View style={styles.mainImageContainer}>
+          <Image
+            source={{uri: 'https://res.cloudinary.com/dgzn2ix8w/image/upload/v1748528092/Audivia/v44p6ismjiq7mfs2bwc1.png'}}
+            style={styles.mainImage}
+            resizeMode="cover"
+          />
+        </View>
+         {/* Search Bar */}
+         <View style={styles.searchContainer}>
+          <Ionicons name="search" size={20} color={COLORS.primary} style={styles.searchIcon} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search any places..."
+            placeholderTextColor={COLORS.grey}
+          />
+        </View>
+
         <Categories tourTypes={tourTypes} />
 
         {/* Google Map View */}

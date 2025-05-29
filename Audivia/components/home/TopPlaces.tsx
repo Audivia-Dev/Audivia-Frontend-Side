@@ -15,7 +15,7 @@ export const TopPlaces = ({ top3Tours }: TopPlacesProps) => {
   return (
     <View style={styles.topPlacesSection}>
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>3 địa điểm nổi bật</Text>
+        <Text style={styles.sectionTitle}>Địa điểm nổi bật</Text>
       </View>
 
       {Array.isArray(top3Tours) && top3Tours.map((tour, index) => (
@@ -26,7 +26,7 @@ export const TopPlaces = ({ top3Tours }: TopPlacesProps) => {
               style={styles.placeImage}
               resizeMode="cover"
             />
-          ) : <Text>No image</Text>}
+          ) : <Text>Không ảnh</Text>}
           <View style={styles.placeDetails}>
             <Text style={styles.placeName}>{tour.title}</Text>
             <Text style={styles.placeRating}>★★★★☆ {tour.avgRating} • {tour.duration} giờ</Text>

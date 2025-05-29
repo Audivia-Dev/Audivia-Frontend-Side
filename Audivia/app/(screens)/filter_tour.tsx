@@ -13,7 +13,7 @@ import {
 import { Ionicons, FontAwesome } from "@expo/vector-icons"
 import { useLocalSearchParams, useRouter } from "expo-router"
 import { styles } from "@/styles/filter_tour.styles"
-import { getToursByTypeId } from "@/services/tour"
+import { getToursByTypeId, getAllTours } from "@/services/tour"
 import { useUser } from "@/hooks/useUser"
 import { COLORS } from "@/constants/theme"
 import { createSaveTour } from "@/services/save_tour"
@@ -27,15 +27,20 @@ export default function FilterTourScreen() {
   const {user} = useUser()
   
   useEffect(() => {
-    const fetchToursByTypeId = async () => {
+    const fetchTours = async () => {
       try{
-        const response = await getToursByTypeId(typeId as string)
+        let response;
+        if (typeId) {
+          response = await getToursByTypeId(typeId as string)
+        } else {
+          response = await getAllTours()
+        }
         setTours(response.response.data)
       }catch(error){
         console.error("Lỗi khi lấy danh sách tour:", error)
       }
     }
-    fetchToursByTypeId()
+    fetchTours()
   }, [typeId])
  
   const navigateToTourDetail = (tourId: string) => {
@@ -117,7 +122,7 @@ export default function FilterTourScreen() {
       {/* Title */}
       <View style={styles.titleContainer}>
         <View>
-          <Text style={styles.title}>{tourTypeName}</Text>
+          <Text style={styles.title}>{tourTypeName || "Tất cả tour"}</Text>
           <Text style={styles.subtitle}>{tours.length} tour audio khả dụng</Text>
         </View>
       </View>

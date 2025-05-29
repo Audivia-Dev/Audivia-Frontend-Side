@@ -9,6 +9,15 @@ export const getTop3Tours = async () => {
     throw error;
   }
 }
+export const getAllTours = async () => {
+  try {
+    const response = await apiClient.get('/tours');
+    return response.data;
+  } catch (error) {
+    console.error('Lỗi khi lấy danh sách tour:', error);
+    throw error;
+  }
+}
 export const getTourById = async (tourId: string) => {
   try {
     const response = await apiClient.get(`/tours/${tourId}`);
