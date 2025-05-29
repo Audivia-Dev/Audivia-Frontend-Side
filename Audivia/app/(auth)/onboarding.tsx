@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, Dimensions, FlatList, ListRenderItem } from 'react-native';
 import { useRouter } from 'expo-router';
 import { COLORS } from '@/constants/theme';
@@ -45,6 +45,12 @@ export default function OnboardingScreen() {
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const flatListRef = useRef<FlatList<Slide>>(null);
   const { width } = Dimensions.get('window');
+
+  useEffect(() => {
+    slides.forEach(slide => {
+      Image.prefetch(slide.image);
+    });
+  }, []);
 
   const handleNext = async () => {
     if (currentSlideIndex < slides.length - 1) {
