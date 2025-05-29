@@ -43,7 +43,8 @@ export const updateSaveTour = async (
     plannedTime:string
   ) => {
     try {
-        await apiClient.put(`/save-tours/${id}`, plannedTime)
+      const rs =  await apiClient.put(`/save-tours/${id}`,  { plannedTime })
+      
     } catch (error: any) {
         console.error('Lỗi cập nhật thông tour yêu thích:', error.response?.data || error.message)
         throw error

@@ -16,6 +16,7 @@ import { ProfileAbout } from "@/components/profile/ProfileAbout"
 import { ProfileFriends } from "@/components/profile/ProfileFriends"
 import { ProfilePosts } from "@/components/profile/ProfilePosts"
 import { createChatRoom, createChatRoomMember, getPrivateRoom } from "@/services/chat"
+import { createNotification } from "@/services/notification"
 
 export default function ProfileScreen() {
   const [activeTab, setActiveTab] = useState("posts")
@@ -176,6 +177,23 @@ export default function ProfileScreen() {
         if (response.success) {
           setPosts([response.response, ...posts]);
           setShowPostModal(false);
+
+
+          try {
+            const notificationParams = {
+              userId: user?.id as string,
+              content: `${user?.fullName} đã đăng một bài viết mới`,
+              type: "Bài viết",
+              isRead: false,
+            }
+            await createNotification(notificationParams)
+
+          } catch (error) {
+            console.error('Lỗi khi tạo thông báo:', error)
+          }
+
+
+
         } else {
           throw new Error(response.message || 'Không thể tạo bài viết');
         }

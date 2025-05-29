@@ -10,7 +10,7 @@ class NotificationSignalRService {
   private currentToken: string | null = null;
   private isInitialized: boolean = false;
   public onUnreadCountChange?: (count: number) => void;
-
+  private notificationDeletedCallbacks: ((notification: any) => void)[] = [];
   // Kiểm tra xem connection có đang hoạt động không
   isConnected(): boolean {
     return this.connection?.state === SignalR.HubConnectionState.Connected;
@@ -79,6 +79,10 @@ class NotificationSignalRService {
       }
     });
 
+    this.connection.on("NotificationDeleted", (notification: any) => {
+      this.notificationDeletedCallbacks.forEach(cb => cb(notification));
+    })
+
     // Xử lý các sự kiện connection
     this.connection.onclose((error) => {
       console.log("SignalR connection closed:", error);
@@ -104,6 +108,14 @@ class NotificationSignalRService {
       console.error("Error starting SignalR connection:", error);
       throw error;
     }
+  }
+
+  onDeleteNotification(callback: (notification: any) => void) {
+    this.notificationDeletedCallbacks.push(callback);
+  }
+
+  removeDeleteNotificationCallback(callback: (notification: any) => void) {
+    this.notificationDeletedCallbacks = this.notificationDeletedCallbacks.filter(cb => cb !== callback);
   }
 
   async stop() {

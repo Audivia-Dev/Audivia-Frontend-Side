@@ -12,7 +12,7 @@ export const MenuAccount = () => {
     router.push("/(screens)/tour_purchase")
   }
   const handleHistoryTour = () => {
-    router.push("/(screens)/history_tour")
+    router.push("/(screens)/tour_purchase")
   }
   return (
     <View style={styles.section}>
