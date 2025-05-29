@@ -4,15 +4,26 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider } from '@/contexts/AuthContext';
 import LayoutContent from '@/contexts/LayoutContext';
 import { useEffect } from 'react';
-import { Stack } from 'expo-router';
+import { SplashScreen, Stack } from 'expo-router';
 import { useUser } from '@/hooks/useUser';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { notificationSignalRService } from '@/services/notificationSignalR';
 import { AppState } from 'react-native';
 import { chatSignalRService } from '@/services/chat_signalR';
+import { customFonts } from '@/utils/font';
+import { useFonts } from 'expo-font';
 
 export default function RootLayout() {
   const { user } = useUser();
+  const [fontsLoaded] = useFonts(customFonts);
+  
+  useEffect(() => {
+    if (fontsLoaded) {
+      SplashScreen.hideAsync();
+    } else {
+      SplashScreen.preventAutoHideAsync();
+    }
+  }, [fontsLoaded]);
 
   useEffect(() => {
     const initializeSignalR = async () => {

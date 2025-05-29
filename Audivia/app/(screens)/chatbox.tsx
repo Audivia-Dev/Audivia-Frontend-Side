@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useCallback } from "react"
 import {
   View,
   Text,
@@ -9,147 +9,155 @@ import {
   SafeAreaView,
   KeyboardAvoidingView,
   Platform,
-  Animated,
+  ActivityIndicator,
 } from "react-native"
 import { Ionicons } from "@expo/vector-icons"
 import { useRouter } from "expo-router"
 import { COLORS } from "@/constants/theme"
 import { styles } from "@/styles/chatbox.styles"
+import { sendChatMessage, getChatHistory, ChatBotMessage as ApiChatMessage } from "@/services/chatbot"
+import { useUser } from "@/hooks/useUser"
+import AsyncStorage from "@react-native-async-storage/async-storage"
 
-// Dữ liệu mẫu cho tin nhắn
-const MESSAGES = [
-  {
-    id: "1",
-    text: "Xin chào! Tôi là Audy, trợ lý ảo của Audivia. Tôi có thể giúp gì cho bạn về các tour du lịch?",
-    time: "10:30",
-    isBot: true,
-    isNew: false,
-  },
-  {
-    id: "2",
-    text: "Chào Audy, tôi muốn tìm hiểu về tour Nhà Văn hóa ĐHQG TP.HCM",
-    time: "10:31",
-    isBot: false,
-    isNew: false,
-  },
-  {
-    id: "3",
-    text: "Tuyệt vời! Tour Nhà Văn hóa ĐHQG TP.HCM là một tour miễn phí kéo dài khoảng 40 phút. Tour này sẽ đưa bạn tham quan 6 địa điểm chính trong khuôn viên, bao gồm thư viện, không gian triển lãm và khu vực ngoài trời.",
-    time: "10:32",
-    isBot: true,
-    isNew: false,
-  },
-  {
-    id: "4",
-    text: "Tour này có những điểm gì đặc biệt?",
-    time: "10:33",
-    isBot: false,
-    isNew: false,
-  },
-  {
-    id: "5",
-    text: "Tour này có nhiều điểm đặc biệt như:\n\n• Kiến trúc hiện đại kết hợp với không gian xanh\n• Bộ sưu tập sách phong phú tại thư viện\n• Các triển lãm nghệ thuật và văn hóa thường xuyên thay đổi\n• Không gian học tập và làm việc nhóm tiện nghi\n• Khu vực ngoài trời với cảnh quan đẹp",
-    time: "10:34",
-    isBot: true,
-    isNew: false,
-  },
-]
+const CLIENT_SESSION_ID_KEY = "chatClientSessionId"
+
+const generateGUID = () => {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+    var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8)
+    return v.toString(16)
+  })
+}
+
+interface UIMessage {
+  id: string
+  text: string
+  time: string
+  isBot: boolean
+  // isNew: boolean // May not be needed if FlatList manages new item rendering
+}
+
+const PAGE_SIZE = 20
 
 export default function ChatScreen() {
-  const [messages, setMessages] = useState(MESSAGES)
+  const { user } = useUser()
+  const [messages, setMessages] = useState<UIMessage[]>([])
   const [inputText, setInputText] = useState("")
-  const [isTyping, setIsTyping] = useState(false)
   const flatListRef = useRef<FlatList<any>>(null)
-  const typingAnimation = useRef(new Animated.Value(0)).current
   const router = useRouter()
 
-  useEffect(() => {
-    // Tự động cuộn xuống tin nhắn mới nhất
-    if (flatListRef.current) {
-      flatListRef.current.scrollToEnd({ animated: true })
-    }
-  }, [messages])
+  const [clientSessionId, setClientSessionId] = useState<string | null>(null)
+  const [userId, setUserId] = useState<string | null>(null)
 
-  useEffect(() => {
-    // Hiệu ứng "đang nhập" khi isTyping = true
-    if (isTyping) {
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(typingAnimation, {
-            toValue: 1,
-            duration: 500,
-            useNativeDriver: true,
-          }),
-          Animated.timing(typingAnimation, {
-            toValue: 0,
-            duration: 500,
-            useNativeDriver: true,
-          }),
-        ]),
-      ).start()
-    } else {
-      typingAnimation.setValue(0)
-    }
-  }, [isTyping])
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false)
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
+  const [isSendingMessage, setIsSendingMessage] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [hasMoreHistory, setHasMoreHistory] = useState(true)
 
-  const goBack = () => {
-    router.back()
+  // Effect to initialize clientSessionId and userId
+  useEffect(() => {
+    const initSession = async () => {
+      let sessionId = await AsyncStorage.getItem(CLIENT_SESSION_ID_KEY)
+      if (!sessionId) {
+        sessionId = generateGUID()
+        await AsyncStorage.setItem(CLIENT_SESSION_ID_KEY, sessionId)
+      }
+      setClientSessionId(sessionId)
+    }
+    initSession()
+
+    if (user?.id) {
+      setUserId(user.id)
+    }
+  }, [user])
+
+  // Effect to load initial chat history
+  useEffect(() => {
+    if (clientSessionId && userId) {
+      loadChatHistory(1, true)
+    }
+  }, [clientSessionId, userId])
+
+  const mapApiMessageToUIMessage = (apiMsg: ApiChatMessage, isNewestBotReply: boolean = false): UIMessage => {
+    return {
+      id: apiMsg.id || generateGUID(),
+      text: apiMsg.reply,
+      time: apiMsg.timestamp,
+      isBot: apiMsg.sender === 1,
+    }
   }
 
-  const sendMessage = () => {
-    if (inputText.trim() === "") return
+  const loadChatHistory = useCallback(async (page: number, initialLoad = false) => {
+    if (!clientSessionId || !hasMoreHistory || isLoadingMore || (initialLoad && isLoadingHistory)) return
 
-    // Thêm tin nhắn của người dùng
-    const newUserMessage = {
-      id: String(messages.length + 1),
-      text: inputText,
+    if (initialLoad) setIsLoadingHistory(true)
+    else setIsLoadingMore(true)
+
+    try {
+      const history = await getChatHistory(clientSessionId, page, PAGE_SIZE)
+      const uiMessages = history.map(msg => mapApiMessageToUIMessage(msg)).reverse()
+
+      setMessages(prevMessages => page === 1 ? uiMessages : [...uiMessages, ...prevMessages])
+
+      if (history.length < PAGE_SIZE) {
+        setHasMoreHistory(false)
+      }
+      setCurrentPage(page)
+
+    } catch (error) {
+      console.error("Failed to load chat history:", error)
+    } finally {
+      if (initialLoad) setIsLoadingHistory(false)
+      else setIsLoadingMore(false)
+    }
+  }, [clientSessionId, hasMoreHistory, isLoadingMore, isLoadingHistory])
+
+  const handleSendMessage = async () => {
+    if (inputText.trim() === "" || !clientSessionId || !userId || isSendingMessage) return
+
+    setIsSendingMessage(true)
+
+    const userMessageText = inputText
+    const tempUserMessageId = generateGUID()
+
+    const newUserMessage: UIMessage = {
+      id: tempUserMessageId,
+      text: userMessageText,
       time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       isBot: false,
-      isNew: true,
     }
-
-    setMessages([...messages, newUserMessage])
+    setMessages(prevMessages => [newUserMessage, ...prevMessages])
     setInputText("")
 
-    // Giả lập bot đang nhập
-    setIsTyping(true)
+    try {
+      const botReply = await sendChatMessage(userMessageText, clientSessionId, userId)
+      const newBotMessage = mapApiMessageToUIMessage(botReply, true)
 
-    // Giả lập phản hồi từ bot sau 1-2 giây
-    setTimeout(
-      () => {
-        setIsTyping(false)
+      setMessages(prevMessages => {
+        return [newBotMessage, ...prevMessages]
+      })
 
-        const botResponses = [
-          "Tôi hiểu rồi! Để tôi kiểm tra thông tin cho bạn nhé.",
-          "Cảm ơn bạn đã hỏi. Đây là thông tin bạn cần biết về tour này.",
-          "Tôi sẽ giúp bạn sắp xếp chuyến đi này. Bạn có yêu cầu đặc biệt nào không?",
-          "Tour này rất phổ biến! Tôi khuyên bạn nên đặt trước ít nhất 1 ngày.",
-          "Bạn có thể tìm thêm thông tin chi tiết trong phần mô tả tour nhé.",
-        ]
-
-        const randomResponse = botResponses[Math.floor(Math.random() * botResponses.length)]
-
-        const newBotMessage = {
-          id: String(messages.length + 2),
-          text: randomResponse,
-          time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-          isBot: true,
-          isNew: true,
-        }
-
-        setMessages((prevMessages) => [...prevMessages, newBotMessage])
-      },
-      1000 + Math.random() * 1000,
-    )
+    } catch (error) {
+      console.error("Failed to send message or get bot reply:", error)
+      setMessages(prevMessages => prevMessages.filter(msg => msg.id !== tempUserMessageId))
+      setInputText(userMessageText)
+    } finally {
+      setIsSendingMessage(false)
+    }
   }
 
-  const renderMessage = ({ item }: { item: any }) => {
+  const loadMoreMessages = () => {
+    if (hasMoreHistory && !isLoadingMore && clientSessionId) {
+      loadChatHistory(currentPage + 1)
+    }
+  }
+
+  const renderMessage = ({ item }: { item: UIMessage }) => {
     return (
-      <Animated.View
+      <View
         style={[
           styles.messageContainer,
           item.isBot ? styles.botMessageContainer : styles.userMessageContainer,
-          item.isNew && { opacity: 1, transform: [{ translateY: 0 }] },
         ]}
       >
         {item.isBot && (
@@ -157,9 +165,37 @@ export default function ChatScreen() {
         )}
         <View style={[styles.messageBubble, item.isBot ? styles.botMessageBubble : styles.userMessageBubble]}>
           <Text style={styles.messageText}>{item.text}</Text>
-          <Text style={styles.messageTime}>{item.time}</Text>
+          <Text style={item.isBot ? styles.messageTime : styles.messageTimeLight}>{item.time}</Text>
         </View>
-      </Animated.View>
+      </View>
+    )
+  }
+
+  const goBack = () => {
+    router.back()
+  }
+
+  // Auto-scroll to bottom (or top for inverted FlatList) when new messages are added
+  useEffect(() => {
+    if (messages.length > 0 && flatListRef.current) {
+      setTimeout(() => flatListRef.current?.scrollToOffset({ animated: true, offset: 0 }), 100)
+    }
+  }, [messages])
+
+  if (isLoadingHistory && messages.length === 0) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.backButton} onPress={goBack}>
+            <Ionicons name="arrow-back" size={24} color="#000" />
+          </TouchableOpacity>
+          <View style={styles.headerInfo}><Text style={styles.headerName}>Audy - Trợ lý du lịch</Text></View>
+        </View>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator size="large" color={COLORS.primary} />
+          <Text>Đang tải cuộc trò chuyện...</Text>
+        </View>
+      </SafeAreaView>
     )
   }
 
@@ -189,57 +225,18 @@ export default function ChatScreen() {
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.messagesContainer}
         showsVerticalScrollIndicator={false}
+        inverted
+        onEndReached={loadMoreMessages}
+        onEndReachedThreshold={0.5}
+        ListHeaderComponent={
+          isLoadingMore ? <ActivityIndicator style={{ marginVertical: 10 }} size="small" color={COLORS.primary} /> : null
+        }
       />
-
-      {/* Typing Indicator */}
-      {isTyping && (
-        <View style={styles.typingContainer}>
-          <Image
-            source={{ uri: "https://cdn-icons-png.flaticon.com/512/5229/5229537.png" }}
-            style={styles.typingAvatar}
-          />
-          <View style={styles.typingBubble}>
-            <Animated.View
-              style={[
-                styles.typingDot,
-                {
-                  opacity: typingAnimation.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [0.3, 1],
-                  }),
-                },
-              ]}
-            />
-            <Animated.View
-              style={[
-                styles.typingDot,
-                {
-                  opacity: typingAnimation.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [0.5, 1],
-                  }),
-                },
-              ]}
-            />
-            <Animated.View
-              style={[
-                styles.typingDot,
-                {
-                  opacity: typingAnimation.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [0.7, 1],
-                  }),
-                },
-              ]}
-            />
-          </View>
-        </View>
-      )}
 
       {/* Input Area */}
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={100}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 30}
         style={styles.inputContainer}
       >
         <TouchableOpacity style={styles.attachButton}>
@@ -252,17 +249,22 @@ export default function ChatScreen() {
             value={inputText}
             onChangeText={setInputText}
             multiline
+            editable={!isSendingMessage}
           />
           <TouchableOpacity style={styles.emojiButton}>
             <Ionicons name="happy-outline" size={24} color="#666" />
           </TouchableOpacity>
         </View>
         <TouchableOpacity
-          style={[styles.sendButton, inputText.trim() ? styles.sendButtonActive : {}]}
-          onPress={sendMessage}
-          disabled={!inputText.trim()}
+          style={[styles.sendButton, (inputText.trim() && !isSendingMessage) ? styles.sendButtonActive : {}]}
+          onPress={handleSendMessage}
+          disabled={!inputText.trim() || isSendingMessage}
         >
-          <Ionicons name="send" size={20} color={inputText.trim() ? "#fff" : "#999"} />
+          {isSendingMessage ? (
+            <ActivityIndicator size="small" color="#fff" />
+          ) : (
+            <Ionicons name="send" size={20} color={(inputText.trim() && !isSendingMessage) ? "#fff" : "#999"} />
+          )}
         </TouchableOpacity>
       </KeyboardAvoidingView>
     </SafeAreaView>

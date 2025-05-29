@@ -7,11 +7,11 @@ import { COLORS } from '@/constants/theme';
 export default function LayoutContent() {
   const { isAuthenticated } = useAuth();
   const pathname = usePathname();
-  
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.primary }}>
-      <Stack screenOptions={{headerShown: false}}/>
-      {/* {isAuthenticated && !pathname.includes('chatbox') && <FloatingButton onPress={() => router.push("/(screens)/chatbox")}/>} */}
+      <Stack screenOptions={{ headerShown: false }} />
+      {isAuthenticated && !pathname.includes('chatbox') && <FloatingButton onPress={() => router.push("/(screens)/chatbox")} />}
     </SafeAreaView>
   );
 }

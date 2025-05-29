@@ -4,8 +4,8 @@ import { Animated, PanResponder, StyleSheet, TouchableOpacity, Dimensions, Image
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 const FloatingButton = ({ onPress }: { onPress?: () => void }) => {
-  const pan = useRef(new Animated.ValueXY({ x: SCREEN_WIDTH - 80, y: SCREEN_HEIGHT - 150 })).current;
-  const [currentPosition, setCurrentPosition] = useState({ x: SCREEN_WIDTH - 80, y: SCREEN_HEIGHT - 150 });
+  const pan = useRef(new Animated.ValueXY({ x: SCREEN_WIDTH - 80, y: SCREEN_HEIGHT - 180 })).current;
+  const [currentPosition, setCurrentPosition] = useState({ x: SCREEN_WIDTH - 80, y: SCREEN_HEIGHT - 180 });
 
   // Add listener to track current position
   pan.addListener((value) => setCurrentPosition(value));
@@ -68,7 +68,7 @@ const FloatingButton = ({ onPress }: { onPress?: () => void }) => {
 const styles = StyleSheet.create({
   floatingButton: {
     position: "absolute",
-    zIndex: 999,
+    zIndex: 500,
     width: 60,
     height: 60,
     borderRadius: 30,

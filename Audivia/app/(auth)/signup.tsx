@@ -33,23 +33,26 @@ export default function Signup() {
 
   return (
     <View style={styles.container}>
+      {/* Circular Background Shape */}
+      <View style={styles.circleBottomShape} />
       {/* Logo */}
       <View style={styles.logoSection}>
-        <Image source={require("@/assets/images/logo.png")} style={styles.logo} />
         <MaskedView maskElement={
           <Text style={[styles.brandTitle, { backgroundColor: 'transparent' }]}>
-            Audivia
+            Đăng Ký
           </Text>
         }>
           <LinearGradient
-            colors={[COLORS.light, COLORS.purpleGradient]}
+            colors={[COLORS.primary, COLORS.purpleGradient]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}>
             <Text style={[styles.brandTitle, { opacity: 0 }]}>
-              Audivia
+              Đăng Ký
             </Text>
           </LinearGradient>
         </MaskedView>
+        <Image source={{ uri: 'https://res.cloudinary.com/dgzn2ix8w/image/upload/v1748439988/Audivia/xxynw0hglztf4mijnobw.png' }} style={styles.logo} />
+
       </View>
 
       <AuthForm
@@ -59,10 +62,6 @@ export default function Signup() {
         onToggleAuth={() => router.push("/login")}
       />
 
-      {/* Terms */}
-      <View style={styles.footer}>
-        <Text>© 2025 Audivia. All rights reserved.</Text>
-      </View>
     </View>
   );
 }
