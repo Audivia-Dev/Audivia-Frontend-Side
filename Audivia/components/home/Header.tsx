@@ -17,16 +17,19 @@ export const Header = ({ locationAddress }: HeaderProps) => {
   return (
     <View>
       <View style={styles.header}>
-        <View style={styles.avatarWrapper}>
-          {user?.avatarUrl ? (
-            <Image
-              source={{ uri: user?.avatarUrl }}
-              style={styles.avatarImage}
-              resizeMode="cover"
-            />
-          ) : (
-            <Ionicons name="person-circle-outline" size={24} color={COLORS.primary} />
-          )}
+        <View style={styles.userInfoContainer}>
+          <View style={styles.avatarWrapper}>
+            {user?.avatarUrl ? (
+              <Image
+                source={{ uri: user?.avatarUrl }}
+                style={styles.avatarImage}
+                resizeMode="cover"
+              />
+            ) : (
+              <Ionicons name="person-circle-outline" size={24} color={COLORS.primary} />
+            )}
+          </View>
+          <Text style={styles.userNameText}>Hi, {user?.userName}</Text>
         </View>
         <View style={styles.headerIcons}>
           <View style={styles.iconContainer}>

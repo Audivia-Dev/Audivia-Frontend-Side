@@ -34,8 +34,8 @@ export const NotificationButton = () => {
                 <Image 
                     source={{ uri: 'https://res.cloudinary.com/dgzn2ix8w/image/upload/v1748529207/Audivia/vsx5niettalvvfpx1j3t.png' }}
                     style={{
-                        width: 34,
-                        height: 34,
+                        width: 36,
+                        height: 36,
                         resizeMode: 'contain'
                     }}
                 />
