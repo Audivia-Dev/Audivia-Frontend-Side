@@ -205,42 +205,11 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   topPlacesSection: {
-    paddingHorizontal: 16,
     marginTop: 20,
     marginBottom: 60,
   },
-  placeItem: {
-    flexDirection: "row",
-    marginBottom: 16,
-    backgroundColor: COLORS.light,
-    borderRadius: 20,
-    overflow: "hidden",
-    shadowColor: COLORS.dark,
-    shadowOffset: { width: 2, height: 8 },
-    shadowOpacity: 0.9,
-    shadowRadius: 9,
-    elevation: 5,
-  },
-  placeImage: {
-    width: 100,
-    height: 100,
-  },
-  placeDetails: {
-    flex: 1,
-    padding: 12,
-    justifyContent: "space-between",
-  },
-  placeName: {
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  placeRating: {
-    fontSize: 16,
-    color: COLORS.grey,
-  },
-  placePrice: {
-    fontSize: 16,
-    fontWeight: "700",
+  sectionTopPlaceHeader:{
+    paddingHorizontal: 16
   },
   avatarWrapper: {
     width: 52,
