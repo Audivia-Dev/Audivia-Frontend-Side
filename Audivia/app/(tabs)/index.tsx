@@ -3,7 +3,7 @@ import { useEffect, useState } from "react"
 import { Tour, TourType } from "@/models"
 import { getSuggestedTours, getTop3Tours } from "@/services/tour"
 import { getTourTypes } from "@/services/tour_type"
-import UserLocationMap from "@/components/UserLocationMap"
+import UserLocationMap from "@/components/common/UserLocationMap"
 import { Header } from "@/components/home/Header"
 import { Categories } from "@/components/home/Categories"
 import { SuggestedTours } from "@/components/home/SuggestedTours"
@@ -19,24 +19,36 @@ export default function Index() {
   const [suggestedTours, setSuggestedTours] = useState<Tour[]>([])
   const [userCoordinates, setUserCoordinates] = useState<{ latitude: number; longitude: number } | null>(null);
 
-  useEffect(() => {
-    getTop3Tours().then((res) => {
+  const refreshTop3Tours = async () => {
+    try {
+      const res = await getTop3Tours()
       setTop3Tours(res.response.data)
-    })
+    } catch (error) {
+      console.error('Error refreshing top 3 tours:', error)
+    }
+  }
+
+  const refreshSuggestedTours = async () => {
+    if (userCoordinates) {
+      try {
+        const res = await getSuggestedTours(
+          userCoordinates.longitude,
+          userCoordinates.latitude,
+          3 // 3km radius
+        )
+        setSuggestedTours(res.response.data)
+      } catch (error) {
+        console.error('Error refreshing suggested tours:', error)
+      }
+    }
+  }
+
+  useEffect(() => {
+    refreshTop3Tours()
   }, [])
 
   useEffect(() => {
-    if (userCoordinates) {
-      getSuggestedTours(
-        userCoordinates.longitude,
-        userCoordinates.latitude,
-        3 // 3km radius
-      ).then((res) => {
-        setSuggestedTours(res.response.data)
-      }).catch((error) => {
-        console.error('Error fetching suggested tours:', error);
-      });
-    }
+    refreshSuggestedTours()
   }, [userCoordinates]);
 
   useEffect(() => {
@@ -87,8 +99,8 @@ export default function Index() {
           />
         </View>
 
-        <SuggestedTours suggestedTours={suggestedTours} />
-        <TopPlaces top3Tours={top3Tours} />
+        <SuggestedTours suggestedTours={suggestedTours} onRefresh={refreshSuggestedTours} />
+        <TopPlaces top3Tours={top3Tours} onRefresh={refreshTop3Tours} />
       </ScrollView>
     </View>
   )

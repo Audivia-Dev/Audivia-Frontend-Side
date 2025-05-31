@@ -97,147 +97,149 @@ export const ForumPost = ({ item }: ForumPostProps) => {
   );
 
   return (
-    <View style={styles.postContainer}>
-      {/* Post Header */}
-      <View style={styles.postHeader}>
-        <TouchableOpacity
-          style={styles.userInfo}
-          onPress={() => navigateToProfile(item.user.id)}
-        >
-          {item.user.avatarUrl ? (
-            <Image
-              source={{ uri: item.user.avatarUrl }}
-              style={styles.avatar}
-            />
-          ) : (
-            <Ionicons
-              name="person-circle-outline"
-              style={styles.avatar}
-              size={44}
-              color={COLORS.primary}
-            />
-          )}
-          <View>
-            <Text style={styles.userName}>{item.user.userName}</Text>
-            <Text style={styles.location}>{item.location}</Text>
-          </View>
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <Ionicons name="ellipsis-horizontal" size={20} color={COLORS.dark} />
-        </TouchableOpacity>
-      </View>
-
-      {/* Post Image */}
-      <View style={styles.postImageContainer}>
-        <Image
-          source={{ uri: item.images[0] }}
-          style={styles.postImage}
-          resizeMode="cover"
-        />
-      </View>
-
-      {/* Post Actions */}
-      <View style={styles.postActions}>
-        <View style={styles.leftActions}>
-          <TouchableOpacity style={styles.actionButton} onPress={handleLike}>
-            <AntDesign
-              name={isLiked ? "heart" : "hearto"}
-              size={24}
-              color={isLiked ? COLORS.red : COLORS.dark}
-            />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.actionButton} onPress={handleOpenCommentsModal}>
-            <Ionicons name="chatbubble-outline" size={22} color={COLORS.dark} />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* Post Stats */}
-      <View style={styles.postStats}>
-        <Text style={styles.likes}>{likesCount} lượt thích</Text>
-      </View>
-
-      {/* Post Content */}
-      <View style={styles.postContent}>
-        <Text style={styles.postText}>{item.content}</Text>
-      </View>
-
-      {/* Displaying ONLY the Latest Comment */}
-      {latestComment && (
-        <View style={styles.commentsSection}>
-          <View style={styles.commentItem}>
-            <Text style={styles.commentUser}>{user?.userName}:</Text>
-            <Text style={styles.commentText}>{latestComment.content}</Text>
-          </View>
-        </View>
-      )}
-
-      {/* Comments Link - triggers modal */}
-      {commentsCount > 0 && (
-        <TouchableOpacity style={styles.commentsLink} onPress={handleOpenCommentsModal}>
-          <Text style={styles.commentsText}>
-            {isLoadingComments ? 'Đang tải bình luận...' : `Xem tất cả ${commentsCount} bình luận`}
-          </Text>
-        </TouchableOpacity>
-      )}
-
-      {/* Time */}
-      <Text style={styles.timeText}>{item.time}</Text>
-
-      {/* Comment Input */}
-      <View style={styles.commentInputContainer}>
-        {user?.avatarUrl ? (
-          <Image source={{ uri: user.avatarUrl }} style={styles.commentAvatar} />
-        ) : (
-          <Ionicons name="person-circle-outline" style={styles.commentAvatar} size={30} color={COLORS.grey} />
-        )}
-        <TextInput
-          style={styles.commentInput}
-          placeholder="Thêm bình luận..."
-          placeholderTextColor={COLORS.grey}
-          value={commentText}
-          onChangeText={setCommentText}
-          editable={!isSubmittingComment}
-        />
-        <TouchableOpacity onPress={handleComment} disabled={isSubmittingComment}>
-          <Text style={[styles.postButton, isSubmittingComment && { opacity: 0.5 }]}>
-            {isSubmittingComment ? "Đang đăng..." : "Đăng"}
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Comments Modal */}
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={isCommentsModalVisible}
-        onRequestClose={() => {
-          setIsCommentsModalVisible(!isCommentsModalVisible);
-        }}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalView}>
-            <Text style={styles.modalTitle}>Bình luận</Text>
-            {isLoadingComments && !allComments.length ? (
-              <ActivityIndicator size="large" color={COLORS.primary} style={{ marginVertical: 20 }} />
+    <View style={styles.postWrapper}>
+      <View style={styles.postContainer}>
+        {/* Post Header */}
+        <View style={styles.postHeader}>
+          <TouchableOpacity
+            style={styles.userInfo}
+            onPress={() => navigateToProfile(item.user.id)}
+          >
+            {item.user.avatarUrl ? (
+              <Image
+                source={{ uri: item.user.avatarUrl }}
+                style={styles.avatar}
+              />
             ) : (
-              <FlatList
-                data={allComments}
-                renderItem={renderCommentItem}
-                keyExtractor={(c) => c.id}
-                ListEmptyComponent={<Text style={{ paddingVertical: 10 }}>Chưa có bình luận nào.</Text>}
-                style={{ width: '100%' }}
+              <Ionicons
+                name="person-circle-outline"
+                style={styles.avatar}
+                size={44}
+                color={COLORS.primary}
               />
             )}
-            <TouchableOpacity
-              style={[styles.button, styles.buttonClose]}
-              onPress={() => setIsCommentsModalVisible(!isCommentsModalVisible)}
-            >
-              <Text style={styles.textStyle}>Đóng</Text>
+            <View>
+              <Text style={styles.userName}>{item.user.userName}</Text>
+              <Text style={styles.location}>{item.location}</Text>
+              {/* Time */}
+              <Text style={styles.timeText}>{item.time}</Text>
+
+            </View>
+
+          </TouchableOpacity>
+
+        </View>
+
+        {/* Post Image */}
+        <View style={styles.postImageContainer}>
+          <Image
+            source={{ uri: item.images[0] }}
+            style={styles.postImage}
+            resizeMode="cover"
+          />
+        </View>
+
+        {/* Post Actions */}
+        <View style={styles.postActions}>
+          <View style={styles.leftActions}>
+            <TouchableOpacity style={styles.actionButton} onPress={handleLike}>
+              <AntDesign
+                name={isLiked ? "heart" : "hearto"}
+                size={24}
+                color={isLiked ? COLORS.red : COLORS.dark}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.actionButton} onPress={handleOpenCommentsModal}>
+              <Ionicons name="chatbubble-outline" size={22} color={COLORS.dark} />
             </TouchableOpacity>
           </View>
         </View>
-      </Modal>
+
+        {/* Post Stats */}
+        <View style={styles.postStats}>
+          <Text style={styles.likes}>{likesCount} lượt thích</Text>
+        </View>
+
+        {/* Post Content */}
+        <View style={styles.postContent}>
+          <Text style={styles.postText}>{item.content}</Text>
+        </View>
+
+        {/* Displaying ONLY the Latest Comment */}
+        {latestComment && (
+          <View style={styles.commentsSection}>
+            <View style={styles.commentItem}>
+              <Text style={styles.commentUser}>{user?.userName}:</Text>
+              <Text style={styles.commentText}>{latestComment.content}</Text>
+            </View>
+          </View>
+        )}
+
+        {/* Comments Link - triggers modal */}
+        {commentsCount > 0 && (
+          <TouchableOpacity style={styles.commentsLink} onPress={handleOpenCommentsModal}>
+            <Text style={styles.commentsText}>
+              {isLoadingComments ? 'Đang tải bình luận...' : `Xem tất cả ${commentsCount} bình luận`}
+            </Text>
+          </TouchableOpacity>
+        )}
+
+
+        {/* Comment Input */}
+        <View style={styles.commentInputContainer}>
+          {user?.avatarUrl ? (
+            <Image source={{ uri: user.avatarUrl }} style={styles.commentAvatar} />
+          ) : (
+            <Ionicons name="person-circle-outline" style={styles.commentAvatar} size={30} color={COLORS.grey} />
+          )}
+          <TextInput
+            style={styles.commentInput}
+            placeholder="Thêm bình luận..."
+            placeholderTextColor={COLORS.grey}
+            value={commentText}
+            onChangeText={setCommentText}
+            editable={!isSubmittingComment}
+          />
+          <TouchableOpacity onPress={handleComment} disabled={isSubmittingComment}>
+            <Text style={[styles.postButton, isSubmittingComment && { opacity: 0.5 }]}>
+              {isSubmittingComment ? "Đang đăng..." : "Đăng"}
+            </Text>
+          </TouchableOpacity>
+        </View>
+        {/* Comments Modal */}
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={isCommentsModalVisible}
+          onRequestClose={() => {
+            setIsCommentsModalVisible(!isCommentsModalVisible);
+          }}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalView}>
+              <Text style={styles.modalTitle}>Bình luận</Text>
+              {isLoadingComments && !allComments.length ? (
+                <ActivityIndicator size="large" color={COLORS.primary} style={{ marginVertical: 20 }} />
+              ) : (
+                <FlatList
+                  data={allComments}
+                  renderItem={renderCommentItem}
+                  keyExtractor={(c) => c.id}
+                  ListEmptyComponent={<Text style={{ paddingVertical: 10 }}>Chưa có bình luận nào.</Text>}
+                  style={{ width: '100%' }}
+                />
+              )}
+              <TouchableOpacity
+                style={[styles.button, styles.buttonClose]}
+                onPress={() => setIsCommentsModalVisible(!isCommentsModalVisible)}
+              >
+                <Text style={styles.textStyle}>Đóng</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+      </View>
     </View>
+
   );
 }; 

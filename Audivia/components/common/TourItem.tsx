@@ -9,98 +9,136 @@ import { Alert, FlatList, Image, SafeAreaView, StyleSheet, Text, TouchableOpacit
 
 interface TourItemProps {
   tours: Tour[];
+  isSavedTour?: boolean;
+  onDelete?: (tourId: string) => void;
+  onSave?: (tourId: string) => void;
 }
 
-export const TourItem = ({ tours }: TourItemProps) => {
-    const { user } = useUser()
+export const TourItem = ({ tours, isSavedTour = false, onDelete, onSave }: TourItemProps) => {
+  const { user } = useUser()
 
-    const navigateToTourDetail = (tourId: string) => {
-        router.push(`/detail_tour?tourId=${tourId}`)
+  const navigateToTourDetail = (tourId: string) => {
+    router.push(`/detail_tour?tourId=${tourId}`)
+  }
+
+  const handleSaveTour = async (tourId: string) => {
+    try {
+      await createSaveTour(user?.id as string, tourId)
+      Alert.alert("Đã lưu tour", "Tour đã được thêm vào danh sách yêu thích.")
+      if (onSave) {
+        onSave(tourId)
       }
-      const handleSaveTour = async (tourId: string) => {
-        try {
-          await createSaveTour(user?.id as string, tourId)
-          Alert.alert("Đã lưu tour", "Tour đã được thêm vào danh sách yêu thích.")
-        } catch (error) {
-          Alert.alert("Lỗi", "Không thể lưu tour.")
+    } catch (error) {
+      Alert.alert("Lỗi", "Không thể lưu tour.")
+    }
+  }
+
+  const handleDeleteSaveTour = async (tourId: string) => {
+    Alert.alert(
+      'Xác nhận',
+      'Bạn có chắc chắn muốn xóa tour yêu thích này?',
+      [
+        {
+          text: 'Hủy',
+          style: 'cancel'
+        },
+        {
+          text: 'Xóa',
+          style: 'destructive',
+          onPress: async () => {
+            if (onDelete) {
+              onDelete(tourId);
+            }
+          }
         }
-      }
-    const renderTourItem = ({ item }: { item: any }) => (
-        <TouchableOpacity style={styles.tourCard} onPress={() => navigateToTourDetail(item.id)}>
-          <View>
-            {/* Image */}
-            <Image source={{ uri: item.thumbnailUrl || "https://maps.googleapis.com/maps/api/staticmap?center=10.8700,106.8030&zoom=14&size=600x300&maptype=roadmap&markers=color:red%7C10.8700,106.8030&key=YOUR_API_KEY" }} style={styles.tourImage} />
-          </View>
-    
-          {/* Tour Info */}
-          <View style={styles.tourInfo}>
-            {/* Heart Button */}
-            <TouchableOpacity style={styles.favoriteButton} onPress={() => handleSaveTour(item.id)}>
-              <FontAwesome name="heart" size={20} color={COLORS.primary} />
-            </TouchableOpacity>
-    
-            {/* Tour Name */}
-            <Text style={{ fontSize: 20, fontWeight: 'bold', marginLeft: 4 }} numberOfLines={2}>{item.title}</Text>
-    
-            {/* Location */}
-            <View style={styles.locationContainer}>
-              <Ionicons name="location-outline" size={16} color="#666" />
-              <Text style={styles.locationText}>{item.location}</Text>
-            </View>
-    
-            {/* Tour Description */}
-            <View style={styles.locationContainer}>
-              <Ionicons name="information-circle-outline" size={16} color="#666" />
-              <Text style={{ fontSize: 16, color: COLORS.grey, marginLeft: 4 }} numberOfLines={2}>{item.description}</Text>
-            </View>
-    
-            {/* Rating */}
-            <View style={styles.ratingContainer}>
-              <FontAwesome name="star" size={16} color={COLORS.orange} />
-              <Text style={styles.ratingText}>
-                {item.avgRating}
-              </Text>
-            </View>
-    
-              {/* Price and Book Button Container */}
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                {/* Price */}
-                <View style={styles.priceTag}>
-                  <Text style={{ fontSize: 16, fontWeight: 'bold', color: COLORS.primary }}>
-                    {item.price === 0 ? "Miễn phí" : ` ${item.price} Đ`}
-                  </Text>
-                </View>
-    
-                {/* Book Button */}
-                <TouchableOpacity
-                  onPress={() => navigateToTourDetail(item.id)}
-                >
-                  <View style={[
-                    styles.bookButton,
-                    {
-                      
-                    }
-                  ]}>
-                    <LinearGradient
-                      colors={[COLORS.primary, COLORS.purpleGradient]}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 0 }}
-                      style={styles.bookButton}
-                    >
-                      <Text style={styles.bookButtonText}>
-                        Đặt Ngay
-                      </Text>
-                    </LinearGradient>
-                  </View>
-                </TouchableOpacity>
-              </View>
-            </View>
-    
-        </TouchableOpacity>
-      )
+      ]
+    )
+  }
 
-    return (
-       <SafeAreaView>
+  const navigateToPlanDate = (tourId: string) => {
+    router.push(`/plan_tour?id=${tourId}`)
+  }
+
+  const renderTourItem = ({ item }: { item: any }) => (
+    <TouchableOpacity style={styles.tourCard} onPress={() => navigateToTourDetail(item.id)}>
+      <View>
+        {/* Image */}
+        <Image source={{ uri: item.thumbnailUrl || "https://maps.googleapis.com/maps/api/staticmap?center=10.8700,106.8030&zoom=14&size=600x300&maptype=roadmap&markers=color:red%7C10.8700,106.8030&key=YOUR_API_KEY" }} style={styles.tourImage} />
+      </View>
+
+      {/* Tour Info */}
+      <View style={styles.tourInfo}>
+        {isSavedTour ? (
+          <TouchableOpacity
+            style={styles.favoriteButton}
+            onPress={() => handleDeleteSaveTour(item.id)}
+          >
+            <Ionicons name="trash-outline" size={20} color={COLORS.red} />
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity style={styles.favoriteButton} onPress={() => handleSaveTour(item.id)}>
+            <FontAwesome name="heart" size={20} color={COLORS.primary} />
+          </TouchableOpacity>
+        )}
+
+        {/* Tour Name */}
+        <Text style={{ fontSize: 20, fontWeight: 'bold', marginLeft: 4 }} numberOfLines={2}>{item.title}</Text>
+
+        {/* Location */}
+        <View style={styles.locationContainer}>
+          <Ionicons name="location-outline" size={16} color="#666" />
+          <Text style={styles.locationText}>{item.location}</Text>
+        </View>
+
+        {/* Tour Description */}
+        <View style={styles.locationContainer}>
+          <Ionicons name="information-circle-outline" size={16} color="#666" />
+          <Text style={{ fontSize: 16, color: COLORS.grey, marginLeft: 4 }} numberOfLines={2}>{item.description}</Text>
+        </View>
+
+        {/* Rating */}
+        <View style={styles.ratingContainer}>
+          <FontAwesome name="star" size={16} color={COLORS.orange} />
+          <Text style={styles.ratingText}>
+            {item.avgRating}
+          </Text>
+        </View>
+
+        {/* Price and Book Button Container */}
+        <View style={styles.priceAndBookContainer}>
+          {/* Price */}
+          <View style={styles.priceTag}>
+            <Text style={{ fontSize: 16, fontWeight: 'bold', color: COLORS.primary }}>
+              {item.price === 0 ? "Miễn phí" : ` ${item.price} Đ`}
+            </Text>
+          </View>
+
+          {/* Book Button */}
+          <TouchableOpacity
+            onPress={() => isSavedTour ? navigateToPlanDate(item.id) : navigateToTourDetail(item.id)}
+          >
+            <View style={styles.bookButton}>
+              <LinearGradient
+                colors={[COLORS.primary, COLORS.purpleGradient]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.bookButton}
+              >
+                {isSavedTour ? (
+                  <Ionicons name="calendar-outline" size={24} color={COLORS.light} />
+                ) : (
+                  <Text style={styles.bookButtonText}>Đặt Ngay</Text>
+                )}
+              </LinearGradient>
+            </View>
+          </TouchableOpacity>
+        </View>
+      </View >
+    </TouchableOpacity >
+  )
+
+  return (
+    <SafeAreaView>
       {/* Tour List */}
       <FlatList
         data={tours}
@@ -110,11 +148,10 @@ export const TourItem = ({ tours }: TourItemProps) => {
         showsVerticalScrollIndicator={false}
       />
     </SafeAreaView>
-    )
+  )
 }
 
 export const styles = StyleSheet.create({
- 
   tourList: {
     padding: 16,
     paddingTop: 8,
@@ -132,6 +169,7 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     paddingTop: 15,
     paddingHorizontal: 15,
+    marginBottom: 10,
   },
   tourImage: {
     width: 120,
@@ -207,6 +245,12 @@ export const styles = StyleSheet.create({
     fontSize: 14,
     color: "#666",
     marginLeft: 4,
+  },
+  priceAndBookContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 10,
   },
   bookButton: {
     paddingVertical: 14,

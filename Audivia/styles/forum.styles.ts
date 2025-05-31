@@ -4,34 +4,16 @@ import { StyleSheet } from "react-native"
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F8F9FA",
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingTop: 20,
-    paddingBottom: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
-  },
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: "700",
-  },
-  headerIcons: {
-    flexDirection: "row",
-  },
-  iconButton: {
-    marginLeft: 20,
+    backgroundColor: COLORS.blueLight,
+    paddingBottom: 60
   },
   
+
   tabsContainer: {
     flexDirection: "row",
     paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
+    borderBottomWidth: 0.5,
+    borderBottomColor: COLORS.dark
   },
   tab: {
     paddingVertical: 12,
@@ -49,6 +31,7 @@ export const styles = StyleSheet.create({
     color: "#000",
     fontWeight: "600",
   },
+  
   whatsOnYourMindContainer: {
     paddingVertical: 12,
     paddingHorizontal: 16,
@@ -75,18 +58,28 @@ export const styles = StyleSheet.create({
   whatsOnYourMindText: {
     color: "#666",
   },
+  postWrapper: {
+    paddingHorizontal: 16,
+  },
   postContainer: {
+    backgroundColor: COLORS.light,
+    borderRadius: 12,
+    paddingHorizontal: 16,
     marginTop: 16,
     marginBottom: 16,
     borderBottomWidth: 1,
     borderBottomColor: "#f0f0f0",
     paddingBottom: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2},
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2
   },
   postHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 16,
     paddingVertical: 10,
   },
   userInfo: {
@@ -109,25 +102,34 @@ export const styles = StyleSheet.create({
   },
   postImageContainer: {
     width: "100%",
-    height: 400,
+    height: 200
   },
   postImage: {
     width: "100%",
     height: "100%",
+    borderRadius:12
   },
   postActions: {
     flexDirection: "row",
-    paddingHorizontal: 16,
     paddingVertical: 12,
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   leftActions: {
     flexDirection: "row",
+    alignItems: 'center',
   },
   actionButton: {
     marginRight: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  actionText: {
+    fontSize: 14,
+    color: COLORS.dark,
+    marginLeft: 4,
   },
   postStats: {
-    paddingHorizontal: 16,
     marginBottom: 6,
   },
   likes: {
@@ -135,7 +137,6 @@ export const styles = StyleSheet.create({
     fontSize: 14,
   },
   postContent: {
-    paddingHorizontal: 16,
     marginBottom: 8,
   },
   postText: {
@@ -143,7 +144,6 @@ export const styles = StyleSheet.create({
     lineHeight: 20,
   },
   commentsLink: {
-    paddingHorizontal: 16,
     marginBottom: 4,
   },
   commentsText: {
@@ -151,7 +151,6 @@ export const styles = StyleSheet.create({
     fontSize: 14,
   },
   timeText: {
-    paddingHorizontal: 16,
     color: "#999",
     fontSize: 12,
     marginBottom: 8,
@@ -159,7 +158,6 @@ export const styles = StyleSheet.create({
   commentInputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 16,
     paddingTop: 8,
   },
   commentAvatar: {
@@ -176,9 +174,6 @@ export const styles = StyleSheet.create({
     color: COLORS.primary,
     fontWeight: "bold",
   },
-  icon: {
-    marginRight: 16,
-  },
   avatarWrapper: {
     width: 32,
     height: 32,
@@ -188,7 +183,7 @@ export const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  
+
   avatarImage: {
     width: "100%",
     height: "100%",

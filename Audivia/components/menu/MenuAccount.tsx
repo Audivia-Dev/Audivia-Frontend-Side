@@ -16,7 +16,6 @@ export const MenuAccount = () => {
   }
   return (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>Tài khoản của tôi</Text>
       <View style={styles.menuGroup}>
         <TouchableOpacity style={styles.menuItem} onPress={handleHistoryTour}>
           <View style={styles.menuIconContainer}>

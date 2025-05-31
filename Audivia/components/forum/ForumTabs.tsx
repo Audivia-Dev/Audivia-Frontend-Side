@@ -10,19 +10,6 @@ export const ForumTabs = ({ activeTab, setActiveTab }: ForumTabsProps) => {
   return (
     <View style={styles.tabsContainer}>
       <TouchableOpacity
-        style={[styles.tab, activeTab === "Following" && styles.activeTab]}
-        onPress={() => setActiveTab("Following")}
-      >
-        <Text
-          style={[
-            styles.tabText,
-            activeTab === "Following" && styles.activeTabText,
-          ]}
-        >
-          Theo dõi
-        </Text>
-      </TouchableOpacity>
-      <TouchableOpacity
         style={[styles.tab, activeTab === "Popular" && styles.activeTab]}
         onPress={() => setActiveTab("Popular")}
       >
@@ -33,6 +20,19 @@ export const ForumTabs = ({ activeTab, setActiveTab }: ForumTabsProps) => {
           ]}
         >
           Đề xuất
+        </Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={[styles.tab, activeTab === "YourPost" && styles.activeTab]}
+        onPress={() => setActiveTab("YourPost")}
+      >
+        <Text
+          style={[
+            styles.tabText,
+            activeTab === "YourPost" && styles.activeTabText,
+          ]}
+        >
+          Bài đăng của bạn
         </Text>
       </TouchableOpacity>
     </View>

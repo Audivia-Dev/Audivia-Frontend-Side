@@ -59,7 +59,7 @@ const FloatingButton = ({ onPress }: { onPress?: () => void }) => {
       {...panResponder.panHandlers}
     >
       <TouchableOpacity onPress={onPress}>
-        <Image source={require('../assets/images/logo.png')} />
+        <Image source={require('@/assets/images/logo.png')} />
       </TouchableOpacity>
     </Animated.View>
   );

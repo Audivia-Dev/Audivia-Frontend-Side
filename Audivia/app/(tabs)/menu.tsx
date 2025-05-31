@@ -2,11 +2,10 @@ import { View, Text, TouchableOpacity, ScrollView, SafeAreaView } from "react-na
 import styles from "@/styles/menu.styles"
 import { useAuth } from "@/contexts/AuthContext"
 import { MenuHeader } from "@/components/menu/MenuHeader"
-import { MenuStats } from "@/components/menu/MenuStats"
-import { MenuShortcuts } from "@/components/menu/MenuShortcuts"
 import { MenuAccount } from "@/components/menu/MenuAccount"
-import { MenuHelp } from "@/components/menu/MenuHelp"
 import { MenuPreferences } from "@/components/menu/MenuPreferences"
+import { LinearGradient } from "expo-linear-gradient"
+import { COLORS } from "@/constants/theme"
 
 export default function MenuScreen() {
   const { logout } = useAuth()
@@ -19,20 +18,20 @@ export default function MenuScreen() {
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <MenuHeader />
-        <MenuStats />
-        <MenuShortcuts />
         <MenuAccount />
         <MenuPreferences />
-        <MenuHelp />
 
         {/* Sign Out Button */}
         <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
-          <Text style={styles.signOutText}>Đăng xuất</Text>
-        </TouchableOpacity>
-
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>Audivia © 2025</Text>
-        </View>
+            <LinearGradient
+              colors={[COLORS.primary, COLORS.purpleGradient]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.signOutButton}
+            >
+              <Text style={styles.signOutText}>Đăng xuất</Text>
+            </LinearGradient>
+          </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   )
