@@ -6,7 +6,7 @@ import MaskedView from "@react-native-masked-view/masked-view";
 import { useRouter } from "expo-router";
 import { login } from "@/services/user";
 import { useAuth } from "@/contexts/AuthContext";
-import AuthForm from "@/components/AuthForm";
+import AuthForm from "@/components/common/AuthForm";
 
 export default function Login() {
   const router = useRouter();

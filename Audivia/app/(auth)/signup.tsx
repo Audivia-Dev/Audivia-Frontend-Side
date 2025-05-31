@@ -5,7 +5,7 @@ import { COLORS } from "@/constants/theme";
 import MaskedView from "@react-native-masked-view/masked-view";
 import { useRouter } from "expo-router";
 import { register } from "@/services/user";
-import AuthForm from "@/components/AuthForm";
+import AuthForm from "@/components/common/AuthForm";
 export default function Signup() {
   const router = useRouter();
 

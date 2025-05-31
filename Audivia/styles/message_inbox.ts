@@ -41,32 +41,6 @@ const styles = StyleSheet.create({
       alignItems: "center",
       marginLeft: 8,
     },
-    searchHeader: {
-      flexDirection: "row",
-      alignItems: "center",
-      paddingHorizontal: 16,
-      paddingVertical: 12,
-      borderBottomWidth: 1,
-      borderBottomColor: "#f0f0f0",
-    },
-    searchBackButton: {
-      marginRight: 12,
-    },
-    searchInputContainer: {
-      flex: 1,
-      flexDirection: "row",
-      alignItems: "center",
-      backgroundColor: "#f0f0f0",
-      borderRadius: 20,
-      paddingHorizontal: 12,
-      paddingVertical: 8,
-    },
-    searchInput: {
-      flex: 1,
-      fontSize: 16,
-      marginLeft: 8,
-      color: "#000",
-    },
     activeUsersSection: {
       borderBottomWidth: 1,
       borderBottomColor: "#f0f0f0",

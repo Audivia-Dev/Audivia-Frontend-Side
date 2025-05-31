@@ -3,7 +3,7 @@ import { Ionicons, FontAwesome } from '@expo/vector-icons';
 import { COLORS } from '@/constants/theme';
 import styles from '@/styles/home.styles';
 import { Tour } from '@/models';
-import { router } from 'expo-router';
+import { router, useRouter } from 'expo-router';
 import { Alert } from 'react-native';
 import { createSaveTour } from '@/services/save_tour';
 import { useUser } from '@/hooks/useUser';
@@ -11,14 +11,16 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 interface SuggestedToursProps {
   suggestedTours: Tour[];
+  onRefresh?: () => void;
 }
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const CARD_WIDTH = SCREEN_WIDTH * 0.43;
 const CARD_MARGIN = 8;
 
-export const SuggestedTours = ({ suggestedTours }: SuggestedToursProps) => {
+export const SuggestedTours = ({ suggestedTours, onRefresh }: SuggestedToursProps) => {
   const { user } = useUser();
+  const router = useRouter();
 
   if (!suggestedTours || suggestedTours.length === 0) {
     return null;
@@ -30,11 +32,10 @@ export const SuggestedTours = ({ suggestedTours }: SuggestedToursProps) => {
 
   const handleSaveTour = async (tourId: string) => {
     try {
-      if (user?.id) {
-        await createSaveTour(user.id, tourId);
-        Alert.alert("Đã lưu tour", "Tour đã được thêm vào danh sách yêu thích.");
-      } else {
-        Alert.alert("Thông báo", "Vui lòng đăng nhập để lưu tour.");
+      await createSaveTour(user?.id as string, tourId);
+      Alert.alert("Đã lưu tour", "Tour đã được thêm vào danh sách yêu thích.");
+      if (onRefresh) {
+        onRefresh();
       }
     } catch (error) {
       Alert.alert("Lỗi", "Không thể lưu tour.");

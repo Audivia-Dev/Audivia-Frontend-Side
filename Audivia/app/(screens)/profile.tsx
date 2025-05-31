@@ -6,7 +6,7 @@ import * as ImagePicker from 'expo-image-picker'
 import { updateUserInfo, getUserInfo } from "@/services/user"
 import { createPost, getPostByUserId, updatePost, deletePost } from "@/services/post"
 import { Post, User } from "@/models"
-import { PostModal } from "@/components/PostModal"
+import { PostModal } from "@/components/common/PostModal"
 import { createUserFollow, deleteUserFollow, getUserFollows, getUserFriends } from "@/services/user_follow"
 import { ProfileHeader } from "@/components/profile/ProfileHeader"
 import { ProfileCover } from "@/components/profile/ProfileCover"

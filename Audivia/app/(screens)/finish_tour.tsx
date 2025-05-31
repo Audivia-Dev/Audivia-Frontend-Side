@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SuggestedTours } from '@/components/home/SuggestedTours';
 import { Tour } from '@/models';
 import { getSuggestedTours, getTourById } from '@/services/tour';
-import UserLocationMap from '@/components/UserLocationMap';
+import UserLocationMap from '@/components/common/UserLocationMap';
 import { COLORS } from '@/constants/theme';
 import { router, useLocalSearchParams } from 'expo-router';
 
