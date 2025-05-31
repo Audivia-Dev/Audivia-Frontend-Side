@@ -15,6 +15,8 @@ import { getSaveTourById, updateSaveTour } from "@/services/save_tour";
 import { SaveTour } from "@/models";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Platform } from "react-native";
+import { BackButton } from "@/components/common/BackButton";
+import { LinearGradient } from "expo-linear-gradient";
 
 export default function PlanTourScreen() {
   const [planDate, setPlanDate] = useState("");
@@ -42,9 +44,7 @@ export default function PlanTourScreen() {
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={goBack}>
-          <Ionicons name="arrow-back" size={24} color={COLORS.dark} />
-        </TouchableOpacity>
+        <BackButton />
         <Text style={styles.headerTitle}>Lên Lịch Tour</Text>
       </View>
 
@@ -116,11 +116,15 @@ export default function PlanTourScreen() {
               />
             </TouchableOpacity>
           </View>
-          <TouchableOpacity
-            style={styles.confirmButton}
-            onPress={handleSavePlanTime}
-          >
-            <Text style={styles.confirmButtonText}>Xác Nhận Lịch Trình</Text>
+          <TouchableOpacity style={styles.confirmButton} onPress={handleSavePlanTime}>
+            <LinearGradient
+              colors={[COLORS.primary, COLORS.purpleGradient]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.confirmButton}
+            >
+              <Text style={styles.confirmButtonText}>Xác nhận lịch trình</Text>
+            </LinearGradient>
           </TouchableOpacity>
         </View>
         {/* {showDatePicker && (

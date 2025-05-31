@@ -169,6 +169,7 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     paddingTop: 15,
     paddingHorizontal: 15,
+    marginBottom: 10,
   },
   tourImage: {
     width: 120,

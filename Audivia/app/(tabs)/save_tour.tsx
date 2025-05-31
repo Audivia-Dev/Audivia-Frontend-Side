@@ -45,7 +45,7 @@ export default function SavedToursScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.saveWrapper}>
+      <View style={[styles.saveWrapper, {flex: 1}]}>
       <Header title="Lưu yêu thích"/>
       <SaveTourNotification savedToursCount={saveTours.length} />
       <TourItem tours={tours} isSavedTour={true} onDelete={handleDeleteTour} onSave={refreshSavedTours} />

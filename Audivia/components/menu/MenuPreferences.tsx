@@ -7,7 +7,6 @@ import { router } from "expo-router"
 export const MenuPreferences = () => {
   return (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>Tùy chọn</Text>
       <View style={styles.menuGroup}>
         <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/(screens)/character_selection')}>
           <View style={styles.menuIconContainer}>

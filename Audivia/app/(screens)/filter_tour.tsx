@@ -10,7 +10,6 @@ import { Ionicons } from "@expo/vector-icons"
 import { useLocalSearchParams, useRouter } from "expo-router"
 import { styles } from "@/styles/filter_tour.styles"
 import { getToursByTypeId, getAllTours } from "@/services/tour"
-import { useUser } from "@/hooks/useUser"
 import { COLORS } from "@/constants/theme"
 import { NotificationButton } from "@/components/common/NotificationButton"
 import { BackButton } from "@/components/common/BackButton"
@@ -40,16 +39,13 @@ export default function FilterTourScreen() {
     fetchTours()
   }, [typeId])
 
- 
-
   return (
     <SafeAreaView style={styles.container}>
-
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <View style={styles.backIcon}>
-          <BackButton />
+            <BackButton />
           </View>
           <Text style={{ fontSize: 24, color: COLORS.darkGrey, marginLeft: 10, }}>Lọc Tour</Text>
         </View>
@@ -89,7 +85,9 @@ export default function FilterTourScreen() {
       </View>
 
       {/* Tour List */}
-      <TourItem tours={tours}/>
+      <View style={{ flex: 1 }}>
+        <TourItem tours={tours}/>
+      </View>
     </SafeAreaView>
   )
 }

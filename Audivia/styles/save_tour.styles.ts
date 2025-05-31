@@ -4,10 +4,10 @@ const styles = StyleSheet.create({
     container: {
       flex: 1,
       backgroundColor: COLORS.light,
-      paddingBottom: 60
+      paddingBottom: 120
     },
     saveWrapper:{
-      paddingBottom: 60
+      paddingBottom: 100
     },
     header: {
       flexDirection: "row",
