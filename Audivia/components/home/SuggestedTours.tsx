@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, Image, FlatList, Dimensions } from 'react-native';
+import { View, Text, TouchableOpacity, Image, FlatList, Dimensions, StyleSheet } from 'react-native';
 import { Ionicons, FontAwesome } from '@expo/vector-icons';
 import { COLORS } from '@/constants/theme';
 import styles from '@/styles/home.styles';
@@ -7,14 +7,15 @@ import { router } from 'expo-router';
 import { Alert } from 'react-native';
 import { createSaveTour } from '@/services/save_tour';
 import { useUser } from '@/hooks/useUser';
+import { LinearGradient } from 'expo-linear-gradient';
 
 interface SuggestedToursProps {
   suggestedTours: Tour[];
 }
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
-const CARD_WIDTH = SCREEN_WIDTH * 0.75;
-const CARD_MARGIN = 12;
+const CARD_WIDTH = SCREEN_WIDTH * 0.43;
+const CARD_MARGIN = 8;
 
 export const SuggestedTours = ({ suggestedTours }: SuggestedToursProps) => {
   const { user } = useUser();
@@ -44,24 +45,20 @@ export const SuggestedTours = ({ suggestedTours }: SuggestedToursProps) => {
     <TouchableOpacity
       style={[styles.tourCard, {
         width: CARD_WIDTH,
-        marginLeft: index === 0 ? CARD_MARGIN : 0,
+        marginLeft: index === 0 ? CARD_MARGIN : CARD_MARGIN / 2,
         marginRight: CARD_MARGIN,
-        overflow: 'hidden'
+        overflow: 'hidden',
+        marginBottom: 10,
       }]}
       onPress={() => navigateToTourDetail(item.id)}
       activeOpacity={0.9}
     >
       <Image
         source={{ uri: item.thumbnailUrl }}
-        style={[styles.tourImage, { height: CARD_WIDTH * 0.5 }]}
+        style={[styles.tourImage, { height: CARD_WIDTH * 0.7 }]}
         resizeMode="cover"
       />
-      <TouchableOpacity
-        style={styles.favoriteButton}
-        onPress={() => handleSaveTour(item.id)}
-      >
-        <Ionicons name="heart-outline" size={20} color={COLORS.light} />
-      </TouchableOpacity>
+
 
       {/* Price Tag */}
       <View style={{
@@ -76,9 +73,9 @@ export const SuggestedTours = ({ suggestedTours }: SuggestedToursProps) => {
       }}>
         <Text style={{
           color: 'white',
-          fontSize: 12,
+          fontSize: 16,
           fontWeight: '600',
-        }}>{item.price === 0 ? "Miễn phí" : `${item.price.toLocaleString('vi-VN')}đ`}</Text>
+        }}>{item.price === 0 ? "Miễn phí" : `${item.price.toLocaleString('vi-VN')} VND`}</Text>
       </View>
 
       <View style={{ padding: 12 }}>
@@ -86,40 +83,37 @@ export const SuggestedTours = ({ suggestedTours }: SuggestedToursProps) => {
 
         <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6 }}>
           <Ionicons name="location-outline" size={14} color="#666" />
-          <Text style={{ fontSize: 13, color: '#666', marginLeft: 4 }} numberOfLines={1}>{item.location}</Text>
+          <Text style={{ fontSize: 16, color: '#666', marginLeft: 4 }} numberOfLines={1}>{item.location}</Text>
         </View>
 
         <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
           <Ionicons name="time-outline" size={14} color="#666" />
-          <Text style={{ fontSize: 13, color: '#666', marginLeft: 4 }}>{item.duration} phút</Text>
+          <Text style={{ fontSize: 16, color: '#666', marginLeft: 4 }}>{item.duration} phút</Text>
         </View>
 
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             <FontAwesome name="star" size={14} color={COLORS.orange} />
-            <Text style={{ fontSize: 13, marginLeft: 4, fontWeight: '500' }}>
+            <Text style={{ fontSize: 16, marginLeft: 4, fontWeight: '500' }}>
               {item.avgRating.toFixed(1)}
             </Text>
           </View>
 
           <TouchableOpacity
-            style={styles.bookButton}
-            onPress={() => navigateToTourDetail(item.id)}
+            style={styles.favoriteButton}
+            onPress={() => handleSaveTour(item.id)}
           >
-            <Text style={styles.bookButtonText}>Đặt Ngay</Text>
+            <Ionicons name="heart" size={20} color={COLORS.light} />
           </TouchableOpacity>
         </View>
       </View>
-    </TouchableOpacity>
+    </TouchableOpacity >
   );
 
   return (
     <View style={styles.toursSection}>
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Các địa điểm được đề xuất</Text>
-        <TouchableOpacity>
-          <Text style={styles.seeAllText}>Xem tất cả</Text>
-        </TouchableOpacity>
+        <Text style={styles.sectionTitle}>Địa điểm được đề xuất</Text>
       </View>
 
       <Text style={styles.tourSubtitle}>Dựa trên sở thích và vị trí của bạn</Text>

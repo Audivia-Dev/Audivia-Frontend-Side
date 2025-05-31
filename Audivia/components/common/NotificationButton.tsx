@@ -1,4 +1,4 @@
-import { TouchableOpacity, View, Text } from "react-native";
+import { TouchableOpacity, View, Text, Image } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS } from "@/constants/theme";
 import { router } from "expo-router";
@@ -31,11 +31,13 @@ export const NotificationButton = () => {
             onPress={handlePress}
         >
             <View style={{ position: 'relative' }}>
-                <Ionicons
-                    name="notifications-outline"
-                    size={22}
-                    color={COLORS.dark}
-                    style={{ position: 'relative' }}
+                <Image 
+                    source={{ uri: 'https://res.cloudinary.com/dgzn2ix8w/image/upload/v1748529207/Audivia/vsx5niettalvvfpx1j3t.png' }}
+                    style={{
+                        width: 36,
+                        height: 36,
+                        resizeMode: 'contain'
+                    }}
                 />
                 {count > 0 && (
                     <View style={{
