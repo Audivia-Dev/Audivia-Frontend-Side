@@ -5,7 +5,7 @@ import { styles } from "@/styles/forum.styles";
 import { useUser } from "@/hooks/useUser";
 import { router } from "expo-router";
 import { useState, useEffect } from "react";
-import { reactPost, commentPost, getPostComments } from "@/services/post";
+import { reactPost, commentPost, getPostComments, getReactionByUserAndPost } from "@/services/post";
 import { Post as PostModel, Comment as CommentModel } from "@/models";
 
 interface ForumPostProps {
@@ -26,8 +26,27 @@ export const ForumPost = ({ item }: ForumPostProps) => {
   const [isCommentsModalVisible, setIsCommentsModalVisible] = useState(false);
   const [isLoadingComments, setIsLoadingComments] = useState(false);
 
+  // Effect to update counts if the item prop changes (e.g., due to parent re-fetch)
   useEffect(() => {
-  }, [item.id]);
+    // Ensure counts are clamped to 0 when re-synchronizing from prop
+    setLikesCount(Math.max(0, item.likes));
+    setCommentsCount(Math.max(0, item.comments));
+  }, [item.likes, item.comments]);
+
+  useEffect(() => {
+    const fetchUserReactions = async () => {
+      if (!user?.id || !item.id) return;
+      try {
+        const res = await getReactionByUserAndPost(user.id, item.id);
+        if (res.success && res.response) {
+          const hasReacted = res.response !== null;
+          setIsLiked(hasReacted);
+        }
+      } catch (error) {
+      }
+    };
+    fetchUserReactions();
+  }, [user?.id, item.id]);
 
   const navigateToProfile = (userId: string) => {
     router.push({
@@ -40,13 +59,15 @@ export const ForumPost = ({ item }: ForumPostProps) => {
     if (!user?.id) return;
     const originallyLiked = isLiked;
     setIsLiked(!originallyLiked);
-    setLikesCount(prev => originallyLiked ? prev - 1 : prev + 1);
+    // Ensure likesCount never goes below 0
+    setLikesCount(prev => Math.max(0, originallyLiked ? prev - 1 : prev + 1));
     try {
       await reactPost(0, item.id, user.id);
     } catch (error) {
       console.error('Error reacting to post:', error);
       setIsLiked(originallyLiked);
-      setLikesCount(prev => originallyLiked ? prev + 1 : prev - 1);
+      // Revert, ensuring likesCount never goes below 0
+      setLikesCount(prev => Math.max(0, originallyLiked ? prev + 1 : prev - 1));
     }
   };
 
@@ -60,7 +81,8 @@ export const ForumPost = ({ item }: ForumPostProps) => {
         setLatestComment(newComment);
         setAllComments(prevComments => [newComment, ...prevComments].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
         setCommentText("");
-        setCommentsCount(prev => prev + 1);
+        // Ensure commentsCount never goes below 0
+        setCommentsCount(prev => Math.max(0, prev + 1));
       }
     } catch (error) {
       console.error('Error posting comment:', error);
