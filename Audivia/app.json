@@ -18,6 +18,11 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION"
+      ],
       "config": {
         "googleMaps": {
           "apiKey": "${EXPO_PUBLIC_GOOGLE_MAPS_API_KEY}"
@@ -45,9 +50,13 @@
     "experiments": {
       "typedRoutes": true
     },
-    "permissions": [
-      "LOCATION",
-      "LOCATION_BACKGROUND"
-    ]
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "119bd31d-27c5-4337-a191-0be7201c427e"
+      }
+    }
   }
 }

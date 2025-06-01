@@ -54,3 +54,22 @@ export const updateUserInfo = async (id: string, data: any) => {
   }
 };
 
+export const loginWithGoogle = async (googleToken: string) => {
+  try {
+    const response = await apiClient.post('/auth/google-login', {
+      token: googleToken,
+    });
+
+    const { accessToken, refreshToken } = response.data;
+
+    // Store tokens in AsyncStorage
+    await AsyncStorage.setItem('accessToken', accessToken);
+    await AsyncStorage.setItem('refreshToken', refreshToken);
+
+    return response.data;
+  } catch (error: any) {
+    console.error('Google login failed:', error);
+    throw error;
+  }
+};
+

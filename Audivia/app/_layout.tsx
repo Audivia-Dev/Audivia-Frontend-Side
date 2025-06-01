@@ -33,16 +33,24 @@ export default function RootLayout() {
         console.log('Token exists:', !!token);
         if (!token) return;
 
-        //khởi tạo song song 2 signal r
-        console.log('Initializing both SignalR services...');
-        await Promise.all([
-          notificationSignalRService.start(token),
-          chatSignalRService.startConnection(token),
-        ])
-       
-        console.log('SignalR chat and notification initialized in root layout');
+        // Khởi tạo tuần tự để đảm bảo kết nối thành công
+        console.log('Initializing notification SignalR...');
+        await notificationSignalRService.start(token);
+        console.log('Notification SignalR initialized successfully');
+
+        console.log('Initializing chat SignalR...');
+        await chatSignalRService.startConnection(token);
+        console.log('Chat SignalR initialized successfully');
+
+        console.log('All SignalR services initialized successfully');
       } catch (error) {
         console.error('Error initializing SignalR in root layout:', error);
+        // Thử kết nối lại sau 5 giây nếu thất bại
+        setTimeout(() => {
+          if (user?.id) {
+            initializeSignalR();
+          }
+        }, 3000);
       }
     };
 
@@ -56,22 +64,21 @@ export default function RootLayout() {
     // Lắng nghe trạng thái app để xử lý khi app chuyển background/foreground
     const subscription = AppState.addEventListener('change', async (nextAppState) => {
       if (nextAppState === 'active') {
-        // Khi app chuyển sang foreground, kiểm tra và reconnect nếu cần
         try {
           const token = await AsyncStorage.getItem('accessToken');
-          console.log("token", token);
           if (token) {
-            
-            var rs = await notificationSignalRService.start(token);
-            console.log("ket qua: ", rs);
-            
+            // Kiểm tra trạng thái kết nối trước khi thử kết nối lại
+            if (!notificationSignalRService.isConnected()) {
+              console.log('Reconnecting notification SignalR...');
+              await notificationSignalRService.start(token);
+              console.log('Notification SignalR reconnected successfully');
+            }
           }
         } catch (error) {
-          console.error('Error checking SignalR connection:', error);
+          console.error('Error reconnecting SignalR:', error);
         }
       }
-    }
-  );
+    });
 
     return () => {
       subscription.remove();
