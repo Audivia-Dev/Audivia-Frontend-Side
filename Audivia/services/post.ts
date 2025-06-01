@@ -96,6 +96,16 @@ export const getUserReactions = async (userId: string): Promise<ApiResponse<Reac
     }
 }
 
+export const getReactionByUserAndPost = async (userId: string, postId: string): Promise<ApiResponse<Reaction | null>> => {
+    try {
+        const response = await apiClient.get(`/reactions/posts/${postId}/users/${userId}`)
+        return response.data
+    }
+    catch (error: any) {
+        throw error
+    }
+}
+
 export const getPostReactions = async (postId: string): Promise<ApiResponse<Reaction[]>> => {
     try {
         const response = await apiClient.get(`/reactions/posts/${postId}`)
