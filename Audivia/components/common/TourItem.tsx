@@ -82,7 +82,7 @@ export const TourItem = ({ tours, isSavedTour = false, onDelete, onSave }: TourI
         )}
 
         {/* Tour Name */}
-        <Text style={{ fontSize: 20, fontWeight: 'bold', marginLeft: 4 }} numberOfLines={2}>{item.title}</Text>
+        <Text style={{ fontSize: 20, fontWeight: 'bold', marginLeft: 4, width: 200 }} numberOfLines={2}>{item.title}</Text>
 
         {/* Location */}
         <View style={styles.locationContainer}>

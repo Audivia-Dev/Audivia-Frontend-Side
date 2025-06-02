@@ -1,35 +1,43 @@
-import { View, Image, TouchableOpacity, Text } from "react-native"
+import { View, Image, TouchableOpacity, Text, StyleSheet } from "react-native"
 import { Ionicons } from "@expo/vector-icons"
-import { styles } from "@/styles/tour_detail.styles"
+import { styles as tourDetailStyles } from "@/styles/tour_detail.styles"
 
 interface TourHeaderProps {
+  tourDetail: any
   onBack: () => void
   onToggleFavorite: () => void
 }
 
-export const TourHeader = ({ onBack, onToggleFavorite }: TourHeaderProps) => {
+export const TourHeader = ({ tourDetail, onBack, onToggleFavorite }: TourHeaderProps) => {
   return (
-    <View style={styles.mapContainer}>
+    <View style={styles.container}>
       <Image
         source={{
-          uri: "https://maps.googleapis.com/maps/api/staticmap?center=10.8700,106.8030&zoom=14&size=600x300&maptype=roadmap&markers=color:red%7C10.8700,106.8030&key=YOUR_API_KEY",
+          uri: tourDetail.thumbnailUrl,
         }}
-        style={styles.mapImage}
+        style={styles.image}
       />
 
-      <View style={styles.headerOverlay}>
-        <View style={styles.headerLeft}>
-          <TouchableOpacity style={styles.backButton} onPress={onBack}>
-            <Ionicons name="arrow-back" size={24} color="#fff" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Chi tiết Tour</Text>
-        </View>
-        <View>
-          <TouchableOpacity style={styles.favoriteButton} onPress={onToggleFavorite}>
-            <Ionicons name="heart-outline" size={24} color="#fff" />
-          </TouchableOpacity>
-        </View>
+      <View style={tourDetailStyles.headerOverlay}>
+        <TouchableOpacity style={tourDetailStyles.backButton} onPress={onBack}>
+          <Ionicons name="arrow-back" size={24} color="#fff" />
+        </TouchableOpacity>
+
+        <TouchableOpacity style={tourDetailStyles.favoriteButton} onPress={onToggleFavorite}>
+          <Ionicons name="heart-outline" size={24} color="#fff" />
+        </TouchableOpacity>
       </View>
     </View>
   )
-} 
+}
+
+const styles = StyleSheet.create({
+  container: {
+    height: 300,
+    position: 'relative',
+  },
+  image: {
+    width: '100%',
+    height: '100%',
+  },
+}) 
