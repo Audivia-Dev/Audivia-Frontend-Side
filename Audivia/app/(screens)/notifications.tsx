@@ -98,6 +98,7 @@ export default function Notifications() {
     const handleDeleteByUser = async (notificationId: string) => {
         try {
             await deleteNotification(notificationId); // gọi server để xóa
+            setNotifications(prev => prev.filter(n => n.id !== notificationId));
         } catch (error) {
             console.log("Error deleting notification:", error)
         }
