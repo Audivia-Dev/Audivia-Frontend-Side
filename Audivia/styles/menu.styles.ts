@@ -3,7 +3,7 @@ import { StyleSheet } from "react-native"
 const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: "#F8F9FA",
+      backgroundColor: COLORS.light,
     },
     header: {
       backgroundColor: COLORS.light,
@@ -16,21 +16,23 @@ const styles = StyleSheet.create({
       alignItems: "center",
     },
     avatar: {
-      width: 60,
-      height: 60,
-      borderRadius: 30,
-      marginRight: 12,
+      width: 140,
+      height: 140,
+      borderRadius: 100,
+      marginBottom: 15,
+      borderColor: COLORS.purpleGradient,
+      borderWidth:2
     },
     headerTextContainer: {
       flex: 1,
     },
     userName: {
-      fontSize: 22,
+      fontSize: 24,
       fontWeight: "bold",
     },
     viewProfile: {
-      fontSize: 14,
-      color: "#65676B",
+      fontSize: 16,
+      color: COLORS.grey,
       marginTop: 2,
     },
     statsContainer: {
@@ -82,7 +84,16 @@ const styles = StyleSheet.create({
       paddingVertical: 12,
       paddingHorizontal: 16,
       borderBottomWidth: 1,
-      borderBottomColor: "#E4E6EB",
+      borderBottomColor: "#f0f0f0",
+      backgroundColor: COLORS.light,
+      marginHorizontal: 8,
+      marginVertical: 4,
+      borderRadius: 12,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 5 },
+      shadowOpacity: 0.1,
+      shadowRadius: 8,
+      elevation: 4,
     },
     menuIconContainer: {
       width: 36,
@@ -101,10 +112,10 @@ const styles = StyleSheet.create({
       marginLeft: 8,
     },
     signOutButton: {
-      backgroundColor: COLORS.primary,
       marginHorizontal: 16,
       marginVertical: 16,
       paddingVertical: 12,
+      paddingHorizontal:40,
       borderRadius: 8,
       alignItems: "center",
     },

@@ -16,13 +16,13 @@ import { useFocusEffect } from "@react-navigation/native";
 import { useCallback } from "react";
 import styles from "@/styles/message_inbox";
 import { Header } from "@/components/message/Header";
-import { Search } from "@/components/message/Search";
 import { useUser } from "@/hooks/useUser";
 import { createChatRoom, createChatRoomMember, getChatRoomsByUserId, getPrivateRoom, getMessagesByChatRoom } from "@/services/chat";
 import { CreateGroupModal } from "@/components/message/CreateGroupModal";
 import { getUserFriends } from "@/services/user_follow";
 import { GroupAvatar } from "@/components/message/GroupAvatar";
 import { chatSignalRService } from "@/services/chat_signalR";
+import { SearchButton } from "@/components/common/SearchButton";
 
 
 
@@ -389,7 +389,7 @@ export default function MessagingInboxScreen() {
       {!showSearch ? (
         <Header onBack={goBack} onSearch={() => setShowSearch(true)} />
       ) : (
-        <Search
+        <SearchButton
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           onBack={() => setShowSearch(false)}

@@ -1,8 +1,8 @@
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, Stack, usePathname } from 'expo-router';
 import { useAuth } from './AuthContext';
-import FloatingButton from '../components/FloatingButton';
 import { COLORS } from '@/constants/theme';
+import FloatingButton from '@/components/common/FloatingButton';
 
 export default function LayoutContent() {
   const { isAuthenticated } = useAuth();

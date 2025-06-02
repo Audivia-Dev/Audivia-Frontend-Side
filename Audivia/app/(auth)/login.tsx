@@ -6,10 +6,12 @@ import MaskedView from "@react-native-masked-view/masked-view";
 import { useRouter } from "expo-router";
 import { login, loginWithGoogle } from "@/services/user";
 import { useAuth } from "@/contexts/AuthContext";
+
 import AuthForm from "@/components/AuthForm";
 import * as WebBrowser from "expo-web-browser"
 import * as Google from "expo-auth-session/providers/google"
 import { useEffect } from "react";
+
 export default function Login() {
 
   const webClientId  = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID

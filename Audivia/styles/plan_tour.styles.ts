@@ -19,6 +19,7 @@ const styles = StyleSheet.create({
       fontSize: 20,
       fontWeight: "bold",
       color: COLORS.dark,
+      marginLeft: 10
     },
     tourInfoCard: {
       flexDirection: "row",
@@ -33,13 +34,14 @@ const styles = StyleSheet.create({
       elevation: 3,
     },
     tourImage: {
-      width: 100,
-      height: 100,
+      width: 150,
+      height: 150,
     },
     tourInfoContent: {
       flex: 1,
       padding: 12,
       justifyContent: "center",
+      marginTop: 40
     },
     tourName: {
       fontSize: 16,
@@ -72,7 +74,7 @@ const styles = StyleSheet.create({
       flex: 1,
     },
     notificationMessage: {
-      fontSize: 14,
+      fontSize: 16,
       color: COLORS.primary,
       lineHeight: 20,
     },
@@ -90,13 +92,14 @@ const styles = StyleSheet.create({
       backgroundColor: "#fff",
       marginHorizontal: 16,
       marginBottom: 16,
+      marginTop: 30,
       borderRadius: 16,
       padding: 16,
       shadowColor: "#000",
-      shadowOffset: { width: 0, height: 2 },
+      shadowOffset: { width: 0, height: 5 },
       shadowOpacity: 0.05,
       shadowRadius: 4,
-      elevation: 2,
+      elevation: 5,
     },
     sectionTitle: {
       fontSize: 18,
@@ -133,7 +136,6 @@ const styles = StyleSheet.create({
       color: "#999",
     },
     confirmButton: {
-      backgroundColor: COLORS.primary,
       borderRadius: 12,
       paddingVertical: 14,
       alignItems: "center",

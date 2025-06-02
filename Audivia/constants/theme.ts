@@ -27,4 +27,6 @@ export const COLORS = {
         black: "#000000",
         white: "#FFFFFF",
         transparent: "transparent",
+        textPrimary: "#333333",
+        border: "#E0E0E0",
 } as const;

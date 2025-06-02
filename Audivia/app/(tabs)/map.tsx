@@ -1,6 +1,6 @@
 import { View, StyleSheet, Dimensions } from 'react-native'
 import React from 'react'
-import UserLocationMap from '@/components/UserLocationMap'
+import UserLocationMap from '@/components/common/UserLocationMap'
 
 export default function Map() {
   return (

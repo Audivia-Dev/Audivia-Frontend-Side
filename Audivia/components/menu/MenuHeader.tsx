@@ -11,19 +11,20 @@ export const MenuHeader = () => {
   }
 
   return (
-    <View style={styles.header}>
+    <View style={[styles.header, { alignItems: 'center', justifyContent: 'center' }]}>
       <TouchableOpacity onPress={navigateToProfile}>
-        <View style={styles.headerContent}>
+        <View style={[styles.headerContent, { alignItems: 'center' }]}>
           <Image
-            source={{uri: user?.avatarUrl}}
+            source={{ uri: user?.avatarUrl }}
             style={styles.avatar}
           />
-          <View style={styles.headerTextContainer}>
-            <Text style={styles.userName}>{user?.userName}</Text>
-            <Text style={styles.viewProfile}>Xem trang cá nhân của bạn</Text>
-          </View>
+
         </View>
       </TouchableOpacity>
+      <View style={[styles.headerTextContainer, { alignItems: 'center' }]}>
+        <Text style={styles.userName}>{user?.userName}</Text>
+        <Text style={styles.viewProfile}>Xem trang cá nhân của bạn</Text>
+      </View>
     </View>
   )
 } 

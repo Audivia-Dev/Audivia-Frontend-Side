@@ -78,7 +78,7 @@ export interface Comment {
 
 export interface Reaction {
   id: string;
-  type: number;
+  type: string;
   postId: string;
   createdBy: string;
   createdAt: string;
