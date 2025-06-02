@@ -120,7 +120,7 @@ export default function Login() {
         type="login"
         onSubmit={handleLogin}
         onGoogleAuth={handleGoogleLogin}
-        onForgotPassword={() => console.log("Forgot password")}
+        onForgotPassword={() => router.push("/forgot-password")}
         onToggleAuth={() => router.push("/signup")}
       />
     </View>

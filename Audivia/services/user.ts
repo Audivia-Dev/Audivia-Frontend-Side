@@ -73,3 +73,41 @@ export const loginWithGoogle = async (googleToken: string) => {
   }
 };
 
+export const forgotPassword = async (email: string) => {
+  try {
+    const response = await apiClient.post('/auth/forgot-password', {
+      email,
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Forgot password request failed:', error);
+    throw error;
+  }
+};
+
+export const verifyResetCode = async (email: string, code: string) => {
+  try {
+    const response = await apiClient.post('/auth/verify-reset-code', {
+      email,
+      otp: parseInt(code)
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Code verification failed:', error);
+    throw error;
+  }
+};
+
+export const resetPassword = async (email: string, newPassword: string) => {
+  try {
+    const response = await apiClient.post('/auth/reset-password', {
+      email,
+      newPassword,
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Password reset failed:', error);
+    throw error;
+  }
+};
+
