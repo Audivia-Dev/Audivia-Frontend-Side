@@ -10,7 +10,7 @@ interface BeforeTabProps {
 }
 
 const renderRouteItem = (item: any, index: number) => (
-  <View style={styles.routeItem}>
+  <View style={styles.routeItem} key={index}>
     <View style={styles.routeNumberContainer}>
       <Text style={styles.routeNumber}>{index + 1}</Text>
     </View>

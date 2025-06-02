@@ -20,7 +20,7 @@ export const MenuPreferences = () => {
           <View style={styles.menuIconContainer}>
             <Ionicons name="moon-outline" size={22} color={COLORS.primary} />
           </View>
-          <Text style={styles.menuText}>Chế độ tối</Text>
+          <Text style={styles.menuText}>Về Audivia</Text>
           <Ionicons name="chevron-forward" size={20} color="#CCCCCC" style={styles.arrowIcon} />
         </TouchableOpacity>
       </View>

@@ -13,7 +13,7 @@ interface ReviewsTabProps {
 }
 
 const renderReviewItem = (review: Review) => (
-  <View style={styles.reviewItem}>
+  <View style={styles.reviewItem} key={review.id}>
     <View style={styles.reviewHeader}>
       <Image 
         source={{ uri: review?.avatarUrl || "https://randomuser.me/api/portraits/lego/1.jpg" }} 
@@ -75,11 +75,13 @@ export const ReviewsTab = ({ tour }: ReviewsTabProps) => {
             <FontAwesome
               key={index}
               name={
-                star <= Math.floor(tour?.avgRating || 4.8)
-                  ? "star"
-                  : star <= (tour?.avgRating || 4.8)
-                    ? "star-half-o"
-                    : "star-o"
+                !tour?.avgRating
+                  ? "star-o"
+                  : star <= Math.floor(tour.avgRating)
+                    ? "star"
+                    : star <= tour.avgRating
+                      ? "star-half-o"
+                      : "star-o"
               }
               size={16}
               color={COLORS.orange}

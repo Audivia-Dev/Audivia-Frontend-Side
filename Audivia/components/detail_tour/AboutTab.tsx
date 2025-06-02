@@ -33,7 +33,7 @@ export const AboutTab = ({ tour }: AboutTabProps) => {
         <Text style={styles.tourName}>{tour?.title}</Text>
         <View style={styles.locationContainer}>
           <Ionicons name="location-outline" size={16} color={COLORS.primary} />
-          <Text style={styles.locationText}>{tour?.checkpoints?.[0]?.title}</Text>
+          <Text style={styles.locationText}>{tour?.location}</Text>
         </View>
 
         <View style={styles.ratingContainer}>
@@ -56,8 +56,6 @@ export const AboutTab = ({ tour }: AboutTabProps) => {
           </View>
           <Text style={styles.ratingText}>{tour?.avgRating}</Text>
         </View>
-
-        <Text style={styles.priceText}>{tour?.price === 0 ? "Miễn phí" : `${tour?.price} VND`}</Text>
       </View>
 
       {/* Tour Overview */}
@@ -78,22 +76,6 @@ export const AboutTab = ({ tour }: AboutTabProps) => {
             <View style={styles.overviewItemTextContainer}>
               <Text style={styles.overviewItemLabel}>Tổng điểm đến</Text>
               <Text style={styles.overviewItemValue}>{tour?.checkpoints?.length || 0} nơi</Text>
-            </View>
-          </View>
-
-          <View style={styles.overviewItem}>
-            <Ionicons name="globe-outline" size={20} color={COLORS.primary} />
-            <View style={styles.overviewItemTextContainer}>
-              <Text style={styles.overviewItemLabel}>Ngôn ngữ</Text>
-              <Text style={styles.overviewItemValue}>Tiếng Việt</Text>
-            </View>
-          </View>
-
-          <View style={styles.overviewItem}>
-            <Ionicons name="sunny-outline" size={20} color={COLORS.primary} />
-            <View style={styles.overviewItemTextContainer}>
-              <Text style={styles.overviewItemLabel}>Thời gian tốt nhất</Text>
-              <Text style={styles.overviewItemValue}>Buổi sáng</Text>
             </View>
           </View>
         </View>

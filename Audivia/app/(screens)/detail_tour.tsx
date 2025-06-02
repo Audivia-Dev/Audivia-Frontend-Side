@@ -15,6 +15,7 @@ import { COLORS } from "@/constants/theme"
 import { createTransactionHistory } from "@/services/historyTransaction"
 import { createNotification } from "@/services/notification"
 import { useNotificationCount } from "@/hooks/useNotificationCount"
+import { LinearGradient } from "expo-linear-gradient"
 
 export default function TourDetailScreen() {
   const [activeTab, setActiveTab] = useState("about")
@@ -24,7 +25,7 @@ export default function TourDetailScreen() {
   const { user } = useUser()
   const [transaction, setTransaction] = useState<any>()
   const [showPurchaseModal, setShowPurchaseModal] = useState(false)
-  const { refreshCount, updateCount } = useNotificationCount()
+  const { unreadCount, loadUnreadCount } = useNotificationCount()
 
   useEffect(() => {
     const fetchTourById = async () => {
@@ -55,7 +56,7 @@ export default function TourDetailScreen() {
   }
 
   const handlePurchase = () => {
-    
+
     if (transaction) {
       //set audio character ở đây
 
@@ -66,15 +67,15 @@ export default function TourDetailScreen() {
     }
   }
 
- 
+
   const amountToDeposit = Math.max((tour?.price ?? 0) - (user?.balanceWallet ?? 0), 0)
-  
+
   const handleConfirmPurchase = async () => {
-    if (user?.balanceWallet as number < (tour?.price as number) ){
+    if (user?.balanceWallet as number < (tour?.price as number)) {
       router.push(`/deposit?tourId=${tourId}&redirect=detail&amount=${amountToDeposit}`)
     } else {
       await createNewTransactionHistory()
-      
+
       const notificationParams = {
         userId: user?.id as string,
         tourId: tourId as string,
@@ -83,8 +84,8 @@ export default function TourDetailScreen() {
         isRead: false,
       }
       await createNotification(notificationParams)
-      updateCount(1)
-      
+      loadUnreadCount()
+
       router.push(`/detail_tour?tourId=${tourId}`)
     }
   }
@@ -106,25 +107,41 @@ export default function TourDetailScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <TourHeader onBack={goBack} onToggleFavorite={toggleFavorite} />
-      
-      <TourTabs activeTab={activeTab} onTabChange={setActiveTab} />
-      
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Tab Content */}
-        {activeTab === "about" && <AboutTab tour={tour} />}
-        {activeTab === "before" && <BeforeTab tour={tour} />}
-        {activeTab === "reviews" && <ReviewsTab tour={tour} />}
+      {tour && <TourHeader tourDetail={tour} onBack={goBack} onToggleFavorite={toggleFavorite} />}
 
-        {/* Bottom spacing */}
-        <View style={{ height: 80 }} />
-      </ScrollView>
+      <View style={styles.tabContentWrapper}>
+        <TourTabs activeTab={activeTab} onTabChange={setActiveTab} />
+        {/* Wrapper for content below tabs */}
+        <ScrollView showsVerticalScrollIndicator={false}>
+          {/* Tab Content */}
+          {activeTab === "about" && <AboutTab tour={tour} />}
+          {activeTab === "before" && <BeforeTab tour={tour} />}
+          {activeTab === "reviews" && <ReviewsTab tour={tour} />}
+
+          {/* Bottom spacing */}
+          <View style={{ height: 80 }} />
+        </ScrollView>
+      </View>
 
       {/* Start Button */}
       <View style={styles.startButtonContainer}>
-        <TouchableOpacity style={styles.startButton} onPress={handlePurchase}>
-          <Text style={styles.startButtonText}>{transaction ? "Bắt đầu" : "Mua tour"}</Text>
-        </TouchableOpacity>
+        {/* Price Display */}
+        <View style={styles.priceDisplayContainer}>
+          <Text style={styles.priceDisplayText}>{tour?.price} Đ</Text>
+        </View>
+        <View style={styles.startButtonWrapper}>
+          <LinearGradient
+            colors={[COLORS.primary, COLORS.purpleGradient]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.startButtonGradient}
+          >
+            <TouchableOpacity style={styles.startButton} onPress={handlePurchase}>
+              <Text style={styles.startButtonText}>{transaction ? "Bắt đầu" : "Mua tour"}</Text>
+            </TouchableOpacity>
+          </LinearGradient>
+        </View>
+
       </View>
 
       <Modal
@@ -141,7 +158,7 @@ export default function TourDetailScreen() {
                 <Text style={styles.closeText}>X</Text>
               </TouchableOpacity>
             </View>
-            
+
             <View style={styles.tourInfoRow}>
               <View>
                 <Text style={styles.tourName}>{tour?.title}</Text>
@@ -171,12 +188,16 @@ export default function TourDetailScreen() {
               <Text style={styles.totalAmount}>{tour?.price} VNĐ</Text>
             </View>
 
-            <TouchableOpacity 
-              style={styles.purchaseButton} 
-              onPress={handleConfirmPurchase}
+            <LinearGradient
+              colors={[COLORS.primary, COLORS.purpleGradient]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.purchaseButton}
             >
-              <Text style={styles.purchaseButtonText}>Xác nhận thanh toán</Text>
-            </TouchableOpacity>
+              <TouchableOpacity onPress={handleConfirmPurchase}>
+                <Text style={styles.purchaseButtonText}>Xác nhận thanh toán</Text>
+              </TouchableOpacity>
+            </LinearGradient>
 
             <View style={styles.secureRow}>
               <Text style={styles.secureText}>Giao dịch được bảo mật bởi Audivia</Text>

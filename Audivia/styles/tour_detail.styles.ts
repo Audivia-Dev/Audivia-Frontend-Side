@@ -33,11 +33,6 @@ export const styles = StyleSheet.create({
       justifyContent: "center",
       alignItems: "center",
     },
-    headerTitle: {
-      fontSize: 18,
-      fontWeight: "bold",
-      color: "#000",
-    },
     headerLeft: {
       flexDirection: "row",
       alignItems: "center",
@@ -66,7 +61,7 @@ export const styles = StyleSheet.create({
       borderBottomColor: "#00BCD4",
     },
     tabText: {
-      fontSize: 14,
+      fontSize: 16,
       color: "#666",
     },
     activeTabText: {
@@ -79,9 +74,9 @@ export const styles = StyleSheet.create({
       borderBottomColor: "#f0f0f0",
     },
     tourName: {
-      fontSize: 22,
+      fontSize: 20,
       fontWeight: "bold",
-      color: "#00BCD4",
+      color: COLORS.primary,
       marginBottom: 8,
     },
     locationContainer: {
@@ -90,7 +85,7 @@ export const styles = StyleSheet.create({
       marginBottom: 8,
     },
     locationText: {
-      fontSize: 14,
+      fontSize: 16,
       color: "#00BCD4",
       marginLeft: 4,
     },
@@ -107,7 +102,7 @@ export const styles = StyleSheet.create({
       marginRight: 2,
     },
     ratingText: {
-      fontSize: 14,
+      fontSize: 16,
       color: "#666",
     },
     priceText: {
@@ -141,11 +136,12 @@ export const styles = StyleSheet.create({
       marginLeft: 8,
     },
     overviewItemLabel: {
-      fontSize: 12,
+      fontSize: 16,
       color: "#666",
+      marginBottom: 10
     },
     overviewItemValue: {
-      fontSize: 14,
+      fontSize: 18,
       fontWeight: "500",
       color: "#000",
     },
@@ -155,13 +151,13 @@ export const styles = StyleSheet.create({
       borderBottomColor: "#f0f0f0",
     },
     descriptionText: {
-      fontSize: 14,
+      fontSize: 16,
       lineHeight: 22,
       color: "#333",
       marginBottom: 8,
     },
     seeMoreText: {
-      fontSize: 14,
+      fontSize: 16,
       color: "#00BCD4",
       fontWeight: "500",
     },
@@ -175,14 +171,30 @@ export const styles = StyleSheet.create({
       width: 150,
       marginRight: 12,
       position: "relative",
+      backgroundColor: COLORS.light,
+      borderRadius: 12,
+      borderWidth: 0.5,
+      borderColor: COLORS.grey,
+      shadowOffset: { width: 0, height: 5 },
+      shadowColor: COLORS.grey,
+      shadowOpacity: 0.2,
+      shadowRadius: 4,
+      elevation: 4,
+      paddingHorizontal: 10,
+      paddingVertical: 10,
+      marginBottom: 20,
     },
     destinationImage: {
       width: "100%",
-      height: 100,
-      borderRadius: 8,
+      height: 120,
+      borderRadius: 12,
+      borderWidth: 0.5,
+      borderColor: COLORS.grey,
+      paddingHorizontal: 10,
+      paddingVertical: 10,
     },
     destinationName: {
-      fontSize: 14,
+      fontSize: 16,
       fontWeight: "500",
       marginTop: 8,
     },
@@ -198,7 +210,7 @@ export const styles = StyleSheet.create({
       alignItems: "center",
     },
     destinationBadgeText: {
-      fontSize: 12,
+      fontSize: 16,
       fontWeight: "bold",
       color: "#fff",
     },
@@ -217,22 +229,26 @@ export const styles = StyleSheet.create({
       left: 0,
       right: 0,
       padding: 16,
-      backgroundColor: "#fff",
+      backgroundColor: COLORS.light,
       borderTopWidth: 1,
-      borderTopColor: "#f0f0f0",
+      borderTopColor: '#f0f0f0',
+      flexDirection: 'row',
+      alignItems: 'center',
+      zIndex: 1000,
     },
     startButton: {
-      backgroundColor: "#00BCD4",
+      flex: 1,
+      backgroundColor: 'transparent',
       paddingVertical: 14,
       borderRadius: 8,
       alignItems: "center",
+      justifyContent: 'center',
     },
     startButtonText: {
       fontSize: 16,
       fontWeight: "bold",
       color: "#fff",
     },
-    // Styles for "Before" tab
   beforeContainer: {
     padding: 16,
   },
@@ -254,7 +270,7 @@ export const styles = StyleSheet.create({
     marginRight: 12,
   },
   startLocationTitle: {
-    fontSize: 14,
+    fontSize: 16,
     color: "#666",
   },
   startLocationText: {
@@ -294,7 +310,7 @@ export const styles = StyleSheet.create({
     marginBottom: 4,
   },
   routeDescription: {
-    fontSize: 14,
+    fontSize: 16,
     color: "#666",
   },
   viewMapButton: {
@@ -313,7 +329,6 @@ export const styles = StyleSheet.create({
     marginLeft: 8,
   },
 
-  // Styles for "Reviews" tab
   reviewsContainer: {
     padding: 16,
   },
@@ -331,7 +346,7 @@ export const styles = StyleSheet.create({
     marginVertical: 8,
   },
   ratingCount: {
-    fontSize: 14,
+    fontSize: 16,
     color: "#666",
   },
   ratingBars: {
@@ -344,7 +359,7 @@ export const styles = StyleSheet.create({
   },
   ratingBarLabel: {
     width: 20,
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: "500",
     color: "#666",
     marginRight: 8,
@@ -402,11 +417,11 @@ export const styles = StyleSheet.create({
     marginRight: 2,
   },
   reviewTime: {
-    fontSize: 12,
+    fontSize: 16,
     color: "#999",
   },
   reviewComment: {
-    fontSize: 14,
+    fontSize: 16,
     lineHeight: 20,
     color: "#333",
     marginBottom: 12,
@@ -420,7 +435,7 @@ export const styles = StyleSheet.create({
     marginRight: 16,
   },
   reviewActionText: {
-    fontSize: 14,
+    fontSize: 16,
     color: "#666",
     marginLeft: 4,
   },
@@ -438,7 +453,7 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalTitle: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: 'bold',
     marginBottom: 20,
     color: COLORS.dark,
@@ -449,7 +464,7 @@ export const styles = StyleSheet.create({
   },
 
   tourPrice: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: 'bold',
     color: 'black',
     marginBottom: 4,
@@ -488,11 +503,11 @@ export const styles = StyleSheet.create({
     marginBottom: 4,
   },
   walletBalance: {
-    fontSize: 14,
+    fontSize: 16,
     color: COLORS.grey,
   },
   changeText: {
-    fontSize: 14,
+    fontSize: 16,
     color: COLORS.primary,
     fontWeight: '500',
   },
@@ -518,7 +533,6 @@ export const styles = StyleSheet.create({
   },
   purchaseButton: {
     width: '100%',
-    backgroundColor: COLORS.primary,
     padding: 16,
     borderRadius: 8,
     marginBottom: 12,
@@ -530,7 +544,7 @@ export const styles = StyleSheet.create({
     textAlign: 'center',
   },
   secureText: {
-    fontSize: 12,
+    fontSize: 16,
     color: COLORS.grey,
     textAlign: 'center',
   },
@@ -559,7 +573,7 @@ export const styles = StyleSheet.create({
   },
   tourDesc: {
     color: COLORS.grey,
-    fontSize: 13,
+    fontSize: 16,
   },
   paymentMethodHeader: {
     flexDirection: 'row',
@@ -593,6 +607,40 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 4,
+  },
+  // New styles for tour detail screen UI
+  tabContentWrapper: {
+    flex: 1,
+    backgroundColor: COLORS.light,
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    overflow: 'hidden',
+    marginTop: -30,
+  },
+  startButtonWrapper: {
+    flex: 1,
+    marginLeft: 10,
+  },
+  priceDisplayContainer: {
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+    borderRadius: 8,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: COLORS.transparent,
+    marginRight: 10,
+    marginLeft: 10,
+  },
+  priceDisplayText: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: COLORS.primary,
+  },
+  startButtonGradient: {
+    flex: 1,
+    borderRadius: 8,
   },
   })
   

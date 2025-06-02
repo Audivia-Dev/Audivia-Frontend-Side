@@ -16,6 +16,8 @@ import styles from "@/styles/character_selection"
 import { router, useLocalSearchParams } from "expo-router"
 import { useUser } from "@/hooks/useUser"
 import { checkUserPurchasedTour } from "@/services/historyTransaction"
+import { LinearGradient } from "expo-linear-gradient"
+import MaskedView from "@react-native-masked-view/masked-view"
 
 const CharacterSelectionScreen = () => {
   const [selectedCharacter, setSelectedCharacter] = useState<string>("")
@@ -169,7 +171,20 @@ const CharacterSelectionScreen = () => {
         <TouchableOpacity style={styles.backButton} onPress={handleBack}>
           <Ionicons name="arrow-back" size={24} color={COLORS.white} />
         </TouchableOpacity>
-        <Text style={styles.title}>Chọn nhân vật</Text>
+        <MaskedView maskElement={
+          <Text style={[styles.title, { backgroundColor: 'transparent' }]}>
+            Chọn nhân vật
+          </Text>
+        }>
+          <LinearGradient
+            colors={[COLORS.primary, COLORS.purpleGradient]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}>
+            <Text style={[styles.title, { opacity: 0 }]}>
+            Chọn nhân vật
+            </Text>
+          </LinearGradient>
+        </MaskedView>
         <Text style={styles.subtitle}>Chọn nhân vật bạn muốn cùng đồng hành</Text>
       </View>
 
@@ -201,13 +216,16 @@ const CharacterSelectionScreen = () => {
 
           <Text style={styles.characterName}>{currentCharacter.name}</Text>
           <Text style={styles.characterDescription}>{currentCharacter.description}</Text>
-          <TouchableOpacity
-            style={[styles.selectButton, { backgroundColor: COLORS.primary }]}
-            onPress={handleConfirmSelection}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.selectButtonText}>Chọn</Text>
-          </TouchableOpacity>
+          <LinearGradient
+              colors={[COLORS.primary, COLORS.purpleGradient]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.selectButton}
+            >
+              <TouchableOpacity onPress={handleConfirmSelection}>
+                <Text style={styles.selectButtonText}>Chọn</Text>
+              </TouchableOpacity>
+            </LinearGradient>
         </Animated.View>
 
         <TouchableOpacity style={styles.arrowButton} onPress={handleNext}>
