@@ -1,6 +1,6 @@
 import * as SignalR from "@microsoft/signalr";
 
-const API_URL = 'https://audivia-backend.azurewebsites.net'; 
+const API_URL = process.env.EXPO_PUBLIC_SIGNALR_URL; 
 
 class NotificationSignalRService {
   private connection: SignalR.HubConnection | null = null;

@@ -7,7 +7,7 @@ import { useRouter } from "expo-router";
 import { login, loginWithGoogle } from "@/services/user";
 import { useAuth } from "@/contexts/AuthContext";
 
-import AuthForm from "@/components/AuthForm";
+import AuthForm from "@/components/common/AuthForm";
 import * as WebBrowser from "expo-web-browser"
 import * as Google from "expo-auth-session/providers/google"
 import { useEffect } from "react";

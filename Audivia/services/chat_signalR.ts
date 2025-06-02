@@ -1,7 +1,7 @@
 import { HubConnection, HubConnectionBuilder, HubConnectionState } from '@microsoft/signalr';
 import { Message, ChatRoomMember } from '@/models';
 
-const API_URL = 'https://audivia-backend.azurewebsites.net'; // Replace with your actual API URL 
+const API_URL = process.env.EXPO_PUBLIC_SIGNALR_URL; // Replace with your actual API URL 
 class SignalRService {
     private connection: HubConnection | null = null;
     private messageCallbacks: ((message: Message) => void)[] = [];
