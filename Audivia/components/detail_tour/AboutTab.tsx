@@ -8,12 +8,12 @@ interface AboutTabProps {
   tour: Tour | undefined
 }
 
-const renderDestinationItem = (destination: Checkpoint, index: number) => (
+const renderDestinationItem = (destination: any, index: number) => (
   <View key={destination.id} style={styles.destinationItem}>
     <Image
       source={{
         uri:
-          destination.imageUrl ||
+          destination.images[0].imageUrl ||
           "https://maps.googleapis.com/maps/api/staticmap?center=10.8700,106.8030&zoom=14&size=600x300&maptype=roadmap&markers=color:red%7C10.8700,106.8030&key=YOUR_API_KEY",
       }}
       style={styles.destinationImage}
