@@ -111,7 +111,7 @@ export const TourMap: React.FC<UserLocationMapProps> = ({ tour, height = 300 }) 
 
             const url = `https://routes.googleapis.com/directions/v2:computeRoutes`;
             const prepareHeaders = {
-                'Content-Type': 'application/json', // Bắt buộc cho POST request với JSON body
+                'Content-Type': 'application/json',
                 'X-Goog-Api-Key': API_KEY,
                 'X-Goog-FieldMask': 'routes.duration,routes.distanceMeters,routes.polyline.encodedPolyline',
             };

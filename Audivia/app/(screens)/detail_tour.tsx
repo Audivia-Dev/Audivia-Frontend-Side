@@ -15,6 +15,7 @@ import { COLORS } from "@/constants/theme"
 import { createTransactionHistory } from "@/services/historyTransaction"
 import { createNotification } from "@/services/notification"
 import { useNotificationCount } from "@/hooks/useNotificationCount"
+import { getTourProgress, createTourProgress } from "@/services/progress"
 import { LinearGradient } from "expo-linear-gradient"
 
 export default function TourDetailScreen() {
@@ -55,15 +56,34 @@ export default function TourDetailScreen() {
     router.push(`/character_selection?tourId=${tourId}`)
   }
 
-  const handlePurchase = () => {
+  const handlePurchase = async () => {
 
     if (transaction) {
-      //set audio character ở đây
+      try {
+        // Check if tour progress exists
+        const existingProgress = await getTourProgress(user?.id as string, tourId as string);
 
-      startTour()
+        if (existingProgress.response === null) {
+          const progressData = {
+            tourId: tourId as string,
+            userId: user?.id as string,
+            startedAt: new Date().toISOString(),
+            finishedAt: null,
+            isCompleted: false,
+            currentCheckpointId: tour?.checkpoints[0]?.id || null,
+            score: 0,
+            groupMode: false,
+            groupId: null
+          };
+          console.log('Creating new tour progress:', progressData);
+          await createTourProgress(progressData);
+        }
+      } catch (error) {
+        console.error('Error handling tour progress:', error);
+      }
+      startTour();
     } else {
-      setShowPurchaseModal(true)
-
+      setShowPurchaseModal(true);
     }
   }
 

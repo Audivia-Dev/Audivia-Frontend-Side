@@ -136,3 +136,13 @@ export const getPostComments = async (postId: string): Promise<ApiResponse<Comme
         throw error
     }
 }
+
+export const deleteComment = async (id: string): Promise<ApiResponse<void>> => {
+    try {
+        const response = await apiClient.delete(`/comments/${id}`)
+        return response.data
+    } catch (error: any) {
+        console.error('Lỗi xóa comment:', error.response?.data || error.message)
+        throw error
+    }
+}
