@@ -1,12 +1,13 @@
 // get tour checkpoints and route from Google Maps API and render on map with marker 
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { View, StyleSheet, Image, ActivityIndicator, Text, TouchableOpacity, Linking, Platform } from 'react-native';
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE, Region } from 'react-native-maps';
 import { Checkpoint, Tour } from '@/models';
 import * as Location from 'expo-location';
 import { COLORS } from '@/constants/theme';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface UserLocationMapProps {
     tour: Tour;
@@ -18,95 +19,87 @@ interface RouteInfo {
     duration: string;
 }
 
+// Decode Google's encoded polyline
+const decodePolyline = (encoded: string): { latitude: number, longitude: number }[] => {
+    const points: { latitude: number, longitude: number }[] = [];
+    let index = 0, lat = 0, lng = 0;
+
+    while (index < encoded.length) {
+        let b, shift = 0, result = 0;
+
+        do {
+            b = encoded.charCodeAt(index++) - 63;
+            result |= (b & 0x1f) << shift;
+            shift += 5;
+        } while (b >= 0x20);
+
+        const dlat = (result & 1) ? ~(result >> 1) : (result >> 1);
+        lat += dlat;
+
+        shift = 0;
+        result = 0;
+
+        do {
+            b = encoded.charCodeAt(index++) - 63;
+            result |= (b & 0x1f) << shift;
+            shift += 5;
+        } while (b >= 0x20);
+
+        const dlng = (result & 1) ? ~(result >> 1) : (result >> 1);
+        lng += dlng;
+
+        points.push({
+            latitude: lat * 1e-5,
+            longitude: lng * 1e-5,
+        });
+    }
+
+    return points;
+};
+
 export const TourMap: React.FC<UserLocationMapProps> = ({ tour, height = 300 }) => {
     const [mapRegion, setMapRegion] = useState<Region | null>(null);
     const [userLocation, setUserLocation] = useState<Location.LocationObject | null>(null);
     const [routeCoordinates, setRouteCoordinates] = useState<{ latitude: number, longitude: number }[]>([]);
     const [routeInfo, setRouteInfo] = useState<RouteInfo>({ distance: '', duration: '' });
-    const [loading, setLoading] = useState<boolean>(true);
-    useEffect(() => {
-        // Get user location
-        const getUserLocation = async () => {
-            try {
-                const { status } = await Location.requestForegroundPermissionsAsync();
-                if (status !== 'granted') {
-                    console.error('Location permission not granted');
-                    return;
-                }
+    const [loadingMapData, setLoadingMapData] = useState<boolean>(true);
+    const [loadingUserLocation, setLoadingUserLocation] = useState<boolean>(true);
 
-                const location = await Location.getCurrentPositionAsync({});
-                setUserLocation(location);
+    const fetchRoute = useCallback(async (checkpoints: Checkpoint[]) => {
+        if (!tour || checkpoints.length < 2) { // <--- THÊM !tour vào điều kiện
+            setRouteCoordinates([]);
+            setRouteInfo({ distance: "N/A", duration: "N/A" });
+            return;
+        }
 
-                // If we have checkpoints, set the map region centered on the first checkpoint
-                if (tour?.checkpoints?.length > 0) {
-                    const firstCheckpoint = tour.checkpoints[0];
-                    setMapRegion({
-                        latitude: firstCheckpoint.latitude,
-                        longitude: firstCheckpoint.longitude,
-                        latitudeDelta: 0.01,
-                        longitudeDelta: 0.01,
-                    });
-
-                    // Get route coordinates
-                    if (tour.checkpoints.length > 1) {
-                        await fetchRoute(tour.checkpoints);
-                    }
-                } else if (location) {
-                    // If no checkpoints, center map on user location
-                    setMapRegion({
-                        latitude: location.coords.latitude,
-                        longitude: location.coords.longitude,
-                        latitudeDelta: 0.01,
-                        longitudeDelta: 0.01,
-                    });
-                }
-
-                setLoading(false);
-            } catch (error) {
-                console.error('Error getting location:', error);
-                setLoading(false);
-            }
-        };
-
-        getUserLocation();
-    }, [tour]);
-
-    const fetchRoute = async (checkpoints: Checkpoint[]) => {
-        if (checkpoints.length < 2) return;
-
+        const cacheKey = `ROUTE_CACHE_${tour.id}`; // <--- Dùng tour.id cho cache key
         try {
+            const cachedData = await AsyncStorage.getItem(cacheKey);
+            if (cachedData) {
+                const parsedData = JSON.parse(cachedData);
+                setRouteCoordinates(parsedData.routeCoordinates);
+                setRouteInfo(parsedData.routeInfo);
+                console.log(`Loaded route from cache for tour ${tour.id}`);
+                setLoadingMapData(false);
+                return;
+            }
+
             const API_KEY = process.env.EXPO_PUBLIC_GOOGLE_ROUTE_API_KEY || '';
-            // Prepare payload for Routes API
             const payload = {
                 origin: {
-                    location: {
-                        latLng: {
-                            latitude: checkpoints[0].latitude,
-                            longitude: checkpoints[0].longitude,
-                        },
-                    },
+                    location: { latLng: { latitude: checkpoints[0].latitude, longitude: checkpoints[0].longitude } },
                 },
                 destination: {
-                    location: {
-                        latLng: {
-                            latitude: checkpoints[checkpoints.length - 1].latitude,
-                            longitude: checkpoints[checkpoints.length - 1].longitude,
-                        },
-                    },
+                    location: { latLng: { latitude: checkpoints[checkpoints.length - 1].latitude, longitude: checkpoints[checkpoints.length - 1].longitude } },
                 },
                 intermediates: checkpoints.slice(1, -1).map((cp: Checkpoint) => ({
-                    location: {
-                        latLng: {
-                            latitude: cp.latitude,
-                            longitude: cp.longitude,
-                        },
-                    },
+                    location: { latLng: { latitude: cp.latitude, longitude: cp.longitude } },
                 })),
-                travelMode: "WALK", // Walking mode
-                routingPreference: "TRAFFIC_AWARE", // Traffic-aware routing
-                computeAlternativeRoutes: false, // No alternative routes needed
-                units: "METRIC", // Use metric units
-                languageCode: "en-US", // Language setting
+                travelMode: "WALK",
+                routingPreference: "TRAFFIC_AWARE",
+                computeAlternativeRoutes: false,
+                units: "METRIC",
+                languageCode: "en-US",
             };
 
             const url = `https://routes.googleapis.com/directions/v2:computeRoutes`;
@@ -125,69 +118,102 @@ export const TourMap: React.FC<UserLocationMapProps> = ({ tour, height = 300 }) 
 
             if (json.routes && json.routes.length > 0) {
                 const route = json.routes[0];
-                // Decode the polyline
                 const points = decodePolyline(route.polyline.encodedPolyline);
-                setRouteCoordinates(points);
 
-                // Set distance and duration info
-                const totalDistance = route.distanceMeters / 1000; // Convert from meters to km
+                const totalDistance = route.distanceMeters / 1000;
                 const totalDuration = route.duration
                     ? parseInt(route.duration.replace("s", "")) / 60
-                    : 0; // Convert from seconds to minutes
+                    : 0;
 
-                setRouteInfo({
+                const newRouteInfo = {
                     distance: totalDistance.toFixed(2),
                     duration: totalDuration.toFixed(0)
-                });
+                };
+
+                setRouteCoordinates(points);
+                setRouteInfo(newRouteInfo);
+
+                // 3. Lưu kết quả vào cache
+                await AsyncStorage.setItem(cacheKey, JSON.stringify({
+                    routeCoordinates: points,
+                    routeInfo: newRouteInfo,
+                }));
+                console.log(`Saved route to cache for tour ${tour.id}`);
+
             } else {
                 throw new Error("Routes API error: " + (json.error?.message || "No routes found"));
             }
         } catch (error) {
-            console.error("Error fetching route:", error);
+            console.error("Error fetching route or caching:", error);
             setRouteCoordinates([]);
             setRouteInfo({ distance: "N/A", duration: "N/A" });
+        } finally {
+            setLoadingMapData(false);
         }
-    };
+    }, [tour]);
 
-    // Decode Google's encoded polyline
-    const decodePolyline = (encoded: string): { latitude: number, longitude: number }[] => {
-        const points: { latitude: number, longitude: number }[] = [];
-        let index = 0, lat = 0, lng = 0;
+    useEffect(() => {
+        const getUserLocation = async () => {
+            try {
+                const { status } = await Location.requestForegroundPermissionsAsync();
+                if (status !== 'granted') {
+                    console.error('Location permission not granted');
+                    setLoadingUserLocation(false);
+                    return;
+                }
 
-        while (index < encoded.length) {
-            let b, shift = 0, result = 0;
+                const location = await Location.getCurrentPositionAsync({});
+                setUserLocation(location);
+                setLoadingUserLocation(false);
+            } catch (error) {
+                console.error('Error getting user location:', error);
+                setLoadingUserLocation(false);
+            }
+        };
+        getUserLocation();
+    }, []);
 
-            do {
-                b = encoded.charCodeAt(index++) - 63;
-                result |= (b & 0x1f) << shift;
-                shift += 5;
-            } while (b >= 0x20);
-
-            const dlat = (result & 1) ? ~(result >> 1) : (result >> 1);
-            lat += dlat;
-
-            shift = 0;
-            result = 0;
-
-            do {
-                b = encoded.charCodeAt(index++) - 63;
-                result |= (b & 0x1f) << shift;
-                shift += 5;
-            } while (b >= 0x20);
-
-            const dlng = (result & 1) ? ~(result >> 1) : (result >> 1);
-            lng += dlng;
-
-            points.push({
-                latitude: lat * 1e-5,
-                longitude: lng * 1e-5,
-            });
+    useEffect(() => {
+        if (!tour) {
+            setLoadingMapData(false);
+            return;
         }
 
-        return points;
-    };
+        const setupMapAndRoute = async () => {
+            setLoadingMapData(true);
+            if (tour.checkpoints?.length > 0) {
+                const firstCheckpoint = tour.checkpoints[0];
+                setMapRegion({
+                    latitude: firstCheckpoint.latitude,
+                    longitude: firstCheckpoint.longitude,
+                    latitudeDelta: 0.01,
+                    longitudeDelta: 0.01,
+                });
 
-    if (loading) {
+                if (tour.checkpoints.length > 1) {
+                    await fetchRoute(tour.checkpoints);
+                } else {
+                    setLoadingMapData(false);
+                }
+            } else if (userLocation) {
+                setMapRegion({
+                    latitude: userLocation.coords.latitude,
+                    longitude: userLocation.coords.longitude,
+                    latitudeDelta: 0.01,
+                    longitudeDelta: 0.01,
+                });
+                setLoadingMapData(false);
+            } else {
+                setLoadingMapData(false);
+            }
+        };
+
+        setupMapAndRoute();
+    }, [tour, userLocation, fetchRoute]);
+
+
+
+    if (loadingMapData) {
         return <ActivityIndicator size="large" color={COLORS.primary} style={{ height }} />;
     }
 
