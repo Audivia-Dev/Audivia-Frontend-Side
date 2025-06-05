@@ -134,3 +134,27 @@ export interface Review {
   userName: string
   avatarUrl: string
 }
+
+export interface TourProgress {
+  id: string;
+  tourId: string;
+  userId: string;
+  startedAt: string;
+  finishedAt?: string;
+  isCompleted: boolean;
+  currentCheckpointId: string;
+  score: number;
+  groupMode: boolean;
+  groupId?: number;
+  checkpointProgress: CheckpointProgress[];
+}
+
+export interface CheckpointProgress {
+  id: string;
+  userTourProgressId: string;
+  tourCheckpointId: string;
+  checkpointAudioId: string;
+  progressSeconds: number;
+  isCompleted: boolean;
+  lastListenedTime: string;
+}
