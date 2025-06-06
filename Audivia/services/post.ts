@@ -137,12 +137,22 @@ export const getPostComments = async (postId: string): Promise<ApiResponse<Comme
     }
 }
 
-export const deleteComment = async (id: string): Promise<ApiResponse<void>> => {
+export const deleteComment = async (id: string, userId: string): Promise<ApiResponse<void>> => {
     try {
-        const response = await apiClient.delete(`/comments/${id}`)
+        const response = await apiClient.delete(`/comments/${id}?userId=${userId}`)
         return response.data
     } catch (error: any) {
         console.error('Lỗi xóa comment:', error.response?.data || error.message)
+        throw error
+    }
+}
+
+export const updateComment = async (commentId: string, content: string, updatedBy: string): Promise<ApiResponse<Comment>> => {
+    try {
+        const response = await apiClient.put(`/comments/${commentId}`, { content, updatedBy })
+        return response.data
+    } catch (error: any) {
+        console.error('Lỗi cập nhật bình luận:', error.response?.data || error.message)
         throw error
     }
 }

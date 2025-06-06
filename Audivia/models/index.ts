@@ -4,6 +4,7 @@ export interface Tour {
   description: string;
   thumbnailUrl: string;
   avgRating: number;
+  ratingCount: number;
   duration: number;
   price: number;
   location: string;
