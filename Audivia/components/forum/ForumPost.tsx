@@ -1,11 +1,11 @@
-import { Image, Text, TouchableOpacity, View, TextInput, Modal, FlatList, ActivityIndicator } from "react-native";
+import { Image, Text, TouchableOpacity, View, TextInput, Modal, FlatList, ActivityIndicator, Alert, StyleSheet } from "react-native";
 import { Ionicons, AntDesign } from "@expo/vector-icons";
 import { COLORS } from "@/constants/theme";
 import { styles } from "@/styles/forum.styles";
 import { useUser } from "@/hooks/useUser";
 import { router } from "expo-router";
 import { useState, useEffect } from "react";
-import { reactPost, commentPost, getPostComments, getReactionByUserAndPost } from "@/services/post";
+import { reactPost, commentPost, getPostComments, getReactionByUserAndPost, updateComment, deleteComment } from "@/services/post";
 import { Post as PostModel, Comment as CommentModel } from "@/models";
 
 interface ForumPostProps {
@@ -20,11 +20,12 @@ export const ForumPost = ({ item }: ForumPostProps) => {
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
 
   const [allComments, setAllComments] = useState<CommentModel[]>([]);
-  const [latestComment, setLatestComment] = useState<CommentModel | null>(null);
   const [commentsCount, setCommentsCount] = useState(item.comments);
 
   const [isCommentsModalVisible, setIsCommentsModalVisible] = useState(false);
   const [isLoadingComments, setIsLoadingComments] = useState(false);
+  const [editingComment, setEditingComment] = useState<CommentModel | null>(null);
+  const [editedContent, setEditedContent] = useState("");
 
   // Effect to update counts if the item prop changes (e.g., due to parent re-fetch)
   useEffect(() => {
@@ -78,7 +79,6 @@ export const ForumPost = ({ item }: ForumPostProps) => {
       const newCommentResponse = await commentPost(commentText.trim(), item.id, user.id);
       if (newCommentResponse.success && newCommentResponse.response) {
         const newComment = newCommentResponse.response;
-        setLatestComment(newComment);
         setAllComments(prevComments => [newComment, ...prevComments].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
         setCommentText("");
         // Ensure commentsCount never goes below 0
@@ -111,12 +111,107 @@ export const ForumPost = ({ item }: ForumPostProps) => {
     }
   };
 
-  const renderCommentItem = ({ item: commentItem }: { item: CommentModel }) => (
-    <View style={styles.modalCommentItem}>
-      <Text style={styles.modalCommentUser}>{commentItem.userName}:</Text>
-      <Text style={styles.modalCommentText}>{commentItem.content}</Text>
-    </View>
-  );
+  const handleUpdateComment = async () => {
+    if (!editingComment || !editedContent.trim() || !user?.id) return;
+    try {
+      const originalComments = [...allComments];
+      const updatedComments = allComments.map(c =>
+        c.id === editingComment.id ? { ...c, content: editedContent.trim() } : c
+      ).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      setAllComments(updatedComments);
+      setEditingComment(null);
+      setEditedContent("");
+
+      await updateComment(editingComment.id, editedContent.trim(), user.id);
+    } catch (error) {
+      console.error("Error updating comment:", error);
+      Alert.alert("Lỗi", "Đã xảy ra lỗi khi cập nhật bình luận.");
+    }
+  };
+
+  const handleDeleteComment = (commentId: string) => {
+    if (!user?.id) return;
+    Alert.alert(
+      "Xóa bình luận",
+      "Bạn có chắc muốn xóa bình luận này không?",
+      [
+        { text: "Hủy", style: "cancel" },
+        {
+          text: "Xóa",
+          style: "destructive",
+          onPress: async () => {
+            const originalComments = [...allComments];
+            setAllComments(prev => prev.filter(c => c.id !== commentId));
+            setCommentsCount(prev => Math.max(0, prev - 1));
+            try {
+              await deleteComment(commentId, user.id);
+            } catch (error) {
+              // Revert on failure
+              setAllComments(originalComments);
+              setCommentsCount(prev => prev + 1);
+              console.error("Error deleting comment:", error);
+              Alert.alert("Lỗi", "Xóa bình luận thất bại.");
+            }
+          },
+        },
+      ]
+    );
+  };
+
+
+  const renderCommentItem = ({ item: commentItem }: { item: CommentModel }) => {
+    const isAuthor = commentItem.createdBy === user?.id;
+    const handleStartEdit = () => {
+      setEditingComment(commentItem);
+      setEditedContent(commentItem.content);
+    };
+
+    const handleCancelEdit = () => {
+      setEditingComment(null);
+      setEditedContent("");
+    };
+
+    if (editingComment?.id === commentItem.id) {
+      return (
+        <View style={localStyles.commentEditingContainer}>
+          <TextInput
+            value={editedContent}
+            onChangeText={setEditedContent}
+            style={localStyles.commentEditTextInput}
+            autoFocus
+            multiline
+          />
+          <View style={localStyles.editingControls}>
+            <TouchableOpacity onPress={handleUpdateComment} style={[localStyles.editingButton, { backgroundColor: COLORS.primary }]}>
+              <Text style={localStyles.editingButtonText}>Lưu</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleCancelEdit} style={[localStyles.editingButton, { backgroundColor: COLORS.grey }]}>
+              <Text style={localStyles.editingButtonText}>Hủy</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      );
+    }
+
+    return (
+      <View style={styles.modalCommentItem}>
+        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'flex-start' }}>
+          <Text style={styles.modalCommentUser}>{commentItem.userName}:</Text>
+          <Text style={styles.modalCommentText}>{commentItem.content}</Text>
+        </View>
+        {isAuthor && (
+          <View style={localStyles.commentActions}>
+            <TouchableOpacity onPress={handleStartEdit} style={{ marginRight: 15 }}>
+              <Ionicons name="pencil" size={18} color={COLORS.dark} />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => handleDeleteComment(commentItem.id)}>
+              <Ionicons name="trash" size={18} color={COLORS.red} />
+            </TouchableOpacity>
+          </View>
+        )}
+      </View>
+    );
+  };
 
   return (
     <View style={styles.postWrapper}>
@@ -187,16 +282,6 @@ export const ForumPost = ({ item }: ForumPostProps) => {
           <Text style={styles.postText}>{item.content}</Text>
         </View>
 
-        {/* Displaying ONLY the Latest Comment */}
-        {latestComment && (
-          <View style={styles.commentsSection}>
-            <View style={styles.commentItem}>
-              <Text style={styles.commentUser}>{user?.userName}:</Text>
-              <Text style={styles.commentText}>{latestComment.content}</Text>
-            </View>
-          </View>
-        )}
-
         {/* Comments Link - triggers modal */}
         {commentsCount > 0 && (
           <TouchableOpacity style={styles.commentsLink} onPress={handleOpenCommentsModal}>
@@ -264,4 +349,39 @@ export const ForumPost = ({ item }: ForumPostProps) => {
     </View>
 
   );
-}; 
+};
+
+const localStyles = StyleSheet.create({
+  commentActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: 10,
+  },
+  commentEditingContainer: {
+    padding: 10,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 8,
+    marginVertical: 4,
+  },
+  commentEditTextInput: {
+    backgroundColor: 'white',
+    borderRadius: 5,
+    padding: 10,
+    marginBottom: 10,
+    minHeight: 50,
+  },
+  editingControls: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+  },
+  editingButton: {
+    marginLeft: 10,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 5,
+  },
+  editingButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
+});

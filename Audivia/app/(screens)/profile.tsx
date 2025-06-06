@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { View, SafeAreaView, FlatList, Alert } from "react-native"
-import { useRouter, useLocalSearchParams } from "expo-router"
+import { useRouter, useLocalSearchParams, useFocusEffect } from "expo-router"
 import { useUser } from "@/hooks/useUser"
 import * as ImagePicker from 'expo-image-picker'
 import { updateUserInfo, getUserInfo } from "@/services/user"
@@ -36,6 +36,23 @@ export default function ProfileScreen() {
   const [status, setStatus] = useState("")
   const [friends, setFriend] = useState<User[]>([])
 
+  const fetchPosts = useCallback(async () => {
+    if (profileUser?.id) {
+      try {
+        console.log(`Fetching posts for user ID: ${profileUser.id} on profile screen focus`);
+        const response = await getPostByUserId(profileUser.id)
+        if (response.success) {
+          setPosts(response.response)
+        } else {
+          Alert.alert('Lỗi', 'Không thể tải bài viết mới nhất.');
+        }
+      } catch (error) {
+        console.error('Error fetching posts:', error)
+        Alert.alert('Lỗi', 'Không thể tải bài viết')
+      }
+    }
+  }, [profileUser?.id]);
+
   const fetchUserData = async () => {
     try {
       if (params.userId && user?.id) {
@@ -62,20 +79,17 @@ export default function ProfileScreen() {
   }, [params.userId, user]);
 
   useEffect(() => {
-    const fetchPosts = async () => {
-      if (profileUser?.id) {
-        try {
-          const response = await getPostByUserId(profileUser.id)
-          setPosts(response.response)
-        } catch (error) {
-          console.error('Error fetching posts:', error)
-          Alert.alert('Lỗi', 'Không thể tải bài viết')
-        }
-      }
-    }
+    fetchPosts();
+  }, [fetchPosts]);
 
-    fetchPosts()
-  }, [profileUser?.id])
+  useFocusEffect(
+    useCallback(() => {
+      if (profileUser?.id) {
+        fetchPosts();
+      }
+      return () => {};
+    }, [fetchPosts, profileUser?.id])
+  );
 
   const handleCreateUserFollow = async () => {
     try {
@@ -83,9 +97,9 @@ export default function ProfileScreen() {
       setStatus((prevStatus) => {
         if (prevStatus === "NotFollowing") {
           return "Following";
-        }else if (prevStatus === "NotFollowedBack") {
-          return "Friends"; 
-        }else if (prevStatus === "Following") {
+        } else if (prevStatus === "NotFollowedBack") {
+          return "Friends";
+        } else if (prevStatus === "Following") {
           return "Friends";
         } else {
           return prevStatus;
@@ -100,9 +114,9 @@ export default function ProfileScreen() {
   const handleDeleteUserFollow = async () => {
     try {
       await deleteUserFollow(user?.id as string, params.userId as string);
-      if(status === "Friends") {
+      if (status === "Friends") {
         setStatus("NotFollowedBack")
-      }else if(status === "Following") {
+      } else if (status === "Following") {
         setStatus("NotFollowing")
       }
     } catch (error) {
@@ -161,8 +175,8 @@ export default function ProfileScreen() {
     try {
       if (editingPost) {
         await updatePost(editingPost.id, postData);
-        setPosts(posts.map((post) => 
-          post.id === editingPost.id 
+        setPosts(posts.map((post) =>
+          post.id === editingPost.id
             ? { ...post, ...postData }
             : post
         ));
@@ -200,7 +214,7 @@ export default function ProfileScreen() {
       }
     } catch (error: any) {
       Alert.alert(
-        'Lỗi', 
+        'Lỗi',
         error.response?.data?.message || error.message || 'Không thể lưu bài viết. Vui lòng thử lại.'
       );
     }
@@ -225,7 +239,7 @@ export default function ProfileScreen() {
         quality: 1,
       })
       if (!result.canceled) {
-        await updateUserInfo(profileUser?.id as string, {avatarUrl: result.assets[0].uri})
+        await updateUserInfo(profileUser?.id as string, { avatarUrl: result.assets[0].uri })
         setShowAvatarModal(false)
       }
     } catch (error) {
@@ -237,7 +251,7 @@ export default function ProfileScreen() {
   const handleChangeAvatar = async () => {
     try {
       const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync()
-      
+
       if (!permissionResult.granted) {
         Alert.alert('Cần quyền truy cập', 'Vui lòng cho phép ứng dụng truy cập thư viện ảnh')
         return
@@ -250,7 +264,7 @@ export default function ProfileScreen() {
       })
 
       if (!result.canceled) {
-        await updateUserInfo(profileUser?.id as string, {avatarUrl: result.assets[0].uri})
+        await updateUserInfo(profileUser?.id as string, { avatarUrl: result.assets[0].uri })
       }
     } catch (error) {
       console.error('Error picking image:', error)
@@ -271,7 +285,7 @@ export default function ProfileScreen() {
           text: 'Xóa',
           style: 'destructive',
           onPress: async () => {
-            await updateUserInfo(profileUser?.id as string, {avatarUrl: DEFAULT_AVATAR})
+            await updateUserInfo(profileUser?.id as string, { avatarUrl: DEFAULT_AVATAR })
             setShowAvatarModal(false)
           }
         }
@@ -299,7 +313,7 @@ export default function ProfileScreen() {
           createdBy: user.id,
           type: "private",
         });
-        
+
         // Thêm người dùng hiện tại vào là member
         await createChatRoomMember({
           chatRoomId: newChatRoom.id,
@@ -307,7 +321,7 @@ export default function ProfileScreen() {
           nickname: "",
           userId: user.id
         });
-        
+
         // Thêm người dùng được chọn vào là member
         await createChatRoomMember({
           chatRoomId: newChatRoom.id,
@@ -360,7 +374,7 @@ export default function ProfileScreen() {
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <ProfileHeader onBack={goBack} />
-      
+
       <FlatList
         data={[1]}
         renderItem={() => (

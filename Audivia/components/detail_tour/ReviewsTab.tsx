@@ -15,9 +15,9 @@ interface ReviewsTabProps {
 const renderReviewItem = (review: Review) => (
   <View style={styles.reviewItem} key={review.id}>
     <View style={styles.reviewHeader}>
-      <Image 
-        source={{ uri: review?.avatarUrl || "https://randomuser.me/api/portraits/lego/1.jpg" }} 
-        style={styles.reviewerAvatar} 
+      <Image
+        source={{ uri: review?.avatarUrl || "https://randomuser.me/api/portraits/lego/1.jpg" }}
+        style={styles.reviewerAvatar}
       />
       <View style={styles.reviewerInfo}>
         <Text style={styles.reviewerName}>{review?.userName || "Anonymous"}</Text>
@@ -56,6 +56,7 @@ export const ReviewsTab = ({ tour }: ReviewsTabProps) => {
           setReviews([])
           return
         }
+        console.log(response)
         setReviews(response)
       } catch (error) {
         console.error("Error fetching reviews:", error)
@@ -65,7 +66,7 @@ export const ReviewsTab = ({ tour }: ReviewsTabProps) => {
 
     fetchReviews()
   }, [tourId])
-  
+
   return (
     <View style={styles.reviewsContainer}>
       <View style={styles.ratingOverview}>
@@ -89,7 +90,7 @@ export const ReviewsTab = ({ tour }: ReviewsTabProps) => {
             />
           ))}
         </View>
-        <Text style={styles.ratingCount}>Dựa trên {tour?.avgRating} đánh giá</Text>
+        <Text style={styles.ratingCount}>Dựa trên {tour?.ratingCount} đánh giá</Text>
       </View>
 
       <View style={styles.reviewsHeader}>
