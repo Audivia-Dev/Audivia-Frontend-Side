@@ -17,7 +17,7 @@ export const TopPlaces = ({ top3Tours, onRefresh }: TopPlacesProps) => {
 
       <View>
         {top3Tours.map((tour) => (
-          <TourItem key={tour.id} tour={tour} onSave={onRefresh} />
+          <TourItem key={tour.id} tour={tour} onSave={onRefresh}  />
         ))}
       </View>
     </View>

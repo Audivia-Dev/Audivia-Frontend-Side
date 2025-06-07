@@ -60,7 +60,8 @@ export const TourItem = ({ tour, isSavedTour = false, onDelete, onSave }: TourIt
   }
 
   return (
-    <TouchableOpacity style={styles.tourCard} onPress={() => navigateToTourDetail(tour.id)}>
+    <View style={styles.tourList}>
+      <TouchableOpacity style={styles.tourCard} onPress={() => navigateToTourDetail(tour.id)}>
       <View>
         {/* Image */}
         <Image source={{ uri: tour.thumbnailUrl || "https://maps.googleapis.com/maps/api/staticmap?center=10.8700,106.8030&zoom=14&size=600x300&maptype=roadmap&markers=color:red%7C10.8700,106.8030&key=YOUR_API_KEY" }} style={styles.tourImage} />
@@ -135,6 +136,7 @@ export const TourItem = ({ tour, isSavedTour = false, onDelete, onSave }: TourIt
         </View>
       </View >
     </TouchableOpacity >
+    </View>
   )
 }
 
@@ -154,9 +156,8 @@ export const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5,
     flexDirection: 'row',
-    paddingTop: 15,
     paddingHorizontal: 15,
-    marginBottom: 10,
+    paddingTop: 16
   },
   tourImage: {
     width: 120,
