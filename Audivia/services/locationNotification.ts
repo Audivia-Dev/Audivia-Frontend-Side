@@ -6,7 +6,7 @@ import { getDistance } from 'geolib';
 
 const LOCATION_TASK_NAME = 'background-location-task';
 const CHECKPOINTS_STORAGE_KEY = 'audivia-checkpoints-storage';
-const NOTIFICATION_DISTANCE_THRESHOLD = 5; // 5 meters for better testing
+const NOTIFICATION_DISTANCE_THRESHOLD = 10; // 10 meters for better testing
 
 // Configure notification handler for when the app is in the foreground
 Notifications.setNotificationHandler({
@@ -28,13 +28,13 @@ TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }) => {
       const { locations } = data as { locations: Location.LocationObject[] };
       const currentLocation = locations[0];
 
-      const storedCheckpoints = await AsyncStorage.getItem(CHECKPOINTS_STORAGE_KEY);
-      if (!storedCheckpoints) {
-        return; // No checkpoints to process
+      const storedData = await AsyncStorage.getItem(CHECKPOINTS_STORAGE_KEY);
+      if (!storedData) {
+        return; // No data to process
       }
 
-      let checkpoints: any[] = JSON.parse(storedCheckpoints);
-      if (!currentLocation || checkpoints.length === 0) return;
+      const { checkpoints, tourId } = JSON.parse(storedData)
+      if (!currentLocation || !checkpoints || checkpoints.length === 0 || !tourId) return;
 
       let hasMadeChanges = false;
       for (const checkpoint of checkpoints) {
@@ -51,20 +51,24 @@ TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }) => {
           console.log(`Sending notification for "${checkpoint.title}"`);
           await Notifications.scheduleNotificationAsync({
             content: {
-              title: "Checkpoint Reached!",
-              body: `You are near ${checkpoint.title}. Open the app to learn more.`,
+              title: "Tới điểm đến!",
+              body: `Bạn đang rất gần ${checkpoint.title}. Mở ứng dụng để nghe audio.`,
               sound: 'default',
+              data: {
+                tourId: tourId,
+                checkpointId: checkpoint.id
+              }
             },
             trigger: null,
           });
 
-          checkpoint.notified = true; // Mark as notified to prevent spam
+          checkpoint.notified = true;
           hasMadeChanges = true;
         }
       }
 
       if (hasMadeChanges) {
-        await AsyncStorage.setItem(CHECKPOINTS_STORAGE_KEY, JSON.stringify(checkpoints));
+        await AsyncStorage.setItem(CHECKPOINTS_STORAGE_KEY, JSON.stringify({ checkpoints, tourId }));
       }
 
     } catch (taskError) {
@@ -73,7 +77,7 @@ TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }) => {
   }
 });
 
-export const startLocationTracking = async (tripCheckpoints: any[]) => {
+export const startLocationTracking = async (tripCheckpoints: any[], tourId: string) => {
   console.log("Requesting permissions...");
   const { status: foregroundStatus } = await Location.requestForegroundPermissionsAsync();
   if (foregroundStatus !== 'granted') {
@@ -89,7 +93,11 @@ export const startLocationTracking = async (tripCheckpoints: any[]) => {
 
   // Store non-notified checkpoints for the background task
   const initialCheckpoints = tripCheckpoints.map(cp => ({ ...cp, notified: false }));
-  await AsyncStorage.setItem(CHECKPOINTS_STORAGE_KEY, JSON.stringify(initialCheckpoints));
+  const dataToStore = {
+    checkpoints: initialCheckpoints,
+    tourId: tourId,
+  };
+  await AsyncStorage.setItem(CHECKPOINTS_STORAGE_KEY, JSON.stringify(dataToStore));
 
   console.log("Starting background location updates...");
   await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {

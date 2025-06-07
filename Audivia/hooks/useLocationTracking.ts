@@ -4,8 +4,8 @@ import { startLocationTracking, stopLocationTracking } from '../services/locatio
 export const useLocationTracking = () => {
   const [isTracking, setIsTracking] = useState(false);
 
-  const startTracking = async (checkpoints) => {
-    await startLocationTracking(checkpoints);
+  const startTracking = async (checkpoints: any, tourId: any) => {
+    await startLocationTracking(checkpoints, tourId);
     setIsTracking(true);
   };
 
