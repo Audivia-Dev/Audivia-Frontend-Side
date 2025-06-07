@@ -131,36 +131,6 @@ export default function TourAudioScreen() {
         console.log("Tour đã hoàn thành, không theo dõi vị trí.");
       }
     }
-
-
-    // // --- KHỐI CODE TEST (ĐANG HOẠT ĐỘNG) ---
-    // // Dữ liệu giả để test chức năng thông báo.
-    // const mockCheckpointsForTesting = [
-    //   {
-    //     id: 'test-checkpoint-1',
-    //     title: 'Vị trí test của bạn',
-    //     latitude: 37.4273, // Gần vị trí bạn cung cấp
-    //     longitude: -122.0875983,
-    //     order: 1,
-    //     description: 'Mock description',
-    //     tourId: 'mock-tour-id'
-    //   },
-    //   {
-    //     id: 'test-checkpoint-2',
-    //     title: 'Một vị trí ở xa',
-    //     latitude: 34.0522, // Los Angeles
-    //     longitude: -118.2437,
-    //     order: 2,
-    //     description: 'Mock description 2',
-    //     tourId: 'mock-tour-id'
-    //   }
-    // ];
-    // console.log("CHẾ ĐỘ TEST: Bắt đầu theo dõi vị trí với dữ liệu giả.");
-    // // Ép kiểu `as any` vì mock data có thể không đủ hết các trường của model `Checkpoint`
-    // startTracking(mockCheckpointsForTesting as any);
-    // // --- KẾT THÚC KHỐI CODE TEST ---
-
-    // Hàm cleanup: Chạy khi bạn rời khỏi màn hình để dừng theo dõi.
     return () => {
       console.log("Rời màn hình. Dừng theo dõi vị trí.");
       stopTracking();
