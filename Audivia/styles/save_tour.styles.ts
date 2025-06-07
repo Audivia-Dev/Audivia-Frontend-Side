@@ -6,9 +6,6 @@ const styles = StyleSheet.create({
       backgroundColor: COLORS.light,
       paddingBottom: 120
     },
-    saveWrapper:{
-      paddingBottom: 100
-    },
     header: {
       flexDirection: "row",
       alignItems: "center",
@@ -100,7 +97,7 @@ const styles = StyleSheet.create({
     },
     tourList: {
       padding: 16,
-      paddingBottom: 80,
+      paddingBottom: 120,
     },
     tourCard: {
       backgroundColor: "#fff",

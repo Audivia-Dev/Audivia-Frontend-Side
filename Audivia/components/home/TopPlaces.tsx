@@ -15,7 +15,11 @@ export const TopPlaces = ({ top3Tours, onRefresh }: TopPlacesProps) => {
         <Text style={styles.sectionTitle}>Địa điểm nổi bật</Text>
       </View>
 
-      <TourItem tours={top3Tours} onSave={onRefresh}/>
+      <View>
+        {top3Tours.map((tour) => (
+          <TourItem key={tour.id} tour={tour} onSave={onRefresh} />
+        ))}
+      </View>
     </View>
   );
 }; 

@@ -5,16 +5,16 @@ import { createSaveTour } from "@/services/save_tour"
 import { FontAwesome, Ionicons } from "@expo/vector-icons"
 import { LinearGradient } from "expo-linear-gradient"
 import { router } from "expo-router"
-import { Alert, FlatList, Image, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from "react-native"
+import { Alert, Image, StyleSheet, Text, TouchableOpacity, View } from "react-native"
 
 interface TourItemProps {
-  tours: Tour[];
+  tour: Tour;
   isSavedTour?: boolean;
   onDelete?: (tourId: string) => void;
   onSave?: (tourId: string) => void;
 }
 
-export const TourItem = ({ tours, isSavedTour = false, onDelete, onSave }: TourItemProps) => {
+export const TourItem = ({ tour, isSavedTour = false, onDelete, onSave }: TourItemProps) => {
   const { user } = useUser()
 
   const navigateToTourDetail = (tourId: string) => {
@@ -59,11 +59,11 @@ export const TourItem = ({ tours, isSavedTour = false, onDelete, onSave }: TourI
     router.push(`/plan_tour?id=${tourId}`)
   }
 
-  const renderTourItem = ({ item }: { item: any }) => (
-    <TouchableOpacity style={styles.tourCard} onPress={() => navigateToTourDetail(item.id)}>
+  return (
+    <TouchableOpacity style={styles.tourCard} onPress={() => navigateToTourDetail(tour.id)}>
       <View>
         {/* Image */}
-        <Image source={{ uri: item.thumbnailUrl || "https://maps.googleapis.com/maps/api/staticmap?center=10.8700,106.8030&zoom=14&size=600x300&maptype=roadmap&markers=color:red%7C10.8700,106.8030&key=YOUR_API_KEY" }} style={styles.tourImage} />
+        <Image source={{ uri: tour.thumbnailUrl || "https://maps.googleapis.com/maps/api/staticmap?center=10.8700,106.8030&zoom=14&size=600x300&maptype=roadmap&markers=color:red%7C10.8700,106.8030&key=YOUR_API_KEY" }} style={styles.tourImage} />
       </View>
 
       {/* Tour Info */}
@@ -71,36 +71,36 @@ export const TourItem = ({ tours, isSavedTour = false, onDelete, onSave }: TourI
         {isSavedTour ? (
           <TouchableOpacity
             style={styles.favoriteButton}
-            onPress={() => handleDeleteSaveTour(item.id)}
+            onPress={() => handleDeleteSaveTour(tour.id)}
           >
             <Ionicons name="trash-outline" size={20} color={COLORS.red} />
           </TouchableOpacity>
         ) : (
-          <TouchableOpacity style={styles.favoriteButton} onPress={() => handleSaveTour(item.id)}>
+          <TouchableOpacity style={styles.favoriteButton} onPress={() => handleSaveTour(tour.id)}>
             <FontAwesome name="heart" size={20} color={COLORS.primary} />
           </TouchableOpacity>
         )}
 
         {/* Tour Name */}
-        <Text style={{ fontSize: 20, fontWeight: 'bold', marginLeft: 4, width: 200 }} numberOfLines={2}>{item.title}</Text>
+        <Text style={{ fontSize: 20, fontWeight: 'bold', marginLeft: 4, width: 200 }} numberOfLines={2}>{tour.title}</Text>
 
         {/* Location */}
         <View style={styles.locationContainer}>
           <Ionicons name="location-outline" size={16} color="#666" />
-          <Text style={styles.locationText}>{item.location}</Text>
+          <Text style={styles.locationText}>{tour.location}</Text>
         </View>
 
         {/* Tour Description */}
         <View style={styles.locationContainer}>
           <Ionicons name="information-circle-outline" size={16} color="#666" />
-          <Text style={{ fontSize: 16, color: COLORS.grey, marginLeft: 4 }} numberOfLines={2}>{item.description}</Text>
+          <Text style={{ fontSize: 16, color: COLORS.grey, marginLeft: 4 }} numberOfLines={2}>{tour.description}</Text>
         </View>
 
         {/* Rating */}
         <View style={styles.ratingContainer}>
           <FontAwesome name="star" size={16} color={COLORS.orange} />
           <Text style={styles.ratingText}>
-            {item.avgRating}
+            {tour.avgRating}
           </Text>
         </View>
 
@@ -109,13 +109,13 @@ export const TourItem = ({ tours, isSavedTour = false, onDelete, onSave }: TourI
           {/* Price */}
           <View style={styles.priceTag}>
             <Text style={{ fontSize: 16, fontWeight: 'bold', color: COLORS.primary }}>
-              {item.price === 0 ? "Miễn phí" : ` ${item.price} Đ`}
+              {tour.price === 0 ? "Miễn phí" : ` ${tour.price} Đ`}
             </Text>
           </View>
 
           {/* Book Button */}
           <TouchableOpacity
-            onPress={() => isSavedTour ? navigateToPlanDate(item.id) : navigateToTourDetail(item.id)}
+            onPress={() => isSavedTour ? navigateToPlanDate(tour.id) : navigateToTourDetail(tour.id)}
           >
             <View style={styles.bookButton}>
               <LinearGradient
@@ -135,19 +135,6 @@ export const TourItem = ({ tours, isSavedTour = false, onDelete, onSave }: TourI
         </View>
       </View >
     </TouchableOpacity >
-  )
-
-  return (
-    <SafeAreaView>
-      {/* Tour List */}
-      <FlatList
-        data={tours}
-        renderItem={renderTourItem}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.tourList}
-        showsVerticalScrollIndicator={false}
-      />
-    </SafeAreaView>
   )
 }
 

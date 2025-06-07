@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   TextInput,
   SafeAreaView,
+  FlatList
 } from "react-native"
 import { Ionicons } from "@expo/vector-icons"
 import { useLocalSearchParams, useRouter } from "expo-router"
@@ -15,12 +16,13 @@ import { NotificationButton } from "@/components/common/NotificationButton"
 import { BackButton } from "@/components/common/BackButton"
 import { ChatMessageButton } from "@/components/common/ChatMessage"
 import { TourItem } from "@/components/common/TourItem"
+import { Tour } from "@/models"
 
 
 export default function FilterTourScreen() {
   const [searchQuery, setSearchQuery] = useState("")
   const { typeId, tourTypeName } = useLocalSearchParams()
-  const [tours, setTours] = useState([])
+  const [tours, setTours] = useState<Tour[]>([])
 
   useEffect(() => {
     const fetchTours = async () => {
@@ -86,7 +88,12 @@ export default function FilterTourScreen() {
 
       {/* Tour List */}
       <View style={{ flex: 1 }}>
-        <TourItem tours={tours}/>
+        <FlatList
+          data={tours}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => <TourItem tour={item} />}
+          showsVerticalScrollIndicator={false}
+        />
       </View>
     </SafeAreaView>
   )
