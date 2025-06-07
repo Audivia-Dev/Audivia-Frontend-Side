@@ -32,6 +32,7 @@ export default function UserLocationMap({
 
       let fetchedLocation = await Location.getCurrentPositionAsync({}) // current location
       setLocation(fetchedLocation)
+      // console.log('Fetched location:', fetchedLocation)
 
       if (onLocationChange) {
         if (fetchedLocation) {

@@ -17,6 +17,7 @@ import { useUser } from "@/hooks/useUser"
 import { checkUserPurchasedTour } from "@/services/historyTransaction"
 import { getTourProgress, updateTourProgress } from "@/services/progress"
 import { Audio } from "expo-av"
+import { useLocationTracking } from "@/hooks/useLocationTracking"
 
 export default function TourAudioScreen() {
   const router = useRouter()
@@ -26,6 +27,7 @@ export default function TourAudioScreen() {
   const [characterId, setCharacterId] = useState<string | null>(null)
   const [tourProgress, setTourProgress] = useState<TourProgress>()
   const [audioDurations, setAudioDurations] = useState<{ [key: string]: number }>({})
+  const { startTracking, stopTracking } = useLocationTracking();
 
   const fetchTourDetails = useCallback(async () => {
     if (tourId) {
@@ -114,6 +116,26 @@ export default function TourAudioScreen() {
       fetchAudioDurationsFromFile();
     }
   }, [tour, characterId]); // Depends on tour (for checkpoints) and characterId
+
+  // --- Location Tracking Logic ---
+  useEffect(() => {
+
+    // --- KHỐI CODE PRODUCTION ---
+    // Để sử dụng, hãy bỏ comment khối này và comment "KHỐI CODE TEST" ở dưới.
+    // Đừng quên đổi dependency array ở cuối thành [tour, tourProgress?.isCompleted]
+    if (tour?.checkpoints && tour.checkpoints.length > 0) {
+      if (!tourProgress?.isCompleted) {
+        console.log("PRODUCTION: Bắt đầu theo dõi vị trí cho tour:", tour.title);
+        startTracking(tour.checkpoints);
+      } else {
+        console.log("Tour đã hoàn thành, không theo dõi vị trí.");
+      }
+    }
+    return () => {
+      console.log("Rời màn hình. Dừng theo dõi vị trí.");
+      stopTracking();
+    };
+  }, [tour, tourProgress?.isCompleted]);
 
   const handleBack = () => {
     router.back()

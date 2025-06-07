@@ -13,10 +13,12 @@ import { chatSignalRService } from '@/services/chat_signalR';
 import { customFonts } from '@/utils/font';
 import { useFonts } from 'expo-font';
 
+import "@/services/locationNotification";
+
 export default function RootLayout() {
   const { user } = useUser();
   const [fontsLoaded] = useFonts(customFonts);
-  
+
   useEffect(() => {
     if (fontsLoaded) {
       SplashScreen.hideAsync();
@@ -88,7 +90,7 @@ export default function RootLayout() {
   return (
     <AuthProvider>
       <SafeAreaProvider>
-        <LayoutContent/>
+        <LayoutContent />
       </SafeAreaProvider>
     </AuthProvider>
   );
