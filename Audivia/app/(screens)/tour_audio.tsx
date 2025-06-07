@@ -120,13 +120,10 @@ export default function TourAudioScreen() {
   // --- Location Tracking Logic ---
   useEffect(() => {
 
-    // --- KHỐI CODE PRODUCTION ---
-    // Để sử dụng, hãy bỏ comment khối này và comment "KHỐI CODE TEST" ở dưới.
-    // Đừng quên đổi dependency array ở cuối thành [tour, tourProgress?.isCompleted]
     if (tour?.checkpoints && tour.checkpoints.length > 0) {
       if (!tourProgress?.isCompleted) {
         console.log("PRODUCTION: Bắt đầu theo dõi vị trí cho tour:", tour.title);
-        startTracking(tour.checkpoints);
+        startTracking(tour.checkpoints, tour.id);
       } else {
         console.log("Tour đã hoàn thành, không theo dõi vị trí.");
       }

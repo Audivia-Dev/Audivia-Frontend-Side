@@ -21,15 +21,15 @@ export const getHistoryTransactionByUserId = async (userId: string) => {
 }
 
 export const checkUserPurchasedTour = async (userId: string, tourId: string) => {
-  try{
+  try {
     console.warn(userId);
     console.warn(tourId);
     console.log(userId, tourId)
     const response = await apiClient.get(`/transaction-histories/user/${userId}/tour/${tourId}`);
     console.warn(response.data);
-    
-    return response.data; 
-  } catch(error){
+
+    return response.data;
+  } catch (error) {
     console.error('Error checking user purchased tour:', error);
     throw error;
   }

@@ -4,7 +4,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider } from '@/contexts/AuthContext';
 import LayoutContent from '@/contexts/LayoutContext';
 import { useEffect } from 'react';
-import { SplashScreen, Stack } from 'expo-router';
+import { SplashScreen, Stack, useRouter } from 'expo-router';
 import { useUser } from '@/hooks/useUser';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { notificationSignalRService } from '@/services/notificationSignalR';
@@ -15,9 +15,56 @@ import { useFonts } from 'expo-font';
 
 import "@/services/locationNotification";
 
+import * as Notifications from 'expo-notifications';
+import { checkUserPurchasedTour } from '@/services/historyTransaction';
+import { getTourProgress } from '@/services/progress';
+
 export default function RootLayout() {
   const { user } = useUser();
   const [fontsLoaded] = useFonts(customFonts);
+  const router = useRouter();
+
+  useEffect(() => {
+    // Lắng nghe sự kiện khi người dùng nhấn vào thông báo
+    const notificationResponseListener = Notifications.addNotificationResponseReceivedListener(async (response) => {
+      const { tourId, checkpointId } = response.notification.request.content.data;
+      console.log('Notification tapped. Data:', { tourId, checkpointId });
+
+      if (tourId && checkpointId && user?.id) {
+        try {
+          console.log(`Fetching tour-specific data for user ${user.id} and tour ${tourId}`);
+
+          // Lấy characterId người dùng đã chọn cho tour này
+          const purchaseInfo = await checkUserPurchasedTour(user.id, tourId as string);
+          const characterIdForTour = purchaseInfo?.audioCharacterId;
+          console.log('Retrieved characterId for this tour:', characterIdForTour);
+
+          // Lấy tiến trình hiện tại của tour
+          const progressData = await getTourProgress(user.id, tourId as string);
+          const tourProgressId = progressData?.response?.id;
+          console.log('Retrieved tourProgressId:', tourProgressId);
+
+          if (characterIdForTour && tourProgressId) {
+            // Điều hướng đến màn hình phát audio với đầy đủ thông tin
+            const path = `/audio_player?checkpointId=${checkpointId}&characterId=${characterIdForTour}&tourProgressId=${tourProgressId}`;
+            console.log('Navigating to:', path);
+            router.push(path as any);
+          } else {
+            console.warn('Could not retrieve character or progress. Navigating to tour audio screen as a fallback.');
+            router.push(`/(screens)/tour_audio?tourId=${tourId}` as any);
+          }
+        } catch (error) {
+          console.error('Error handling notification tap:', error);
+          // Điều hướng dự phòng nếu có lỗi
+          router.push(`/(screens)/tour_audio?tourId=${tourId}` as any);
+        }
+      }
+    });
+
+    return () => {
+      Notifications.removeNotificationSubscription(notificationResponseListener);
+    };
+  }, [user?.id, router]);
 
   useEffect(() => {
     if (fontsLoaded) {
@@ -35,7 +82,6 @@ export default function RootLayout() {
         console.log('Token exists:', !!token);
         if (!token) return;
 
-        // Khởi tạo tuần tự để đảm bảo kết nối thành công
         console.log('Initializing notification SignalR...');
         await notificationSignalRService.start(token);
         console.log('Notification SignalR initialized successfully');
@@ -63,7 +109,6 @@ export default function RootLayout() {
       console.log('No user ID found, skipping SignalR initialization');
     }
 
-    // Lắng nghe trạng thái app để xử lý khi app chuyển background/foreground
     const subscription = AppState.addEventListener('change', async (nextAppState) => {
       if (nextAppState === 'active') {
         try {
