@@ -8,7 +8,7 @@ const LOCATION_TASK_NAME = 'background-location-task';
 const CHECKPOINTS_STORAGE_KEY = 'audivia-checkpoints-storage';
 const NOTIFICATION_TIMESTAMPS_KEY = 'audivia-notification-timestamps-storage';
 const NOTIFICATION_DISTANCE_THRESHOLD = 10; // 10 meters for better testing
-const NOTIFICATION_COOLDOWN_MS = 10 * 60 * 1000; // 10 minutes
+const NOTIFICATION_COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes
 const CHECKPOINT_NOTIFICATION_CATEGORY_ID = 'checkpoint-arrival';
 export const STOP_TOUR_ACTION_ID = 'stop-tour-action';
 
@@ -158,8 +158,8 @@ export const startLocationTracking = async (tripCheckpoints: any[], tourId: stri
 
     showsBackgroundLocationIndicator: true,
     foregroundService: {
-      notificationTitle: "Audivia is guiding your tour",
-      notificationBody: "Tracking your location for real-time alerts.",
+      notificationTitle: "Audivia đang dẫn tour!",
+      notificationBody: "Theo dõi vị trí của bạn để thông báo khi tới các điểm dừng.",
     }
   });
   console.log('High-accuracy location tracking started.');
