@@ -46,6 +46,20 @@ TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }) => {
       const { locations } = data as { locations: Location.LocationObject[] };
       const currentLocation = locations[0];
 
+      // --- Location Validation ---
+      // 1. Ignore stale location updates (older than 15 seconds)
+      const locationAge = Date.now() - currentLocation.timestamp;
+      if (locationAge > 15000) {
+        console.log(`Ignoring stale location update (age: ${Math.round(locationAge / 1000)}s)`);
+        return;
+      }
+      // 2. Ignore inaccurate location updates (accuracy > 50 meters)
+      if (currentLocation.coords.accuracy == null || currentLocation.coords.accuracy > 50) {
+        console.log(`Ignoring inaccurate location update (accuracy: ${currentLocation.coords.accuracy?.toFixed(1) ?? 'unknown'}m)`);
+        return;
+      }
+      // --- End Validation ---
+
       const storedData = await AsyncStorage.getItem(CHECKPOINTS_STORAGE_KEY);
       const timestampsData = await AsyncStorage.getItem(NOTIFICATION_TIMESTAMPS_KEY);
       const notificationTimestamps = timestampsData ? JSON.parse(timestampsData) : {};
@@ -131,18 +145,24 @@ export const startLocationTracking = async (tripCheckpoints: any[], tourId: stri
   };
   await AsyncStorage.setItem(CHECKPOINTS_STORAGE_KEY, JSON.stringify(dataToStore));
 
-  console.log("Starting background location updates...");
+  console.log("Starting background location updates with high-frequency settings...");
   await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
+    // Highest possible accuracy for GPS. This is battery-intensive.
     accuracy: Location.Accuracy.BestForNavigation,
-    timeInterval: 5000, // 5 seconds
-    distanceInterval: 2, // 2 meters
+
+    // Request updates every 1 second. This is the key for real-time feel.
+    timeInterval: 1000,
+
+    // Notify for any movement, relying on timeInterval for frequency.
+    distanceInterval: 0,
+
     showsBackgroundLocationIndicator: true,
     foregroundService: {
       notificationTitle: "Audivia is guiding your tour",
-      notificationBody: "Tracking your location for checkpoint alerts.",
+      notificationBody: "Tracking your location for real-time alerts.",
     }
   });
-  console.log('Location tracking started.');
+  console.log('High-accuracy location tracking started.');
 };
 
 export const stopLocationTracking = async () => {
