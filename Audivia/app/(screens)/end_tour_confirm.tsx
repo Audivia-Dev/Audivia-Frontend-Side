@@ -3,14 +3,19 @@ import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Dimensions } fr
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '@/constants/theme';
 import { router, useLocalSearchParams } from 'expo-router';
+import { useLocationTracking } from '@/hooks/useLocationTracking';
 
 const { width } = Dimensions.get('window');
 
 const EndTourScreen = () => {
   const { tourId } = useLocalSearchParams()
+  const { stopTracking } = useLocationTracking();
   
-  const onFinish = () => {
-    router.push(`/(screens)/finish_tour?tourId=${tourId}`)
+  const onFinish = async () => {
+    console.log("Tour ended. Stopping location tracking...");
+    await stopTracking();
+    console.log("Location tracking stopped.");
+    router.push(`/(screens)/finish_tour?tourId=${tourId}`);
   }
   return (
     <SafeAreaView style={styles.container}>
