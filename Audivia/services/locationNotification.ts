@@ -6,7 +6,25 @@ import { getDistance } from 'geolib';
 
 const LOCATION_TASK_NAME = 'background-location-task';
 const CHECKPOINTS_STORAGE_KEY = 'audivia-checkpoints-storage';
+const NOTIFICATION_TIMESTAMPS_KEY = 'audivia-notification-timestamps-storage';
 const NOTIFICATION_DISTANCE_THRESHOLD = 10; // 10 meters for better testing
+const NOTIFICATION_COOLDOWN_MS = 10 * 60 * 1000; // 10 minutes
+const CHECKPOINT_NOTIFICATION_CATEGORY_ID = 'checkpoint-arrival';
+export const STOP_TOUR_ACTION_ID = 'stop-tour-action';
+
+// This function needs to be called once when the app initializes.
+export const setupNotificationActions = () => {
+  Notifications.setNotificationCategoryAsync(CHECKPOINT_NOTIFICATION_CATEGORY_ID, [
+    {
+      identifier: STOP_TOUR_ACTION_ID,
+      buttonTitle: 'Dừng Tour',
+      options: {
+        isDestructive: true,
+        opensAppToForeground: false, // Handle action in the background
+      },
+    },
+  ]);
+};
 
 // Configure notification handler for when the app is in the foreground
 Notifications.setNotificationHandler({
@@ -29,6 +47,9 @@ TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }) => {
       const currentLocation = locations[0];
 
       const storedData = await AsyncStorage.getItem(CHECKPOINTS_STORAGE_KEY);
+      const timestampsData = await AsyncStorage.getItem(NOTIFICATION_TIMESTAMPS_KEY);
+      const notificationTimestamps = timestampsData ? JSON.parse(timestampsData) : {};
+
       if (!storedData) {
         return; // No data to process
       }
@@ -36,19 +57,18 @@ TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }) => {
       const { checkpoints, tourId } = JSON.parse(storedData)
       if (!currentLocation || !checkpoints || checkpoints.length === 0 || !tourId) return;
 
-      let hasMadeChanges = false;
+      let timestampsNeedUpdate = false;
       for (const checkpoint of checkpoints) {
-        if (checkpoint.notified) continue; // Skip if already notified
-
         const distance = getDistance(
           { latitude: currentLocation.coords.latitude, longitude: currentLocation.coords.longitude },
           { latitude: checkpoint.latitude, longitude: checkpoint.longitude }
         );
 
-        console.log(`Distance to "${checkpoint.title}": ${distance.toFixed(1)}m`);
+        const lastNotified = notificationTimestamps[checkpoint.id] || 0;
+        const hasCooledDown = Date.now() - lastNotified > NOTIFICATION_COOLDOWN_MS;
 
-        if (distance <= NOTIFICATION_DISTANCE_THRESHOLD) {
-          console.log(`Sending notification for "${checkpoint.title}"`);
+        if (distance <= NOTIFICATION_DISTANCE_THRESHOLD && hasCooledDown) {
+          console.log(`User is within radius for "${checkpoint.title}" and cooldown has passed. Notifying.`);
           await Notifications.scheduleNotificationAsync({
             content: {
               title: "Tới điểm đến!",
@@ -57,18 +77,20 @@ TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }) => {
               data: {
                 tourId: tourId,
                 checkpointId: checkpoint.id
-              }
+              },
+              categoryIdentifier: CHECKPOINT_NOTIFICATION_CATEGORY_ID,
             },
             trigger: null,
           });
 
-          checkpoint.notified = true;
-          hasMadeChanges = true;
+          // Update the timestamp for this checkpoint
+          notificationTimestamps[checkpoint.id] = Date.now();
+          timestampsNeedUpdate = true;
         }
       }
 
-      if (hasMadeChanges) {
-        await AsyncStorage.setItem(CHECKPOINTS_STORAGE_KEY, JSON.stringify({ checkpoints, tourId }));
+      if (timestampsNeedUpdate) {
+        await AsyncStorage.setItem(NOTIFICATION_TIMESTAMPS_KEY, JSON.stringify(notificationTimestamps));
       }
 
     } catch (taskError) {
@@ -78,6 +100,17 @@ TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }) => {
 });
 
 export const startLocationTracking = async (tripCheckpoints: any[], tourId: string) => {
+  // First, check if a tracking task is already running.
+  // If so, stop it before starting a new one to prevent conflicts.
+  const isTracking = await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
+  if (isTracking) {
+    console.log("A previous location tracking task was running. Stopping it before starting a new one.");
+    await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+  }
+
+  // Clear any previous notification timestamps to ensure a fresh session
+  await AsyncStorage.removeItem(NOTIFICATION_TIMESTAMPS_KEY);
+
   console.log("Requesting permissions...");
   const { status: foregroundStatus } = await Location.requestForegroundPermissionsAsync();
   if (foregroundStatus !== 'granted') {
@@ -92,9 +125,8 @@ export const startLocationTracking = async (tripCheckpoints: any[], tourId: stri
   }
 
   // Store non-notified checkpoints for the background task
-  const initialCheckpoints = tripCheckpoints.map(cp => ({ ...cp, notified: false }));
   const dataToStore = {
-    checkpoints: initialCheckpoints,
+    checkpoints: tripCheckpoints, // Store original checkpoints without `notified` flag
     tourId: tourId,
   };
   await AsyncStorage.setItem(CHECKPOINTS_STORAGE_KEY, JSON.stringify(dataToStore));
@@ -120,5 +152,6 @@ export const stopLocationTracking = async () => {
     console.log("Stopped location updates.");
   }
   await AsyncStorage.removeItem(CHECKPOINTS_STORAGE_KEY);
+  await AsyncStorage.removeItem(NOTIFICATION_TIMESTAMPS_KEY); // Also clear timestamps on stop
   console.log('Location tracking stopped and checkpoints cleared.');
 };

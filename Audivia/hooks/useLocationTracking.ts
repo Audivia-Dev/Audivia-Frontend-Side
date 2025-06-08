@@ -15,13 +15,13 @@ export const useLocationTracking = () => {
   };
 
   // Optional: Automatically stop tracking when the component unmounts
-  useEffect(() => {
-    return () => {
-      if (isTracking) {
-        stopLocationTracking();
-      }
-    };
-  }, [isTracking]);
+  // useEffect(() => {
+  //   return () => {
+  //     if (isTracking) {
+  //       stopLocationTracking();
+  //     }
+  //   };
+  // }, [isTracking]);
 
   return { isTracking, startTracking, stopTracking };
 }; 

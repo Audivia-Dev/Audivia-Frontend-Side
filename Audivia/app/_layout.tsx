@@ -18,6 +18,7 @@ import "@/services/locationNotification";
 import * as Notifications from 'expo-notifications';
 import { checkUserPurchasedTour } from '@/services/historyTransaction';
 import { getTourProgress } from '@/services/progress';
+import { setupNotificationActions, STOP_TOUR_ACTION_ID, stopLocationTracking } from '@/services/locationNotification';
 
 export default function RootLayout() {
   const { user } = useUser();
@@ -25,8 +26,20 @@ export default function RootLayout() {
   const router = useRouter();
 
   useEffect(() => {
+    // Configure notification actions on app startup
+    setupNotificationActions();
+  }, []);
+
+  useEffect(() => {
     // Lắng nghe sự kiện khi người dùng nhấn vào thông báo
     const notificationResponseListener = Notifications.addNotificationResponseReceivedListener(async (response) => {
+      // Handle the custom "Stop Tour" action
+      if (response.actionIdentifier === STOP_TOUR_ACTION_ID) {
+        console.log('User pressed the "Stop Tour" button in the notification.');
+        await stopLocationTracking();
+        return; // Action handled, no need to navigate.
+      }
+
       const { tourId, checkpointId } = response.notification.request.content.data;
       console.log('Notification tapped. Data:', { tourId, checkpointId });
 
