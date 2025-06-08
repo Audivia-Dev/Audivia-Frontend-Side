@@ -59,11 +59,12 @@ export default function Login() {
   };
 
   const handleGoogleLogin = async () => {
-    GoogleSignin.configure({
-      // iosClientId: iosClientId,
-       webClientId: webClientId,
-     })
     try {
+      GoogleSignin.configure({
+        // iosClientId: iosClientId,
+         webClientId: webClientId,
+       })
+      await GoogleSignin.signOut(); //reset de chon tai khoan google
       console.log("Starting Google Login...");
       await GoogleSignin.hasPlayServices();
       const response = await GoogleSignin.signIn();
@@ -79,7 +80,7 @@ export default function Login() {
          
         if (backendResponse.accessToken && backendResponse.refreshToken) {
          await authLogin(backendResponse.accessToken, backendResponse.refreshToken);
-         alert('Đăng nhập Google thành công');
+         //alert('Đăng nhập Google thành công');
         } else {
          alert("Google login successful but backend failed to issue app tokens.");
         }

@@ -1,3 +1,4 @@
+import 'dotenv/config';
 export default {
   "expo": {
     "name": "Audivia",
@@ -75,9 +76,6 @@ export default {
       "expo-font",
       [
         "@react-native-google-signin/google-signin",
-        {
-          "iosUrlScheme": "com.googleusercontent.apps.546579320818-5s43e3hdp1hr9iekdjaaof1o2524rf03"
-        }
       ]
     ],
     "experiments": {
