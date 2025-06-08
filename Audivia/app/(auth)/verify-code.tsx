@@ -3,6 +3,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { COLORS } from '@/constants/theme';
 import { useState } from 'react';
 import { verifyResetCode } from '@/services/user';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function VerifyCode() {
   const [code, setCode] = useState('');
@@ -56,9 +57,18 @@ export default function VerifyCode() {
           maxLength={6}
         />
 
-        <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-          <Text style={styles.buttonText}>Xác Nhận</Text>
-        </TouchableOpacity>
+      <TouchableOpacity onPress={handleSubmit}  activeOpacity={0.7}>
+        <LinearGradient
+          colors={[COLORS.primary, COLORS.purpleGradient]}  // Thay bằng màu gradient bạn muốn
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.button}  // Style cho nút
+        >
+         <Text style={[styles.buttonText, { backgroundColor: 'transparent' }]}>
+          Xác nhận
+          </Text>
+        </LinearGradient>
+      </TouchableOpacity>
 
         <TouchableOpacity 
           style={styles.backButton} 

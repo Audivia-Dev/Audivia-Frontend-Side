@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import { COLORS } from '@/constants/theme';
 import { useState } from 'react';
 import { forgotPassword } from '@/services/user';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
@@ -46,9 +47,23 @@ export default function ForgotPassword() {
           autoCapitalize="none"
         />
 
-        <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-          <Text style={styles.buttonText}>Gửi Yêu Cầu</Text>
-        </TouchableOpacity>
+      <TouchableOpacity 
+        onPress={handleSubmit}  // Thay bằng hàm xử lý đăng nhập của bạn
+        activeOpacity={0.7}    // Độ mờ khi nhấn (tùy chọn)
+      >
+        <LinearGradient
+          colors={[COLORS.primary, COLORS.purpleGradient]}  // Thay bằng màu gradient bạn muốn
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.button}  // Style cho nút
+        >
+         <Text style={[styles.buttonText, { backgroundColor: 'transparent' }]}>
+          Gửi yêu cầu
+          </Text>
+        </LinearGradient>
+      </TouchableOpacity>
+    
+
 
         <TouchableOpacity 
           style={styles.backButton} 
@@ -92,17 +107,37 @@ const styles = StyleSheet.create({
     padding: 15,
     fontSize: 16,
   },
+
   button: {
-    backgroundColor: COLORS.primary,
-    padding: 15,
+    backgroundColor: '#fff', // nền có thể là trắng để tương phản với gradient chữ
+    paddingVertical: 12,
+    paddingHorizontal: 24,
     borderRadius: 8,
     alignItems: 'center',
+    elevation: 2,
   },
   buttonText: {
-    color: '#fff',
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: 'bold',
+    color: COLORS.white
   },
+  brandTitle: {
+    fontSize: 36,
+    fontWeight: 'bold',
+    marginTop: 10,
+    color: COLORS.dark,
+},
+  // button: {
+  //   backgroundColor: COLORS.primary,
+  //   padding: 15,
+  //   borderRadius: 8,
+  //   alignItems: 'center',
+  // },
+  // buttonText: {
+  //   color: '#fff',
+  //   fontSize: 16,
+  //   fontWeight: '600',
+  // },
   backButton: {
     padding: 15,
     alignItems: 'center',
