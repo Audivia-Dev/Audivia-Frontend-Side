@@ -1,3 +1,4 @@
+import 'dotenv/config';
 export default {
   "expo": {
     "name": "Audivia",
@@ -71,7 +72,11 @@ export default {
           "backgroundColor": "#ffffff"
         }
       ],
-      "expo-font"
+
+      "expo-font",
+      [
+        "@react-native-google-signin/google-signin",
+      ]
     ],
     "experiments": {
       "typedRoutes": true
@@ -85,8 +90,8 @@ export default {
         "origin": false
       },
       "eas": {
-        "projectId": "f2a89538-adbf-47fb-b851-3a138194381b"
-      }
+        "projectId": "119bd31d-27c5-4337-a191-0be7201c427e"
+      },
     }
   }
 }
