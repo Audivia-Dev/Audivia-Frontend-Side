@@ -7,7 +7,7 @@ import { getDistance } from 'geolib';
 const LOCATION_TASK_NAME = 'background-location-task';
 const CHECKPOINTS_STORAGE_KEY = 'audivia-checkpoints-storage';
 const NOTIFICATION_TIMESTAMPS_KEY = 'audivia-notification-timestamps-storage';
-const NOTIFICATION_DISTANCE_THRESHOLD = 10; // 10 meters for better testing
+const NOTIFICATION_DISTANCE_THRESHOLD = 5; // 5 meters for better testing
 const NOTIFICATION_COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes
 const CHECKPOINT_NOTIFICATION_CATEGORY_ID = 'checkpoint-arrival';
 export const STOP_TOUR_ACTION_ID = 'stop-tour-action';
@@ -47,14 +47,14 @@ TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }) => {
       const currentLocation = locations[0];
 
       // --- Location Validation ---
-      // 1. Ignore stale location updates (older than 15 seconds)
+      // 1. Ignore stale location updates (older than 5 seconds)
       const locationAge = Date.now() - currentLocation.timestamp;
-      if (locationAge > 15000) {
+      if (locationAge > 5000) {
         console.log(`Ignoring stale location update (age: ${Math.round(locationAge / 1000)}s)`);
         return;
       }
-      // 2. Ignore inaccurate location updates (accuracy > 50 meters)
-      if (currentLocation.coords.accuracy == null || currentLocation.coords.accuracy > 50) {
+      // 2. Ignore inaccurate location updates (accuracy > 25 meters)
+      if (currentLocation.coords.accuracy == null || currentLocation.coords.accuracy > 25) {
         console.log(`Ignoring inaccurate location update (accuracy: ${currentLocation.coords.accuracy?.toFixed(1) ?? 'unknown'}m)`);
         return;
       }
@@ -86,7 +86,7 @@ TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }) => {
           await Notifications.scheduleNotificationAsync({
             content: {
               title: "Tới điểm đến!",
-              body: `Bạn đang rất gần ${checkpoint.title}. Mở ứng dụng để nghe audio.`,
+              body: `Bạn đang rất gần ${checkpoint.title}. Mở ứng dụng để nghe audio cùng Audi nhé.`,
               sound: 'default',
               data: {
                 tourId: tourId,
@@ -155,6 +155,11 @@ export const startLocationTracking = async (tripCheckpoints: any[], tourId: stri
 
     // Notify for any movement, relying on timeInterval for frequency.
     distanceInterval: 0,
+
+    // --- Enhancements for Real-Time Tracking ---
+    activityType: Location.ActivityType.Fitness, // Helps iOS prioritize updates for walking.
+    pausesUpdatesAutomatically: false, // Prevents iOS from pausing updates to save power.
+    // -----------------------------------------
 
     showsBackgroundLocationIndicator: true,
     foregroundService: {

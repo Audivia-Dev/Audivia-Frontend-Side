@@ -120,13 +120,15 @@ export default function TourAudioScreen() {
 
   // --- Location Tracking Logic ---
   useEffect(() => {
-    // Always start tracking when the user is on this screen, regardless of completion status.
-    // The background task will now notify every time the user approaches a checkpoint.
+    // Always start tracking when the user is on this screen.
+    // The background task will notify every time the user approaches a checkpoint.
     if (tour?.checkpoints && tour.checkpoints.length > 0) {
-      console.log("PRODUCTION: Luôn bắt đầu theo dõi vị trí cho tour:", tour.title);
+      console.log("Starting location tracking for tour:", tour.title);
       startTracking(tour.checkpoints, tour.id);
     }
-  }, [tour]);
+    // No cleanup function is returned, so tracking continues when the screen is left.
+    // It will only be stopped explicitly by the user or when the app is killed.
+  }, [tour, startTracking]);
 
   const handleBack = () => {
     router.back()
