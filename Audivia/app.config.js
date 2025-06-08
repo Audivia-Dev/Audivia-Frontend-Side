@@ -71,7 +71,14 @@ export default {
           "backgroundColor": "#ffffff"
         }
       ],
-      "expo-font"
+
+      "expo-font",
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.546579320818-5s43e3hdp1hr9iekdjaaof1o2524rf03"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
@@ -85,8 +92,8 @@ export default {
         "origin": false
       },
       "eas": {
-        "projectId": "f2a89538-adbf-47fb-b851-3a138194381b"
-      }
+        "projectId": "119bd31d-27c5-4337-a191-0be7201c427e"
+      },
     }
   }
 }

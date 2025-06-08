@@ -55,6 +55,7 @@ export const updateUserInfo = async (id: string, data: any) => {
 };
 
 export const loginWithGoogle = async (googleToken: string) => {
+
   try {
     const response = await apiClient.post('/auth/google-login', {
       token: googleToken,

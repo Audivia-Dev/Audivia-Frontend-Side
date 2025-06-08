@@ -11,7 +11,7 @@ import AuthForm from "@/components/common/AuthForm";
 import * as WebBrowser from "expo-web-browser"
 import * as Google from "expo-auth-session/providers/google"
 import { useEffect } from "react";
-
+import {GoogleSignin, isSuccessResponse, isErrorWithCode, statusCodes } from "@react-native-google-signin/google-signin"
 export default function Login() {
 
   const webClientId  = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID
@@ -23,10 +23,17 @@ export default function Login() {
   const { login: authLogin } = useAuth();
 
   const [request, response, promptAsync] = Google.useAuthRequest({
-    webClientId,
-    iosClientId,
-    androidClientId
+   // webClientId,
+   // iosClientId,
+    androidClientId,
   });
+
+  // useEffect(() => {
+  //   GoogleSignin.configure({
+  //    // iosClientId: iosClientId,
+  //     webClientId: webClientId,
+  //   })
+  // }, [])
 
   useEffect(() => {
     if (response?.type === "success") {
@@ -52,43 +59,31 @@ export default function Login() {
   };
 
   const handleGoogleLogin = async () => {
+    GoogleSignin.configure({
+      // iosClientId: iosClientId,
+       webClientId: webClientId,
+     })
     try {
       console.log("Starting Google Login...");
-      const result = await promptAsync();
-      console.log("Google login result:", result);
-      if (result.type === "success") {
-        const { authentication } = result;
-        const token = authentication?.accessToken;
-        console.log("Google login success", token);
+      await GoogleSignin.hasPlayServices();
+      const response = await GoogleSignin.signIn();
+      
+      console.log("Google login result:", response);
+      if (isSuccessResponse(response)) {
+        const { idToken, user } = response.data;
+        const {name, email, photo} = user
         
-        if (!authentication?.accessToken) {
-          throw new Error("No access token received from Google");
-        }
-        
-        const backendResponse = await loginWithGoogle(authentication.accessToken);
+        const token = idToken;
+        const backendResponse = await loginWithGoogle(token as string);
+        console.log(backendResponse);
+         
         if (backendResponse.accessToken && backendResponse.refreshToken) {
          await authLogin(backendResponse.accessToken, backendResponse.refreshToken);
          alert('Đăng nhập Google thành công');
-         // Điều hướng user sau khi đăng nhập thành công
-          // router.replace('/'); // Ví dụ: điều hướng về trang chính
         } else {
          alert("Google login successful but backend failed to issue app tokens.");
         }
-
-      } else if (result?.type === 'cancel') {
-        console.log("Google login cancelled");
-        // alert("Đăng nhập Google đã bị hủy");
-      } else if (result?.type === 'dismiss') {
-         console.log("Google login dismissed");
-         // alert("Đăng nhập Google đã bị đóng");
-      } else {
-         console.log("Google login failed with type:", result?.type);
-         alert("Đăng nhập Google thất bại");
       }
-
-      
-
-
 
     } catch (error) {
       console.error("Google login error:", error);
