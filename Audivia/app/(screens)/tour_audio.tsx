@@ -5,6 +5,7 @@ import {
   ScrollView,
   TouchableOpacity,
   SafeAreaView,
+  Alert,
 } from "react-native"
 import { Ionicons } from "@expo/vector-icons"
 import { COLORS } from "@/constants/theme"
@@ -119,20 +120,15 @@ export default function TourAudioScreen() {
 
   // --- Location Tracking Logic ---
   useEffect(() => {
-
+    // Always start tracking when the user is on this screen.
+    // The background task will notify every time the user approaches a checkpoint.
     if (tour?.checkpoints && tour.checkpoints.length > 0) {
-      if (!tourProgress?.isCompleted) {
-        console.log("PRODUCTION: Bắt đầu theo dõi vị trí cho tour:", tour.title);
-        startTracking(tour.checkpoints, tour.id);
-      } else {
-        console.log("Tour đã hoàn thành, không theo dõi vị trí.");
-      }
+      console.log("Starting location tracking for tour:", tour.title);
+      startTracking(tour.checkpoints, tour.id);
     }
-    return () => {
-      console.log("Rời màn hình. Dừng theo dõi vị trí.");
-      stopTracking();
-    };
-  }, [tour, tourProgress?.isCompleted]);
+    // No cleanup function is returned, so tracking continues when the screen is left.
+    // It will only be stopped explicitly by the user or when the app is killed.
+  }, [tour, startTracking]);
 
   const handleBack = () => {
     router.back()
