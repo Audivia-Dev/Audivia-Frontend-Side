@@ -64,23 +64,19 @@ export default function Index() {
 
   return (
     <View style={styles.container}>
-      
-      
-
       <ScrollView showsVerticalScrollIndicator={false}>
-       
-      <View style={styles.overlayHeader}>
-         <Header locationAddress={currentLocationAddress} />
-      </View>
+        <View style={styles.overlayHeader}>
+          <Header locationAddress={currentLocationAddress} />
+        </View>
         <View style={styles.mainImageContainer}>
           <Image
-            source={{uri: 'https://res.cloudinary.com/dgzn2ix8w/image/upload/v1748528092/Audivia/v44p6ismjiq7mfs2bwc1.png'}}
+            source={{ uri: 'https://res.cloudinary.com/dgzn2ix8w/image/upload/v1748528092/Audivia/v44p6ismjiq7mfs2bwc1.png' }}
             style={styles.mainImage}
             resizeMode="cover"
           />
         </View>
-         {/* Search Bar */}
-         <View style={styles.searchContainer}>
+        {/* Search Bar */}
+        <View style={styles.searchContainer}>
           <Ionicons name="search" size={20} color={COLORS.primary} style={styles.searchIcon} />
           <TextInput
             style={styles.searchInput}

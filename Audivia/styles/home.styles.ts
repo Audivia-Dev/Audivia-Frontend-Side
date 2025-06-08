@@ -189,20 +189,31 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     fontSize: 14,
   },
-  bookButton: {
-    backgroundColor: COLORS.primary,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 6,
-  },
   bookButtonText: {
     color: COLORS.light,
     fontWeight: "600",
-    fontSize: 16,
+  },
+  tourList: {
+    padding: 16,
+    paddingTop: 8,
   },
   priceText: {
     fontSize: 16,
-    fontWeight: "700",
+    fontWeight: "bold",
+    color: COLORS.primary,
+  },
+  priceAndBookContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 10,
+  },
+  bookButton: {
+    width: 100,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
   },
   topPlacesSection: {
     marginTop: 20,
