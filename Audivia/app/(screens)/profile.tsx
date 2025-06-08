@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react"
-import { View, SafeAreaView, FlatList, Alert } from "react-native"
+import { View, SafeAreaView, FlatList, Alert, Modal, Text, TouchableOpacity, StyleSheet } from "react-native"
 import { useRouter, useLocalSearchParams, useFocusEffect } from "expo-router"
 import { useUser } from "@/hooks/useUser"
 import * as ImagePicker from 'expo-image-picker'
@@ -17,6 +17,48 @@ import { ProfileFriends } from "@/components/profile/ProfileFriends"
 import { ProfilePosts } from "@/components/profile/ProfilePosts"
 import { createChatRoom, createChatRoomMember, getPrivateRoom } from "@/services/chat"
 import { createNotification } from "@/services/notification"
+import { Ionicons } from "@expo/vector-icons"
+import { COLORS } from "@/constants/theme"
+
+const modalStyles = StyleSheet.create({
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 20,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: COLORS.dark,
+  },
+  modalActions: {
+    gap: 15,
+  },
+  modalAction: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 15,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 10,
+  },
+  modalActionText: {
+    marginLeft: 10,
+    fontSize: 16,
+    color: COLORS.dark,
+  },
+})
 
 export default function ProfileScreen() {
   const [activeTab, setActiveTab] = useState("posts")
@@ -239,7 +281,7 @@ export default function ProfileScreen() {
         quality: 1,
       })
       if (!result.canceled) {
-        await updateUserInfo(profileUser?.id as string, { avatarUrl: result.assets[0].uri })
+        await handleAvatarChange(result.assets[0].uri)
         setShowAvatarModal(false)
       }
     } catch (error) {
@@ -251,20 +293,19 @@ export default function ProfileScreen() {
   const handleChangeAvatar = async () => {
     try {
       const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync()
-
       if (!permissionResult.granted) {
         Alert.alert('Cần quyền truy cập', 'Vui lòng cho phép ứng dụng truy cập thư viện ảnh')
         return
       }
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ['images', 'videos'],
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
         aspect: [1, 1],
         quality: 1,
       })
-
       if (!result.canceled) {
-        await updateUserInfo(profileUser?.id as string, { avatarUrl: result.assets[0].uri })
+        await handleAvatarChange(result.assets[0].uri)
+        setShowAvatarModal(false)
       }
     } catch (error) {
       console.error('Error picking image:', error)
@@ -272,7 +313,7 @@ export default function ProfileScreen() {
     }
   }
 
-  const handleDeleteAvatar = async () => {
+  const handleDeleteAvatar = () => {
     Alert.alert(
       'Xác nhận',
       'Bạn có chắc chắn muốn xóa ảnh đại diện?',
@@ -285,13 +326,31 @@ export default function ProfileScreen() {
           text: 'Xóa',
           style: 'destructive',
           onPress: async () => {
-            await updateUserInfo(profileUser?.id as string, { avatarUrl: DEFAULT_AVATAR })
+            await handleAvatarChange(DEFAULT_AVATAR)
             setShowAvatarModal(false)
           }
         }
       ]
     )
   }
+
+  const handleAvatarChange = async (newAvatarUrl: string) => {
+    if (!profileUser?.id) {
+      Alert.alert('Lỗi', 'Không tìm thấy thông tin người dùng');
+      return;
+    }
+
+    try {
+      await updateUserInfo(profileUser.id, { avatarUrl: newAvatarUrl });
+      setProfileUser({ ...profileUser, avatarUrl: newAvatarUrl });
+    } catch (error: any) {
+      console.error('Error updating avatar:', error);
+      Alert.alert(
+        'Lỗi',
+        error.response?.data?.message || error.message || 'Không thể cập nhật ảnh đại diện. Vui lòng thử lại.'
+      );
+    }
+  };
 
   const goBack = () => {
     router.back()
@@ -414,6 +473,41 @@ export default function ProfileScreen() {
         onSave={handleSavePost}
         editingPost={editingPost}
       />
+
+      <Modal
+        visible={showAvatarModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowAvatarModal(false)}
+      >
+        <View style={modalStyles.modalOverlay}>
+          <View style={modalStyles.modalContent}>
+            <View style={modalStyles.modalHeader}>
+              <Text style={modalStyles.modalTitle}>Thay đổi ảnh đại diện</Text>
+              <TouchableOpacity onPress={() => setShowAvatarModal(false)}>
+                <Ionicons name="close" size={24} color={COLORS.dark} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={modalStyles.modalActions}>
+              <TouchableOpacity style={modalStyles.modalAction} onPress={handleCameraAvatar}>
+                <Ionicons name="camera-outline" size={24} color={COLORS.primary} />
+                <Text style={modalStyles.modalActionText}>Chụp ảnh</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={modalStyles.modalAction} onPress={handleChangeAvatar}>
+                <Ionicons name="images-outline" size={24} color={COLORS.primary} />
+                <Text style={modalStyles.modalActionText}>Chọn ảnh</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={modalStyles.modalAction} onPress={handleDeleteAvatar}>
+                <Ionicons name="trash-outline" size={24} color={COLORS.red} />
+                <Text style={[modalStyles.modalActionText, { color: COLORS.red }]}>Xóa ảnh</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   )
 }
