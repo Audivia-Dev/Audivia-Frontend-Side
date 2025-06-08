@@ -22,6 +22,7 @@ class SignalRService {
                 .withAutomaticReconnect()
                 .build();
 
+         //   this.connection.serverTimeoutInMilliseconds = 60 * 1000; //sau 60s khong nhan dc message se reconnect
             await this.connection.start();
             console.log('SignalR Connected');
             this.notifyConnectionState(this.connection.state);

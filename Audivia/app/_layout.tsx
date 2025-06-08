@@ -112,12 +112,12 @@ export default function RootLayout() {
         console.log('All SignalR services initialized successfully');
       } catch (error) {
         console.error('Error initializing SignalR in root layout:', error);
-        // Thử kết nối lại sau 5 giây nếu thất bại
+        // Thử kết nối lại sau 2 giây nếu thất bại
         setTimeout(() => {
           if (user?.id) {
             initializeSignalR();
           }
-        }, 3000);
+        }, 2000);
       }
     };
 
@@ -138,6 +138,11 @@ export default function RootLayout() {
               console.log('Reconnecting notification SignalR...');
               await notificationSignalRService.start(token);
               console.log('Notification SignalR reconnected successfully');
+            }
+            if (!chatSignalRService.isConnected()) {
+              console.log('Reconnecting chat SignalR...');
+              await chatSignalRService.startConnection(token);
+              console.log('Chat SignalR reconnected successfully');
             }
           }
         } catch (error) {
