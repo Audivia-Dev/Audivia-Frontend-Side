@@ -189,7 +189,7 @@ export default function MessagingInboxScreen() {
   );
 
   const filteredFriends = friends.filter((friend) =>
-    friend.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (friend.fullName?.toLowerCase() ?? '').includes(searchQuery.toLowerCase()) ||
     friend.userName.toLowerCase().includes(searchQuery.toLowerCase())
   );
  
