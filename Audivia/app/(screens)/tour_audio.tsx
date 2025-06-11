@@ -19,6 +19,7 @@ import { checkUserPurchasedTour } from "@/services/historyTransaction"
 import { getTourProgress, updateTourProgress } from "@/services/progress"
 import { Audio } from "expo-av"
 import { useLocationTracking } from "@/hooks/useLocationTracking"
+import { LinearGradient } from "expo-linear-gradient"
 
 export default function TourAudioScreen() {
   const router = useRouter()
@@ -309,9 +310,17 @@ export default function TourAudioScreen() {
               )
             })}
         </View>
-        <TouchableOpacity style={{ marginHorizontal: 20, marginVertical: 15 }} onPress={handleEndtour}>
-          <View style={{
-            backgroundColor: COLORS.primary,
+
+
+      <TouchableOpacity
+        style={{ marginHorizontal: 20, marginVertical: 15 }}
+        onPress={handleEndtour}
+      >
+        <LinearGradient
+          colors={[COLORS.primary, COLORS.purpleGradient]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={{
             paddingVertical: 15,
             paddingHorizontal: 20,
             borderRadius: 12,
@@ -320,14 +329,20 @@ export default function TourAudioScreen() {
             shadowOpacity: 0.25,
             shadowRadius: 3.84,
             elevation: 5,
-          }}>
-            <Text style={{
+          }}
+        >
+          <Text
+            style={{
               color: "white",
               fontSize: 16,
               fontWeight: "600",
-            }}>Kết thúc</Text>
-          </View>
-        </TouchableOpacity>
+            }}
+          >
+            Kết thúc
+          </Text>
+        </LinearGradient>
+      </TouchableOpacity>
+
         {/* Bottom spacing for fixed details panel */}
         <View style={{ height: 220 }} />
       </ScrollView>

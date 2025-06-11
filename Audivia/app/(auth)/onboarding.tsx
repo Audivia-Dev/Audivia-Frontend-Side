@@ -19,22 +19,22 @@ interface Slide {
 const slides: Slide[] = [
   {
     id: '1',
-    title: 'Explore the Joy of Traveling',
-    description: 'Everything you can imagine, is here.',
+    title: 'Khám phá niềm vui của những chuyến đi',
+    description: 'Mọi điều bạn tưởng tượng đều có ở đây.',
     image: 'https://res.cloudinary.com/dgzn2ix8w/image/upload/v1748363861/Audivia/luro9pjc61fbnuots5kn.png',
     layout: 'original',
   },
   {
     id: '2',
-    title: 'Emotional Voice Tours',
-    description: 'Experience the stories of places like never before with our unique emotional voice tours. Listen to captivating narratives that bring history, culture, and local life to vivid reality.',
+    title: 'Hành trình bằng giọng kể cảm xúc',
+    description: 'Khám phá những câu chuyện của các địa danh theo cách chưa từng có với hành trình giọng kể cảm xúc độc đáo của chúng tôi. Hãy lắng nghe những lời kể đầy cuốn hút, đưa lịch sử, văn hóa và cuộc sống địa phương trở nên sống động.',
     image: 'https://res.cloudinary.com/dgzn2ix8w/image/upload/v1748369792/Audivia/zn76qojhgounxregxxhq.png',
     layout: 'new',
   },
   {
     id: '3',
-    title: 'Personalized Experience',
-    description: 'Tailor your travel experience to your specific interests and pace. Whether you love history, nature, food, or art, we provide curated content and flexible itineraries just for you.',
+    title: 'Trải nghiệm được cá nhân hóa',
+    description: 'Cá nhân hóa hành trình du lịch theo sở thích và nhịp độ của riêng bạn. Dù bạn yêu thích lịch sử, thiên nhiên, ẩm thực hay nghệ thuật, chúng tôi đều mang đến nội dung chọn lọc và lịch trình linh hoạt dành riêng cho bạn.',
     image: 'https://res.cloudinary.com/dgzn2ix8w/image/upload/v1748418065/Audivia/qmobzvxg3tbobfihzcqr.png',
     layout: 'new',
   },
@@ -169,7 +169,7 @@ export default function OnboardingScreen() {
         >
           <TouchableOpacity onPress={handleNext} style={{ width: '100%', alignItems: 'center' }}>
             <Text style={styles.buttonText}>
-              {currentSlideIndex === slides.length - 1 ? 'Get Started' : 'Next'}
+              {currentSlideIndex === slides.length - 1 ? 'Bắt đầu' : 'Tiếp theo'}
             </Text>
           </TouchableOpacity>
         </LinearGradient>

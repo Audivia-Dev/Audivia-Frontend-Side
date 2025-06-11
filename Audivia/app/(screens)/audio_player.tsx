@@ -10,12 +10,14 @@ import { Audio, AVPlaybackStatus } from "expo-av"
 import { getNextAudioByCheckpointId, getPrevAudioByCheckpointId, getTourAudioByCheckpointId } from "@/services/tour"
 import { createCheckpointProgress, getByTourProgressAndCheckpoint, updateCheckpointProgress } from "@/services/progress"
 import { useUser } from "@/hooks/useUser"
+import AudioVideo from "../../components/audio_player/AudioImage"
 
 interface AudioData {
   id: string;
   fileUrl: string;
   image: string;
   transcript: string;
+  videoUrl: string;
 }
 
 export default function AudioPlayerScreen() {
@@ -228,7 +230,7 @@ export default function AudioPlayerScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <AudioHeader onBackPress={handleBack} checkpointId={checkpointId as string} />
-      <AudioImage imageUrl={audioData.image} />
+      <AudioVideo videoUrl={audioData.videoUrl} />
       <PlayerControls
         isPlaying={isPlaying}
         onPlayPause={togglePlayPause}
