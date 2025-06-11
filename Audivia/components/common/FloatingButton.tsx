@@ -1,14 +1,22 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useEffect } from "react";
 import { Animated, PanResponder, StyleSheet, TouchableOpacity, Dimensions, Image } from "react-native";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
+const BUTTON_SIZE = 60;
+
 const FloatingButton = ({ onPress }: { onPress?: () => void }) => {
   const pan = useRef(new Animated.ValueXY({ x: SCREEN_WIDTH - 80, y: SCREEN_HEIGHT - 180 })).current;
-  const [currentPosition, setCurrentPosition] = useState({ x: SCREEN_WIDTH - 80, y: SCREEN_HEIGHT - 180 });
+  const position = useRef({ x: SCREEN_WIDTH - 80, y: SCREEN_HEIGHT - 180 });
 
-  // Add listener to track current position
-  pan.addListener((value) => setCurrentPosition(value));
+  useEffect(() => {
+    const listenerId = pan.addListener((value) => {
+      position.current = value;
+    });
+    return () => {
+      pan.removeListener(listenerId);
+    };
+  }, []);
 
   const panResponder = useRef(
     PanResponder.create({
@@ -16,9 +24,10 @@ const FloatingButton = ({ onPress }: { onPress?: () => void }) => {
       onMoveShouldSetPanResponder: () => true,
       onPanResponderGrant: () => {
         pan.setOffset({
-          x: currentPosition.x,
-          y: currentPosition.y
+          x: position.current.x,
+          y: position.current.y
         });
+        pan.setValue({ x: 0, y: 0 });
       },
       onPanResponderMove: Animated.event(
         [null, { dx: pan.x, dy: pan.y }],
@@ -26,28 +35,17 @@ const FloatingButton = ({ onPress }: { onPress?: () => void }) => {
       ),
       onPanResponderRelease: () => {
         pan.flattenOffset();
-        // Snap to edges
-        const x = currentPosition.x;
-        const y = currentPosition.y;
-        
-        let finalX = x;
-        let finalY = y;
+        const { x, y } = position.current;
 
-        // Snap to left or right edge
-        if (x < SCREEN_WIDTH / 2) {
-          finalX = 20;
-        } else {
-          finalX = SCREEN_WIDTH - 80;
-        }
-
-        // Keep the current Y position but ensure it's within bounds
-        finalY = Math.max(20, Math.min(finalY, SCREEN_HEIGHT - 80));
+        // Snap to closest edge
+        let finalX = x < SCREEN_WIDTH / 2 ? 20 : SCREEN_WIDTH - BUTTON_SIZE - 20;
+        let finalY = Math.max(20, Math.min(y, SCREEN_HEIGHT - BUTTON_SIZE - 20));
 
         Animated.spring(pan, {
           toValue: { x: finalX, y: finalY },
           useNativeDriver: false,
-          tension: 50,
-          friction: 7
+          tension: 60,
+          friction: 7,
         }).start();
       },
     })
@@ -59,7 +57,7 @@ const FloatingButton = ({ onPress }: { onPress?: () => void }) => {
       {...panResponder.panHandlers}
     >
       <TouchableOpacity onPress={onPress}>
-        <Image source={require('@/assets/images/logo.png')} />
+        <Image source={require('@/assets/images/logo.png')} style={{ width: BUTTON_SIZE, height: BUTTON_SIZE }} />
       </TouchableOpacity>
     </Animated.View>
   );
@@ -74,15 +72,13 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: "white",
     elevation: 5,
     shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
   },
 });
-export default FloatingButton;
 
+export default FloatingButton;
