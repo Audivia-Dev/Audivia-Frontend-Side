@@ -216,6 +216,7 @@ const CharacterSelectionScreen = () => {
 
           <Text style={styles.characterName}>{currentCharacter.name}</Text>
           <Text style={styles.characterDescription}>{currentCharacter.description}</Text>
+
           <LinearGradient
               colors={[COLORS.primary, COLORS.purpleGradient]}
               start={{ x: 0, y: 0 }}
@@ -225,7 +226,8 @@ const CharacterSelectionScreen = () => {
               <TouchableOpacity onPress={handleConfirmSelection}>
                 <Text style={styles.selectButtonText}>Chọn</Text>
               </TouchableOpacity>
-            </LinearGradient>
+          </LinearGradient>
+
         </Animated.View>
 
         <TouchableOpacity style={styles.arrowButton} onPress={handleNext}>

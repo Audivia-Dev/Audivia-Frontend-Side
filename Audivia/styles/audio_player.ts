@@ -11,10 +11,12 @@ const styles = StyleSheet.create({
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
-      paddingTop: 50,
-      paddingHorizontal: 16,
-      paddingBottom: 16,
-      backgroundColor: COLORS.primary,
+  //    paddingTop: 15,
+   ///   paddingHorizontal: 16,
+      padding: 7
+    //  paddingBottom: 16,
+    //  height: 100,
+   //   backgroundColor: COLORS.primary,
     },
     backButton: {
       width: 40,
