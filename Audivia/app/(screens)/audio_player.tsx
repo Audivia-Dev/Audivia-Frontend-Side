@@ -7,7 +7,8 @@ import PlayerControls from "../../components/audio_player/PlayerControls"
 import Transcript from "../../components/audio_player/Transcript"
 import { router, useLocalSearchParams } from "expo-router"
 import { Audio, AVPlaybackStatus, InterruptionModeAndroid, InterruptionModeIOS } from "expo-av"
-import { getNextAudioByCheckpointId, getPrevAudioByCheckpointId, getTourAudioByCheckpointId } from "@/services/tour"
+import { getNextAudioByCheckpointId, getPrevAudioByCheckpointId, getTourAudioByCheckpointId, getTourById } from "@/services/tour"
+import { getTourCheckpointById } from "@/services/tour_checkpoint"
 import { createCheckpointProgress, getByTourProgressAndCheckpoint, updateCheckpointProgress } from "@/services/progress"
 import { useUser } from "@/hooks/useUser"
 import AudioVideo from "../../components/audio_player/AudioImage"
@@ -24,12 +25,31 @@ export default function AudioPlayerScreen() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isBuffering, setIsBuffering] = useState(false);
   const [sound, setSound] = useState<Audio.Sound | null>(null);
-  const params = useLocalSearchParams<{ checkpointId: string; characterId: string; tourProgressId: string }>();
-  const { checkpointId, characterId, tourProgressId } = params;
+  const params = useLocalSearchParams<{ checkpointId: string; characterId: string; tourProgressId: string; tourId: string }>();
+  const { checkpointId, characterId, tourProgressId, tourId } = params;
   const [audioData, setAudioData] = useState<AudioData | null>(null);
+  const [checkpointImage, setCheckpointImage] = useState<string | undefined>();
   const { user } = useUser();
   const [currentProgress, setCurrentProgress] = useState(0);
   const [currentAudioDataForCleanup, setCurrentAudioDataForCleanup] = useState<AudioData | null>(null);
+
+  useEffect(() => {
+    const fetchCheckpointImage = async () => {
+      setCheckpointImage(undefined);
+      if (checkpointId) {
+        try {
+          const checkpointDetails = await getTourCheckpointById(checkpointId);
+          if (checkpointDetails && checkpointDetails.images && checkpointDetails.images.length > 0) {
+            setCheckpointImage(checkpointDetails.images[0].imageUrl);
+          }
+        } catch (error) {
+          console.error("Failed to fetch checkpoint image:", error);
+        }
+      }
+    };
+
+    fetchCheckpointImage();
+  }, [checkpointId]);
 
   useEffect(() => {
     Audio.setAudioModeAsync({
@@ -254,7 +274,11 @@ export default function AudioPlayerScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <AudioHeader onBackPress={handleBack} checkpointId={checkpointId as string} />
-      <AudioVideo videoUrl={audioData.videoUrl} />
+      <AudioVideo
+        videoUrl={audioData.videoUrl}
+        imageUrl={checkpointImage}
+        isPlaying={isPlaying}
+      />
       <PlayerControls
         isBuffering={isBuffering}
         isPlaying={isPlaying}
