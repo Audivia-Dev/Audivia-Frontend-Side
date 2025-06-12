@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { View, TouchableOpacity, Text, SafeAreaView, ScrollView, Modal } from "react-native"
 import { useRouter, useLocalSearchParams } from "expo-router"
 import { styles } from "@/styles/tour_detail.styles"
@@ -28,21 +28,25 @@ export default function TourDetailScreen() {
   const [showPurchaseModal, setShowPurchaseModal] = useState(false)
   const { unreadCount, loadUnreadCount } = useNotificationCount()
 
-  useEffect(() => {
-    const fetchTourById = async () => {
+  const fetchTourById = useCallback(async () => {
+    try {
       const response = await getTourById(tourId as string)
       setTour(response.response)
+    } catch (error) {
+      console.error("Error fetching tour by id:", error)
+    }
+  }, [tourId])
+
+  useEffect(() => {
+    const checkIfUserPurchasedTour = async () => {
+      if (!user?.id) return
+      const response = await checkUserPurchasedTour(user?.id, tourId as string)
+      console.log(response)
+      setTransaction(response)
     }
     fetchTourById()
     checkIfUserPurchasedTour()
-  }, [tourId, user?.id])
-
-  const checkIfUserPurchasedTour = async () => {
-    if (!user?.id) return
-    const response = await checkUserPurchasedTour(user?.id, tourId as string)
-    console.log(response)
-    setTransaction(response)
-  }
+  }, [tourId, user?.id, fetchTourById])
 
   const goBack = () => {
     router.back()
@@ -136,7 +140,7 @@ export default function TourDetailScreen() {
           {/* Tab Content */}
           {activeTab === "about" && <AboutTab tour={tour} />}
           {activeTab === "before" && <BeforeTab tour={tour} />}
-          {activeTab === "reviews" && <ReviewsTab tour={tour} />}
+          {activeTab === "reviews" && <ReviewsTab tour={tour} onReviewChange={fetchTourById} />}
 
           {/* Bottom spacing */}
           <View style={{ height: 80 }} />
@@ -179,8 +183,8 @@ export default function TourDetailScreen() {
               </TouchableOpacity>
             </View>
 
-            <View style={styles.tourInfoRow}>
-              <View>
+            <View style={[styles.tourInfoRow, { justifyContent: 'space-between', alignItems: 'center' }]}>
+              <View style={{ flex: 1, marginRight: 10 }}>
                 <Text style={styles.tourName}>{tour?.title}</Text>
                 {/* <Text style={styles.tourDesc}>45-mins guided experience</Text> */}
               </View>

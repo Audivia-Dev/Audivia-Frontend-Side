@@ -427,17 +427,30 @@ export const styles = StyleSheet.create({
     marginBottom: 12,
   },
   reviewActions: {
-    flexDirection: "row",
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.lightGrey,
+    paddingTop: 10,
   },
-  reviewAction: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginRight: 16,
+  actionButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: COLORS.lightGrey,
+    marginLeft: 10,
   },
-  reviewActionText: {
-    fontSize: 16,
-    color: "#666",
-    marginLeft: 4,
+  deleteButton: {
+    backgroundColor: '#FFEBEE',
+  },
+  actionText: {
+    fontSize: 14,
+    color: COLORS.darkGrey,
+    fontWeight: '500',
+  },
+  deleteText: {
+    color: COLORS.red,
   },
   modalOverlay: {
     flex: 1,
@@ -544,9 +557,8 @@ export const styles = StyleSheet.create({
     textAlign: 'center',
   },
   secureText: {
-    fontSize: 16,
+    fontSize: 12,
     color: COLORS.grey,
-    textAlign: 'center',
   },
   modalHeader: {
     flexDirection: 'row',
@@ -641,6 +653,44 @@ export const styles = StyleSheet.create({
   startButtonGradient: {
     flex: 1,
     borderRadius: 8,
+  },
+  modalTextInput: {
+    borderWidth: 1,
+    borderColor: COLORS.grey,
+    borderRadius: 8,
+    padding: 10,
+    width: '100%',
+    minHeight: 100,
+    textAlignVertical: 'top',
+    marginBottom: 20,
+    fontSize: 16,
+  },
+  modalButtonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  modalButton: {
+    flex: 1,
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  cancelButton: {
+    backgroundColor: COLORS.lightGrey,
+    marginRight: 10,
+  },
+  saveButton: {
+    backgroundColor: COLORS.primary,
+    marginLeft: 10,
+  },
+  cancelButtonText: {
+    color: COLORS.dark,
+    fontWeight: 'bold',
+  },
+  saveButtonText: {
+    color: COLORS.white,
+    fontWeight: 'bold',
   },
   })
   
