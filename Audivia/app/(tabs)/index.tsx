@@ -1,7 +1,7 @@
-import { View, ScrollView, Dimensions, Image, TextInput } from "react-native"
+import { View, ScrollView, Dimensions, Image, TextInput, TouchableOpacity, Text, FlatList } from "react-native"
 import { useEffect, useState } from "react"
 import { Tour, TourType } from "@/models"
-import { getSuggestedTours, getTop3Tours } from "@/services/tour"
+import { getSuggestedTours, getTop3Tours, getAllTours } from "@/services/tour"
 import { getTourTypes } from "@/services/tour_type"
 import UserLocationMap from "@/components/common/UserLocationMap"
 import { Header } from "@/components/home/Header"
@@ -11,6 +11,8 @@ import { TopPlaces } from "@/components/home/TopPlaces"
 import styles from "@/styles/home.styles"
 import { Ionicons } from "@expo/vector-icons"
 import { COLORS } from "@/constants/theme"
+import { useDebounce } from "@/hooks/useDebounce"
+import { useRouter } from "expo-router"
 
 export default function Index() {
   const [top3Tours, setTop3Tours] = useState<Tour[]>([])
@@ -18,6 +20,10 @@ export default function Index() {
   const [currentLocationAddress, setCurrentLocationAddress] = useState<string | null>(null);
   const [suggestedTours, setSuggestedTours] = useState<Tour[]>([])
   const [userCoordinates, setUserCoordinates] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchedTours, setSearchedTours] = useState<Tour[]>([]);
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
+  const router = useRouter();
 
   const refreshTop3Tours = async () => {
     try {
@@ -52,19 +58,45 @@ export default function Index() {
   }, [userCoordinates]);
 
   useEffect(() => {
-    getTourTypes().then((res) => {
+    getTourTypes().then((res: { response: TourType[] }) => {
       setTourTypes(res.response)
     })
   }, [])
+
+  useEffect(() => {
+    const fetchSearchedTours = async () => {
+      if (debouncedSearchQuery.length > 0) {
+        const result = await getAllTours({ Title: debouncedSearchQuery, PageSize: 5 });
+        setSearchedTours(result.response.data);
+      } else {
+        setSearchedTours([]);
+      }
+    };
+    fetchSearchedTours();
+  }, [debouncedSearchQuery]);
 
   const handleLocationChange = (address: string | null, coordinates?: { latitude: number; longitude: number } | null) => {
     setCurrentLocationAddress(address);
     setUserCoordinates(coordinates || null);
   };
 
+  const handleDetailedSearch = () => {
+    router.push({
+      pathname: "/(screens)/filter_tour",
+      params: { searchQuery: debouncedSearchQuery }
+    });
+  }
+
+  const handleSuggestionPress = (tourId: string) => {
+    router.push({
+      pathname: "/(screens)/detail_tour",
+      params: { tourId: tourId }
+    });
+  };
+
   return (
     <View style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         <View style={styles.overlayHeader}>
           <Header locationAddress={currentLocationAddress} />
         </View>
@@ -82,8 +114,26 @@ export default function Index() {
             style={styles.searchInput}
             placeholder="Search any places..."
             placeholderTextColor={COLORS.grey}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
           />
         </View>
+        {searchedTours.length > 0 && (
+          <View style={styles.suggestionContainer}>
+            <FlatList
+              data={searchedTours}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <TouchableOpacity onPress={() => handleSuggestionPress(item.id)}>
+                  <Text style={styles.suggestionItem}>{item.title}</Text>
+                </TouchableOpacity>
+              )}
+            />
+            <TouchableOpacity style={styles.detailedSearchButton} onPress={handleDetailedSearch}>
+              <Text style={styles.detailedSearchText}>Search more detail</Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
         <Categories tourTypes={tourTypes} />
 
@@ -101,4 +151,5 @@ export default function Index() {
     </View>
   )
 }
+
 

@@ -9,9 +9,9 @@ export const getTop3Tours = async () => {
     throw error;
   }
 }
-export const getAllTours = async () => {
+export const getAllTours = async (params?: { PageIndex?: number, PageSize?: number, Title?: string }) => {
   try {
-    const response = await apiClient.get('/tours');
+    const response = await apiClient.get('/tours', { params });
     return response.data;
   } catch (error) {
     console.error('Lỗi khi lấy danh sách tour:', error);
@@ -27,9 +27,10 @@ export const getTourById = async (tourId: string) => {
     throw error;
   }
 }
-export const getToursByTypeId = async (typeId: string) => {
+export const getToursByTypeId = async (typeId: string, params?: { PageIndex?: number, PageSize?: number, Title?: string }) => {
   try {
-    const response = await apiClient.get(`/tours?TourTypeId=${typeId}&PageSize=3`);
+    const queryParams = { ...params, TourTypeId: typeId, PageSize: 5 };
+    const response = await apiClient.get('/tours', { params: queryParams });
     return response.data;
   } catch (error) {
     console.error('Lỗi khi lấy danh sách tour:', error);
