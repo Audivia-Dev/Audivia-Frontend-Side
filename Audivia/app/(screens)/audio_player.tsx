@@ -6,7 +6,7 @@ import AudioImage from "../../components/audio_player/AudioImage"
 import PlayerControls from "../../components/audio_player/PlayerControls"
 import Transcript from "../../components/audio_player/Transcript"
 import { router, useLocalSearchParams } from "expo-router"
-import { Audio, AVPlaybackStatus } from "expo-av"
+import { Audio, AVPlaybackStatus, InterruptionModeAndroid, InterruptionModeIOS } from "expo-av"
 import { getNextAudioByCheckpointId, getPrevAudioByCheckpointId, getTourAudioByCheckpointId } from "@/services/tour"
 import { createCheckpointProgress, getByTourProgressAndCheckpoint, updateCheckpointProgress } from "@/services/progress"
 import { useUser } from "@/hooks/useUser"
@@ -21,14 +21,28 @@ interface AudioData {
 }
 
 export default function AudioPlayerScreen() {
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [sound, setSound] = useState<Audio.Sound | null>(null)
-  const params = useLocalSearchParams<{ checkpointId: string; characterId: string; tourProgressId: string }>()
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isBuffering, setIsBuffering] = useState(false);
+  const [sound, setSound] = useState<Audio.Sound | null>(null);
+  const params = useLocalSearchParams<{ checkpointId: string; characterId: string; tourProgressId: string }>();
   const { checkpointId, characterId, tourProgressId } = params;
-  const [audioData, setAudioData] = useState<AudioData | null>(null)
-  const { user } = useUser()
-  const [currentProgress, setCurrentProgress] = useState(0)
+  const [audioData, setAudioData] = useState<AudioData | null>(null);
+  const { user } = useUser();
+  const [currentProgress, setCurrentProgress] = useState(0);
   const [currentAudioDataForCleanup, setCurrentAudioDataForCleanup] = useState<AudioData | null>(null);
+
+  useEffect(() => {
+    Audio.setAudioModeAsync({
+      allowsRecordingIOS: false,
+      interruptionModeIOS: InterruptionModeIOS.DoNotMix,
+      playsInSilentModeIOS: true,
+      staysActiveInBackground: true,
+      interruptionModeAndroid: InterruptionModeAndroid.DuckOthers,
+      shouldDuckAndroid: true,
+      playThroughEarpieceAndroid: false,
+    });
+    console.log("current checkpoint: ", checkpointId)
+  }, []);
 
   const saveTrackProgress = useCallback(async (progressSecs: number, trackData: AudioData) => {
     if (!user?.id || !params.checkpointId || !trackData.id || !params.tourProgressId) {
@@ -79,17 +93,17 @@ export default function AudioPlayerScreen() {
       }
     }
     fetchAndSetAudioData()
-  }, [checkpointId, characterId])
+  }, [checkpointId, characterId]);
 
   useEffect(() => {
-    let isMounted = true
-    let activeSoundInstance: Audio.Sound | null = null;
+    let isMounted = true;
 
     const loadSound = async () => {
       if (sound) {
         await sound.unloadAsync();
         setSound(null);
       }
+
       setCurrentProgress(0);
       setIsPlaying(false);
 
@@ -97,19 +111,26 @@ export default function AudioPlayerScreen() {
         return;
       }
 
+      setIsBuffering(true);
+
       try {
-        const { sound: newSound, status } = await Audio.Sound.createAsync(
+        const { sound: newSound } = await Audio.Sound.createAsync(
           { uri: audioData.fileUrl },
-          { shouldPlay: false },
+          {
+            shouldPlay: false,
+            androidImplementation: 'MediaPlayer',
+          },
           onPlaybackStatusUpdate
         );
         if (isMounted) {
-          activeSoundInstance = newSound;
           setSound(newSound);
         }
       } catch (error) {
         console.error("Error loading sound:", error);
-        if (isMounted) setSound(null);
+        if (isMounted) {
+          setSound(null);
+          setIsBuffering(false);
+        }
       }
     };
 
@@ -117,51 +138,52 @@ export default function AudioPlayerScreen() {
 
     return () => {
       isMounted = false;
-      if (currentAudioDataForCleanup && currentProgress > 0 && activeSoundInstance) {
-        console.log(`Cleanup: Saving progress for ${currentAudioDataForCleanup.id} at ${currentProgress}s`);
-        saveTrackProgress(currentProgress, currentAudioDataForCleanup);
-      }
-      if (activeSoundInstance) {
-        console.log(`Cleanup: Unloading sound for ${currentAudioDataForCleanup?.id || 'unknown'}`);
-        activeSoundInstance.unloadAsync();
-      }
-      if (sound === activeSoundInstance) {
-        setSound(null);
+      if (sound) {
+        sound.unloadAsync();
       }
     };
-  }, [audioData, saveTrackProgress]);
+  }, [audioData]);
 
   const onPlaybackStatusUpdate = async (status: AVPlaybackStatus) => {
-    if (status.isLoaded) {
-      setCurrentProgress(Math.ceil(status.positionMillis / 1000))
-      if (status.didJustFinish) {
-        setIsPlaying(false)
-        if (typeof status.durationMillis === 'number' && user?.id && checkpointId && audioData?.id && tourProgressId) {
-          try {
-            const existingProgressData = await getByTourProgressAndCheckpoint(tourProgressId, checkpointId);
-            const existingProgress = existingProgressData.response;
-            const totalDuration = Math.ceil(status.durationMillis / 1000);
-            const progressData = {
-              progressSeconds: totalDuration,
-              isCompleted: true,
-              lastListenedTime: new Date().toISOString()
-            };
-            if (existingProgress) {
-              await updateCheckpointProgress(existingProgress.id, progressData);
-            } else {
-              await createCheckpointProgress({
-                ...progressData,
-                userTourProgressId: tourProgressId,
-                tourCheckpointId: checkpointId,
-                checkpointAudioId: audioData.id
-              });
-            }
-          } catch (error) {
-            console.error('Error updating checkpoint progress on completion:', error);
+    if (!status.isLoaded) {
+      if (status.error) {
+        console.error(`Playback Error: ${status.error}`);
+        setIsPlaying(false);
+        setIsBuffering(false);
+      }
+      return;
+    }
+
+    setIsBuffering(status.isBuffering);
+    setIsPlaying(status.isPlaying);
+    setCurrentProgress(Math.ceil(status.positionMillis / 1000));
+
+    if (status.didJustFinish) {
+      if (typeof status.durationMillis === 'number' && user?.id && checkpointId && audioData?.id && tourProgressId) {
+        try {
+          const existingProgressData = await getByTourProgressAndCheckpoint(tourProgressId, checkpointId);
+          const existingProgress = existingProgressData.response;
+          const totalDuration = Math.ceil(status.durationMillis / 1000);
+          const progressData = {
+            progressSeconds: totalDuration,
+            isCompleted: true,
+            lastListenedTime: new Date().toISOString()
+          };
+          if (existingProgress) {
+            await updateCheckpointProgress(existingProgress.id, progressData);
+          } else {
+            await createCheckpointProgress({
+              ...progressData,
+              userTourProgressId: tourProgressId,
+              tourCheckpointId: checkpointId,
+              checkpointAudioId: audioData.id
+            });
           }
-        } else if (status.didJustFinish) {
-          console.warn("Audio finished but durationMillis is not available. Progress might not be marked as complete accurately.");
+        } catch (error) {
+          console.error('Error updating checkpoint progress on completion:', error);
         }
+      } else if (status.didJustFinish) {
+        console.warn("Audio finished but durationMillis is not available. Progress might not be marked as complete accurately.");
       }
     }
   };
@@ -182,20 +204,22 @@ export default function AudioPlayerScreen() {
   };
 
   const togglePlayPause = async () => {
-    if (!sound) return;
+    if (!sound || isBuffering) return;
     if (isPlaying) {
       await sound.pauseAsync();
     } else {
       await sound.playAsync();
     }
-    setIsPlaying(!isPlaying);
+    // We don't set isPlaying here, we let onPlaybackStatusUpdate handle it for a single source of truth
   };
 
   const handleNextAudio = async () => {
     await prepareForTrackChangeOrExit();
+    console.log("Getting audio for checkpoint next to checkpoint: ", checkpointId)
     const res = await getNextAudioByCheckpointId(checkpointId);
+    console.log(res)
     if (res.response?.id) {
-      router.setParams({ checkpointId: res.response.id });
+      router.setParams({ checkpointId: res.response.tourCheckpointId });
     } else {
       console.log("No next audio found or no ID in response.");
     }
@@ -205,7 +229,7 @@ export default function AudioPlayerScreen() {
     await prepareForTrackChangeOrExit();
     const res = await getPrevAudioByCheckpointId(checkpointId);
     if (res.response?.id) {
-      router.setParams({ checkpointId: res.response.id });
+      router.setParams({ checkpointId: res.response.tourCheckpointId });
     } else {
       console.log("No previous audio found or no ID in response.");
     }
@@ -232,6 +256,7 @@ export default function AudioPlayerScreen() {
       <AudioHeader onBackPress={handleBack} checkpointId={checkpointId as string} />
       <AudioVideo videoUrl={audioData.videoUrl} />
       <PlayerControls
+        isBuffering={isBuffering}
         isPlaying={isPlaying}
         onPlayPause={togglePlayPause}
         onNext={handleNextAudio}
@@ -243,4 +268,3 @@ export default function AudioPlayerScreen() {
     </SafeAreaView>
   );
 }
-
