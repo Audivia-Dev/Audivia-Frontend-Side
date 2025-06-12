@@ -7,7 +7,7 @@ import {
   Animated,
   ActivityIndicator,
 } from "react-native"
-import { Audio } from "expo-av"
+import { Audio, InterruptionModeAndroid, InterruptionModeIOS, AVPlaybackStatus } from "expo-av"
 import { Ionicons } from "@expo/vector-icons"
 import { COLORS } from "@/constants/theme"
 import { getCharacters } from "@/services/character"
@@ -26,11 +26,42 @@ const CharacterSelectionScreen = () => {
   const [currentSlide, setCurrentSlide] = useState(0)
   const [characters, setCharacters] = useState<any[]>([])
   const [isLoadingData, setIsLoadingData] = useState(true)
-  const soundRef = useRef<Audio.Sound | null>(null)
+  const soundRef = useRef<Audio.Sound>(new Audio.Sound())
   const scaleAnim = useRef(new Animated.Value(1)).current
   const {user} = useUser()
   const {tourId} = useLocalSearchParams()
   const [userTourId, setUserTourId] = useState(null)
+
+  useEffect(() => {
+    const configureAudio = async () => {
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: false,
+        playsInSilentModeIOS: true,
+        staysActiveInBackground: false,
+        interruptionModeIOS: InterruptionModeIOS.DoNotMix,
+        interruptionModeAndroid: InterruptionModeAndroid.DuckOthers,
+        shouldDuckAndroid: true,
+        playThroughEarpieceAndroid: false,
+      });
+    }
+    configureAudio();
+
+    const onPlaybackStatusUpdate = (status: AVPlaybackStatus) => {
+      if (!status.isLoaded) {
+        return;
+      }
+      if (status.didJustFinish) {
+        setIsPlaying(false);
+      }
+    };
+
+    const sound = soundRef.current;
+    sound.setOnPlaybackStatusUpdate(onPlaybackStatusUpdate);
+
+    return () => {
+      sound.unloadAsync();
+    };
+  }, []);
 
   useEffect(() => {
     const fetchCharacters = async () => {
@@ -69,23 +100,21 @@ const CharacterSelectionScreen = () => {
     if (soundRef.current) {
       await soundRef.current.stopAsync()
       await soundRef.current.unloadAsync()
-      soundRef.current = null
     }
     setIsPlaying(false)
   }
 
   const playPreview = async (character: any) => {
+    if (!soundRef.current) return;
     try {
       setIsLoading(true)
-      await stopAudio()
-      const { sound } = await Audio.Sound.createAsync({ uri: character.audioUrl }, { shouldPlay: true })
-      soundRef.current = sound
+      await soundRef.current.loadAsync({ uri: character.audioUrl }, { shouldPlay: true })
       setIsPlaying(true)
-      setIsLoading(false)
     } catch (error) {
       console.error("Error playing audio:", error)
-      setIsLoading(false)
       setIsPlaying(false)
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -105,10 +134,13 @@ const CharacterSelectionScreen = () => {
       }),
     ]).start()
 
+    if (isPlaying) {
+      await stopAudio();
+    }
+
     const characterId = characters[index].id
     setSelectedCharacter(characterId)
     setCurrentSlide(index)
-    setIsPlaying(false)
   }
 
   const handleConfirmSelection = async () => {
@@ -139,11 +171,12 @@ const CharacterSelectionScreen = () => {
   }
 
   const handleAudioToggle = async (character: any) => {
-    if (isPlaying && selectedCharacter === character.id) {
+    const isCurrentlyPlayingThisCharacter = isPlaying && selectedCharacter === character.id;
+    if (isCurrentlyPlayingThisCharacter) {
       await stopAudio()
     } else {
-      await playPreview(character)
       setSelectedCharacter(character.id)
+      await playPreview(character)
     }
   }
 

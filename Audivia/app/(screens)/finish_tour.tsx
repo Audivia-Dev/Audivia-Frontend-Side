@@ -7,67 +7,76 @@ import { getSuggestedTours, getTourById } from '@/services/tour';
 import UserLocationMap from '@/components/common/UserLocationMap';
 import { COLORS } from '@/constants/theme';
 import { router, useLocalSearchParams } from 'expo-router';
+import { useLocationTracking } from '@/hooks/useLocationTracking';
 
 const FinishTourScreen = () => {
-    const [suggestedTours, setSuggestedTours] = useState<Tour[]>([])
-    const [userCoordinates, setUserCoordinates] = useState<{ latitude: number; longitude: number } | null>(null);
-    const [currentLocationAddress, setCurrentLocationAddress] = useState<string | null>(null);
-    const {tourId} = useLocalSearchParams()
-    const [hasFetchedTours, setHasFetchedTours] = useState(false);
-    const [tourInfor, setTourInfor] = useState()
+  const [suggestedTours, setSuggestedTours] = useState<Tour[]>([])
+  const [userCoordinates, setUserCoordinates] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [currentLocationAddress, setCurrentLocationAddress] = useState<string | null>(null);
+  const { tourId } = useLocalSearchParams()
+  const [hasFetchedTours, setHasFetchedTours] = useState(false);
+  const [tourInfor, setTourInfor] = useState<Tour | undefined>()
+  const { stopTracking } = useLocationTracking();
 
-    useEffect(() => {
-        const fetchTourData = async () => {
-            try {
-                const response = await getTourById(tourId as string)
-                setTourInfor(response.response)
-            } catch (error) {
-                console.error('Error fetching tour:', error)
-            }
-        }
-
-        fetchTourData()
-
-        if (userCoordinates && !hasFetchedTours) {
-          getSuggestedTours(
-            userCoordinates.longitude,
-            userCoordinates.latitude,
-            3 // 3km radius
-          ).then((res) => {
-            setSuggestedTours(res.response.data)
-            setHasFetchedTours(true);
-          }).catch((error) => {
-            console.error('Error fetching suggested tours:', error);
-          });
-        }
-      }, [userCoordinates, hasFetchedTours]);
-      
-    const handleLocationChange = (address: string | null, coordinates?: { latitude: number; longitude: number } | null) => {
-        setCurrentLocationAddress(address);
-        if (coordinates && !userCoordinates) {
-            setUserCoordinates(coordinates);
-        }
-    };
-
-    const handleReview = () => {
-        router.push(`/(screens)/review_end_tour?tourId=${tourId}`)
+  useEffect(() => {
+    const fetchTourData = async () => {
+      try {
+        const response = await getTourById(tourId as string)
+        setTourInfor(response.response)
+      } catch (error) {
+        console.error('Error fetching tour:', error)
+      }
     }
+
+    fetchTourData()
+
+    if (userCoordinates && !hasFetchedTours) {
+      getSuggestedTours(
+        userCoordinates.longitude,
+        userCoordinates.latitude,
+        3 // 3km radius
+      ).then((res) => {
+        setSuggestedTours(res.response.data)
+        setHasFetchedTours(true);
+      }).catch((error) => {
+        console.error('Error fetching suggested tours:', error);
+      });
+    }
+  }, [userCoordinates, hasFetchedTours]);
+
+  const handleLocationChange = (address: string | null, coordinates?: { latitude: number; longitude: number } | null) => {
+    setCurrentLocationAddress(address);
+    if (coordinates && !userCoordinates) {
+      setUserCoordinates(coordinates);
+    }
+  };
+
+  const handleReview = () => {
+    router.push(`/(screens)/review_end_tour?tourId=${tourId}`)
+  }
+
+  const handleGoHome = async () => {
+    console.log("Navigating home, stopping location tracking...");
+    await stopTracking();
+    console.log("Location tracking stopped.");
+    router.navigate('/');
+  };
 
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton}>
+        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Kết thúc tour</Text>
-        <View style={{width: 24}} />
+        <View style={{ width: 24 }} />
       </View>
 
       <ScrollView style={styles.scrollView}>
         {/* Main Image */}
-        <Image 
-          source={{uri: tourInfor?.thumbnailUrl}}
+        <Image
+          source={{ uri: tourInfor?.thumbnailUrl }}
           style={styles.mainImage}
           resizeMode="cover"
         />
@@ -75,31 +84,35 @@ const FinishTourScreen = () => {
         {/* Tour Card */}
         <View style={styles.tourCard}>
           <Text style={styles.tourName}>{tourInfor?.title}</Text>
-          
+
           <Text style={styles.congratsText}>
-          Xin chúc mừng! Bạn vừa hoàn thành chuyến tham quan bằng âm thanh! Chúng tôi hy vọng bạn đã có nhiều trải nghiệm ấn tượng trong chuyến đi này!
+            Xin chúc mừng! Bạn vừa hoàn thành chuyến tham quan bằng âm thanh! Chúng tôi hy vọng bạn đã có nhiều trải nghiệm ấn tượng trong chuyến đi này!
           </Text>
-          
+
           {/* Rating */}
           <TouchableOpacity onPress={handleReview}>
-          <View style={styles.ratingSection}>
-            <Text style={styles.rateText}>Đánh giá trải nghiệm của bạn</Text>
-            <View style={styles.starsContainer}>
-              <Ionicons name="star" size={24} color={COLORS.grey} />
-              <Ionicons name="star" size={24} color={COLORS.grey} />
-              <Ionicons name="star" size={24} color={COLORS.grey} />
-              <Ionicons name="star" size={24} color={COLORS.grey} />
-              <Ionicons name="star" size={24} color={COLORS.grey} />
+            <View style={styles.ratingSection}>
+              <Text style={styles.rateText}>Đánh giá trải nghiệm của bạn</Text>
+              <View style={styles.starsContainer}>
+                <Ionicons name="star" size={24} color={COLORS.grey} />
+                <Ionicons name="star" size={24} color={COLORS.grey} />
+                <Ionicons name="star" size={24} color={COLORS.grey} />
+                <Ionicons name="star" size={24} color={COLORS.grey} />
+                <Ionicons name="star" size={24} color={COLORS.grey} />
+              </View>
+              <Text style={styles.ratingText}>5 trên 5</Text>
             </View>
-            <Text style={styles.ratingText}>5 trên 5</Text>
-          </View>
-          
+
           </TouchableOpacity>
           {/* Funny Quiz Button */}
           <TouchableOpacity style={styles.quizButton}>
             <Text style={styles.quizButtonText}>Câu đố vui</Text>
           </TouchableOpacity>
-          
+
+          <TouchableOpacity style={styles.homeButton} onPress={handleGoHome}>
+            <Text style={styles.homeButtonText}>Quay về trang chủ</Text>
+          </TouchableOpacity>
+
           {/* Discover More Tours */}
           <View>
             {/* Hidden UserLocationMap to get location */}
@@ -113,7 +126,7 @@ const FinishTourScreen = () => {
           </View>
         </View>
       </ScrollView>
-      
+
     </SafeAreaView>
   );
 };
@@ -179,7 +192,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 20,
     marginBottom: 20,
-    backgroundColor:'#F5F5F5',
+    backgroundColor: '#F5F5F5',
     borderRadius: 8,
     padding: 8
   },
@@ -204,6 +217,18 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   quizButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  homeButton: {
+    backgroundColor: COLORS.primary,
+    borderRadius: 8,
+    padding: 12,
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  homeButtonText: {
     color: 'white',
     fontWeight: 'bold',
     fontSize: 16,

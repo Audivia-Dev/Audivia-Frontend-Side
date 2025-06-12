@@ -179,8 +179,8 @@ export default function TourDetailScreen() {
               </TouchableOpacity>
             </View>
 
-            <View style={styles.tourInfoRow}>
-              <View>
+            <View style={[styles.tourInfoRow, { justifyContent: 'space-between', alignItems: 'center' }]}>
+              <View style={{ flex: 1, marginRight: 10 }}>
                 <Text style={styles.tourName}>{tour?.title}</Text>
                 {/* <Text style={styles.tourDesc}>45-mins guided experience</Text> */}
               </View>
