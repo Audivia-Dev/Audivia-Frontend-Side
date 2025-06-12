@@ -76,7 +76,8 @@ export default {
       "expo-font",
       [
         "@react-native-google-signin/google-signin",
-      ]
+      ],
+      "expo-video"
     ],
     "experiments": {
       "typedRoutes": true

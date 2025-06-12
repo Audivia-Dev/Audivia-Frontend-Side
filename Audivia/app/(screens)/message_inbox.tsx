@@ -1,4 +1,4 @@
-import React, { useState, useEffect} from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -48,11 +48,11 @@ export default function MessagingInboxScreen() {
     setLoading(true);
     try {
       const data = await getChatRoomsByUserId(user.id);
-      
+
       const mappedData = await Promise.all(data.map(async (room: any) => {
         let friendAvatar = "";
         let friendName = "";
-  
+
         if (room.type === "private") {
           const friend = room.members.find((m: any) => m.userId !== user.id);
           friendAvatar = friend?.user?.avatarUrl || "";
@@ -62,7 +62,7 @@ export default function MessagingInboxScreen() {
         // Lấy tin nhắn cuối cùng của phòng chat
         const messages = await getMessagesByChatRoom(room.id);
         const lastMessage = messages.length > 0 ? messages[messages.length - 1] : null;
-  
+
         return {
           id: room.id,
           name: room.type === "private" ? friendName : room.name,
@@ -74,7 +74,7 @@ export default function MessagingInboxScreen() {
           members: room.members,
         };
       }));
-  
+
       setChatRooms(mappedData);
     } catch (error) {
       console.error("Fetch chat rooms error:", error);
@@ -100,7 +100,7 @@ export default function MessagingInboxScreen() {
       Alert.alert("Lỗi", "Không thể tải danh sách bạn bè. Vui lòng thử lại.");
     }
   };
-  
+
   useFocusEffect(
     useCallback(() => {
       if (user?.id) {
@@ -116,8 +116,8 @@ export default function MessagingInboxScreen() {
       console.log("Received message in inbox:", message);
       const actualMessage = message.response || message;
       console.log("Actual message:", actualMessage);
-     
-      
+
+
       setChatRooms(prev => {
         return prev.map(room => {
           if (String(room.id) === String(actualMessage.chatRoomId)) {
@@ -125,9 +125,9 @@ export default function MessagingInboxScreen() {
               ...room,
               lastMessage: actualMessage.content,
               lastMessageTime: actualMessage.createdAt,
-              time: new Date(actualMessage.createdAt).toLocaleTimeString([], { 
-                hour: '2-digit', 
-                minute: '2-digit' 
+              time: new Date(actualMessage.createdAt).toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit'
               })
             };
           }
@@ -155,7 +155,7 @@ export default function MessagingInboxScreen() {
 
     // Cleanup khi unmount
     return () => {
-     // chatSignalRService.removeMessageCallback(handleReceiveMessage);
+      // chatSignalRService.removeMessageCallback(handleReceiveMessage);
       chatSignalRService.removeMessageDeletedCallback(handleDeleteMessage);
     };
   }, []);
@@ -189,10 +189,10 @@ export default function MessagingInboxScreen() {
   );
 
   const filteredFriends = friends.filter((friend) =>
-    friend.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (friend.fullName?.toLowerCase() ?? '').includes(searchQuery.toLowerCase()) ||
     friend.userName.toLowerCase().includes(searchQuery.toLowerCase())
   );
- 
+
   const goBack = () => router.back();
 
   const navigateToChat = (conversationId: string) => {
@@ -204,7 +204,7 @@ export default function MessagingInboxScreen() {
     try {
       // Kiểm tra xem đã có chat room giữa 2 người chưa
       const existingRoom = await getPrivateRoom(user?.id as string, friendId);
-      
+
       if (existingRoom) {
         // Nếu đã có chat room thì chuyển đến message detail
         navigateToChat(existingRoom.id);
@@ -215,7 +215,7 @@ export default function MessagingInboxScreen() {
           createdBy: user?.id as string,
           type: "private",
         });
-        
+
         // thêm bạn vào là member
         var rs = await createChatRoomMember({
           chatRoomId: newChatRoom.id,
@@ -224,13 +224,13 @@ export default function MessagingInboxScreen() {
           userId: user?.id as string
         });
 
-        
+
         // thêm bạn bè vào là member
         await createChatRoomMember({
           chatRoomId: newChatRoom.id,
           isHost: false,
           nickname: "",
-          userId: friendId 
+          userId: friendId
         });
 
         if (newChatRoom) {
@@ -253,7 +253,7 @@ export default function MessagingInboxScreen() {
           padding: 10,
           borderBottomWidth: 0.5,
           borderColor: "#ddd",
-        }} 
+        }}
       >
         {item.type === "group" ? (
           <GroupAvatar members={item.members} size={40} />
@@ -290,7 +290,7 @@ export default function MessagingInboxScreen() {
   // Render item cho danh sách bạn bè
   const renderFriendItem = ({ item }: { item: any }) => {
     console.warn(item);
-    
+
     return (
       <TouchableOpacity
         onPress={() => createChatWithFriend(item.id)}
@@ -343,7 +343,7 @@ export default function MessagingInboxScreen() {
           createdBy: user?.id as string,
           type: "group",
         });
-        
+
         // Thêm người tạo vào phòng với quyền host
         await createChatRoomMember({
           chatRoomId: newChatRoom.id,
@@ -450,6 +450,6 @@ export default function MessagingInboxScreen() {
         onClose={() => setShowCreateGroup(false)}
         onCreateGroup={createGroup}
       />
-    </SafeAreaView> 
+    </SafeAreaView>
   );
 }

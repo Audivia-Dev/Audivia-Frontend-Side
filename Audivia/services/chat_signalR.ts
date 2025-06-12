@@ -1,4 +1,4 @@
-import { HubConnection, HubConnectionBuilder, HubConnectionState } from '@microsoft/signalr';
+import { HttpTransportType, HubConnection, HubConnectionBuilder, HubConnectionState } from '@microsoft/signalr';
 import { Message, ChatRoomMember } from '@/models';
 
 const API_URL = process.env.EXPO_PUBLIC_SIGNALR_URL; // Replace with your actual API URL 
@@ -16,12 +16,15 @@ class SignalRService {
     async startConnection(token: string) {
         try {
             this.connection = new HubConnectionBuilder()
-                .withUrl(`${API_URL}/chatHub`, {
-                    accessTokenFactory: () => token,
-                  })
-                .withAutomaticReconnect()
-                .build();
+            .withUrl(`${API_URL}/chatHub`, {
+                accessTokenFactory: () => token,
+                transport: HttpTransportType.WebSockets,
+                withCredentials: true,
+            })
+            .withAutomaticReconnect()
+            .build();
 
+         //   this.connection.serverTimeoutInMilliseconds = 60 * 1000; //sau 60s khong nhan dc message se reconnect
             await this.connection.start();
             console.log('SignalR Connected');
             this.notifyConnectionState(this.connection.state);

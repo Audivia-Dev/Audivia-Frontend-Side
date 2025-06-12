@@ -184,7 +184,8 @@ export default function MessageDetailScreen() {
         }
         title={
           chatRoom?.type === "private"
-            ? chatRoom?.members?.find((m: any) => m.userId !== currentUserId)?.user?.fullName
+            ? chatRoom?.members?.find((m: any) => m.userId !== currentUserId)?.user?.fullName ??
+            chatRoom?.members?.find((m: any) => m.userId !== currentUserId)?.user?.userName
             : chatRoom?.name
         }
         isOnline={true}
@@ -199,7 +200,7 @@ export default function MessageDetailScreen() {
           const isOwnMessage = String(item.senderId) === String(currentUserId);
           const senderMember = chatRoom?.members?.find((m: any) => String(m.userId) === String(item.senderId));
           const avatar = senderMember?.user?.avatarUrl || null;
-          const senderName = senderMember?.user?.fullName || item.senderName;
+          const senderName = senderMember?.user?.fullName || senderMember?.user?.username || item.senderName;
           
           return (
             <MessageBubble
