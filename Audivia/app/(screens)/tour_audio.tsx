@@ -162,6 +162,8 @@ export default function TourAudioScreen() {
       console.error('Error updating tour progress:', error)
     }
 
+    console.log("checkpoint in tour_audio file", checkpointId)
+
     router.push(`/audio_player?checkpointId=${checkpointId}&characterId=${characterId}&tourProgressId=${tourProgress.id}`)
   }
 
@@ -312,36 +314,36 @@ export default function TourAudioScreen() {
         </View>
 
 
-      <TouchableOpacity
-        style={{ marginHorizontal: 20, marginVertical: 15 }}
-        onPress={handleEndtour}
-      >
-        <LinearGradient
-          colors={[COLORS.primary, COLORS.purpleGradient]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={{
-            paddingVertical: 15,
-            paddingHorizontal: 20,
-            borderRadius: 12,
-            alignItems: "center",
-            shadowColor: "#000",
-            shadowOpacity: 0.25,
-            shadowRadius: 3.84,
-            elevation: 5,
-          }}
+        <TouchableOpacity
+          style={{ marginHorizontal: 20, marginVertical: 15 }}
+          onPress={handleEndtour}
         >
-          <Text
+          <LinearGradient
+            colors={[COLORS.primary, COLORS.purpleGradient]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
             style={{
-              color: "white",
-              fontSize: 16,
-              fontWeight: "600",
+              paddingVertical: 15,
+              paddingHorizontal: 20,
+              borderRadius: 12,
+              alignItems: "center",
+              shadowColor: "#000",
+              shadowOpacity: 0.25,
+              shadowRadius: 3.84,
+              elevation: 5,
             }}
           >
-            Kết thúc
-          </Text>
-        </LinearGradient>
-      </TouchableOpacity>
+            <Text
+              style={{
+                color: "white",
+                fontSize: 16,
+                fontWeight: "600",
+              }}
+            >
+              Kết thúc
+            </Text>
+          </LinearGradient>
+        </TouchableOpacity>
 
         {/* Bottom spacing for fixed details panel */}
         <View style={{ height: 220 }} />

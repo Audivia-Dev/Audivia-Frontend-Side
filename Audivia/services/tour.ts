@@ -60,7 +60,7 @@ export const getNextAudioByCheckpointId = async (checkpointId: string) => {
     const response = await apiClient.get(`/checkpoint-audios/next/${checkpointId}`)
     return response.data
   } catch (error) {
-    console.error('Lỗi lấy tour audio:', error)
+    console.error('Lỗi lấy tour audio kế tiếp:', error)
     throw error
   }
 }
@@ -69,7 +69,7 @@ export const getPrevAudioByCheckpointId = async (checkpointId: string) => {
     const response = await apiClient.get(`/checkpoint-audios/prev/${checkpointId}`)
     return response.data
   } catch (error) {
-    console.error('Lỗi lấy tour audio:', error)
+    console.error('Lỗi lấy tour audio phía trước:', error)
     throw error
   }
 }
