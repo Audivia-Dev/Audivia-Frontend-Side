@@ -112,5 +112,24 @@ export const styles = StyleSheet.create({
     padding: 8,
     backgroundColor: "rgba(131, 81, 138, 0.1)",
   },
-  
+  categoryButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    marginHorizontal: 5,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: COLORS.grey,
+    backgroundColor: COLORS.light,
+  },
+  categoryButtonActive: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+  },
+  categoryButtonText: {
+    color: COLORS.darkGrey,
+    fontWeight: '500',
+  },
+  categoryButtonTextActive: {
+    color: COLORS.white,
+  },
 })

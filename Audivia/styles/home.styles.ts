@@ -274,5 +274,33 @@ const styles = StyleSheet.create({
     right: 0,
     zIndex: 1,
   },
+  suggestionContainer: {
+    backgroundColor: 'white',
+    borderRadius: 8,
+    marginHorizontal: 20,
+    marginTop: -10,
+    padding: 10,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  suggestionItem: {
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  detailedSearchButton: {
+    marginTop: 10,
+    padding: 10,
+    backgroundColor: COLORS.primary,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  detailedSearchText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
 })
 export default styles;
