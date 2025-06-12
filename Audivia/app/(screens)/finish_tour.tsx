@@ -8,6 +8,7 @@ import UserLocationMap from '@/components/common/UserLocationMap';
 import { COLORS } from '@/constants/theme';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useLocationTracking } from '@/hooks/useLocationTracking';
+import { useUser } from '@/hooks/useUser';
 
 const FinishTourScreen = () => {
   const [suggestedTours, setSuggestedTours] = useState<Tour[]>([])
@@ -17,6 +18,7 @@ const FinishTourScreen = () => {
   const [hasFetchedTours, setHasFetchedTours] = useState(false);
   const [tourInfor, setTourInfor] = useState<Tour | undefined>()
   const { stopTracking } = useLocationTracking();
+  const { user } = useUser();
 
   useEffect(() => {
     const fetchTourData = async () => {
@@ -32,6 +34,7 @@ const FinishTourScreen = () => {
 
     if (userCoordinates && !hasFetchedTours) {
       getSuggestedTours(
+        user?.id,
         userCoordinates.longitude,
         userCoordinates.latitude,
         3 // 3km radius
@@ -42,7 +45,7 @@ const FinishTourScreen = () => {
         console.error('Error fetching suggested tours:', error);
       });
     }
-  }, [userCoordinates, hasFetchedTours]);
+  }, [userCoordinates, hasFetchedTours, user?.id]);
 
   const handleLocationChange = (address: string | null, coordinates?: { latitude: number; longitude: number } | null) => {
     setCurrentLocationAddress(address);

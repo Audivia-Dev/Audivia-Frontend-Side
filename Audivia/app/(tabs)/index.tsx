@@ -1,5 +1,5 @@
 import { View, ScrollView, Dimensions, Image, TextInput, TouchableOpacity, Text, FlatList } from "react-native"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { Tour, TourType } from "@/models"
 import { getSuggestedTours, getTop3Tours, getAllTours } from "@/services/tour"
 import { getTourTypes } from "@/services/tour_type"
@@ -12,7 +12,8 @@ import styles from "@/styles/home.styles"
 import { Ionicons } from "@expo/vector-icons"
 import { COLORS } from "@/constants/theme"
 import { useDebounce } from "@/hooks/useDebounce"
-import { useRouter } from "expo-router"
+import { useRouter, useFocusEffect } from "expo-router"
+import { useUser } from "@/hooks/useUser"
 
 export default function Index() {
   const [top3Tours, setTop3Tours] = useState<Tour[]>([])
@@ -24,20 +25,22 @@ export default function Index() {
   const [searchedTours, setSearchedTours] = useState<Tour[]>([]);
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
   const router = useRouter();
+  const { user } = useUser();
 
-  const refreshTop3Tours = async () => {
+  const refreshTop3Tours = useCallback(async () => {
     try {
       const res = await getTop3Tours()
       setTop3Tours(res.response.data)
     } catch (error) {
       console.error('Error refreshing top 3 tours:', error)
     }
-  }
+  }, [])
 
-  const refreshSuggestedTours = async () => {
+  const refreshSuggestedTours = useCallback(async () => {
     if (userCoordinates) {
       try {
         const res = await getSuggestedTours(
+          user?.id,
           userCoordinates.longitude,
           userCoordinates.latitude,
           3 // 3km radius
@@ -47,15 +50,15 @@ export default function Index() {
         console.error('Error refreshing suggested tours:', error)
       }
     }
-  }
+  }, [userCoordinates, user?.id])
 
-  useEffect(() => {
-    refreshTop3Tours()
-  }, [])
-
-  useEffect(() => {
-    refreshSuggestedTours()
-  }, [userCoordinates]);
+  useFocusEffect(
+    useCallback(() => {
+      console.log('Home screen focused, fetching data...');
+      refreshTop3Tours();
+      refreshSuggestedTours();
+    }, [refreshTop3Tours, refreshSuggestedTours])
+  );
 
   useEffect(() => {
     getTourTypes().then((res: { response: TourType[] }) => {
