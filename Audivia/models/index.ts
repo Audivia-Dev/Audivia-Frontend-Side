@@ -10,7 +10,12 @@ export interface Tour {
   location: string;
   checkpoints: Checkpoint[];
   typeId: string;
+  useCustomMap: boolean;
+  startLatitude: number | null;
+  startLongitude: number | null;
+  customMapImages: CustomMapImage[];
 }
+
 export interface Checkpoint {
   id: string;
   tourId: string;
@@ -21,10 +26,12 @@ export interface Checkpoint {
   order: number;
   imageUrl: string;
 }
+
 export interface TourType {
   id: string;
   name: string;
 }
+
 export interface SaveTour {
   id: string;
   userId: string;
@@ -34,6 +41,7 @@ export interface SaveTour {
   tour: Tour;
   timeAgo: string;
 }
+
 export interface User {
   id: string;
   userName: string;
@@ -124,6 +132,7 @@ export interface TransactionHistory {
   status: string;
   createdAt: Date;
 }
+
 export interface Review {
   id: string
   title: string
@@ -158,4 +167,9 @@ export interface CheckpointProgress {
   progressSeconds: number;
   isCompleted: boolean;
   lastListenedTime: string;
+}
+
+export interface CustomMapImage {
+  imageUrl: string;
+  order: number;
 }

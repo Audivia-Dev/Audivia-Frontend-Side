@@ -4,7 +4,7 @@ import { Ionicons } from "@expo/vector-icons"
 import { useEffect, useState } from "react"
 import { Tour } from "@/models"
 import { getTourById } from "@/services/tour"
-import { TourMap } from "@/components/detail_tour/TourMap"
+import { TourMap, TourCustomMap } from "@/components/detail_tour/TourMap"
 import { COLORS } from "@/constants/theme"
 
 export default function TourMapScreen() {
@@ -42,7 +42,10 @@ export default function TourMapScreen() {
         <TouchableOpacity style={styles.backButton} onPress={goBack}>
           <Ionicons name="arrow-back" size={24} color="#000" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Bản đồ Tour {tour?.title ? `- ${tour.title.substring(0, 15)}${tour.title.length > 15 ? '...' : ''}` : ''}</Text>
+        <Text style={styles.headerTitle}>
+          {tour?.useCustomMap ? 'Sơ đồ tham quan' : 'Bản đồ Tour'} 
+          {tour?.title ? ` - ${tour.title.substring(0, 15)}${tour.title.length > 15 ? '...' : ''}` : ''}
+        </Text>
         <View style={{ width: 40 }} />
       </View>
 
@@ -54,7 +57,11 @@ export default function TourMapScreen() {
         </View>
       ) : tour ? (
         <View style={styles.mapWrapper}>
-          <TourMap tour={tour} height={650} />
+          {tour.useCustomMap ? (
+            <TourCustomMap tour={tour} height={650} />
+          ) : (
+            <TourMap tour={tour} height={650} />
+          )}
         </View>
       ) : (
         <View style={styles.errorContainer}>
