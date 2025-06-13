@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { View, StyleSheet, ActivityIndicator, Text, TouchableOpacity, Linking } from 'react-native';
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE, Region } from 'react-native-maps';
 import { Tour } from '@/models';
@@ -6,17 +6,73 @@ import * as Location from 'expo-location';
 import { COLORS } from '@/constants/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface TourCustomMapProps {
     tour: Tour;
     height?: number;
 }
 
+interface RouteInfo {
+    distance: string;
+    duration: string;
+}
+
 export const TourCustomMap: React.FC<TourCustomMapProps> = ({ tour, height = 300 }) => {
     const [mapRegion, setMapRegion] = useState<Region | null>(null);
     const [userLocation, setUserLocation] = useState<Location.LocationObject | null>(null);
     const [loadingUserLocation, setLoadingUserLocation] = useState<boolean>(true);
+    const [loadingMapData, setLoadingMapData] = useState<boolean>(true);
     const [routeCoordinates, setRouteCoordinates] = useState<{ latitude: number, longitude: number }[]>([]);
+    const [routeInfo, setRouteInfo] = useState<RouteInfo>({ distance: '', duration: '' });
+
+    const fetchRoute = useCallback(async (start: Location.LocationObject, end: { latitude: number, longitude: number }) => {
+        const cacheKey = `ROUTE_CACHE_CUSTOM_${tour.id}`;
+        try {
+            const cachedData = await AsyncStorage.getItem(cacheKey);
+            if (cachedData) {
+                const parsedData = JSON.parse(cachedData);
+                setRouteCoordinates(parsedData.routeCoordinates);
+                setRouteInfo(parsedData.routeInfo);
+                return;
+            }
+
+            const accessToken = process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN;
+            const url = `https://api.mapbox.com/directions/v5/mapbox/walking/${start.coords.longitude},${start.coords.latitude};${end.longitude},${end.latitude}?geometries=geojson&access_token=${accessToken}`;
+            
+            const res = await fetch(url);
+            const json = await res.json();
+
+            if (json.routes && json.routes.length > 0) {
+                const route = json.routes[0];
+                const coords = route.geometry.coordinates.map(([lon, lat]: [number, number]) => ({
+                    latitude: lat,
+                    longitude: lon,
+                }));
+
+                const newRouteInfo = {
+                    distance: (route.distance / 1000).toFixed(2), // km
+                    duration: Math.round(route.duration / 60).toString(), // phút
+                };
+
+                setRouteCoordinates(coords);
+                setRouteInfo(newRouteInfo);
+                await AsyncStorage.setItem(cacheKey, JSON.stringify({ routeCoordinates: coords, routeInfo: newRouteInfo }));
+            } else {
+                throw new Error("Mapbox API error: " + (json.message || "No routes found"));
+            }
+        } catch (error) {
+            console.error("Error fetching Mapbox route for custom map:", error);
+            // Draw straight line as a fallback
+            setRouteCoordinates([
+                { latitude: start.coords.latitude, longitude: start.coords.longitude },
+                { latitude: end.latitude, longitude: end.longitude }
+            ]);
+            setRouteInfo({ distance: "N/A", duration: "N/A" });
+        } finally {
+            setLoadingMapData(false);
+        }
+    }, [tour.id]);
 
     useEffect(() => {
         let locationSubscription: Location.LocationSubscription | null = null;
@@ -56,25 +112,29 @@ export const TourCustomMap: React.FC<TourCustomMapProps> = ({ tour, height = 300
     }, []);
 
     useEffect(() => {
-        if (!tour) return;
+        if (!tour) {
+            setLoadingMapData(false);
+            return;
+        }
 
         if (tour.startLatitude && tour.startLongitude) {
             setMapRegion({
                 latitude: tour.startLatitude,
                 longitude: tour.startLongitude,
-                latitudeDelta: 0.01,
-                longitudeDelta: 0.01,
+                latitudeDelta: 0.02, // Zoom out a bit to see both points
+                longitudeDelta: 0.02,
             });
 
-            // Draw route from user to start location if user location is available
             if (userLocation) {
-                setRouteCoordinates([
-                    { latitude: userLocation.coords.latitude, longitude: userLocation.coords.longitude },
-                    { latitude: tour.startLatitude, longitude: tour.startLongitude }
-                ]);
+                setLoadingMapData(true);
+                fetchRoute(userLocation, { latitude: tour.startLatitude, longitude: tour.startLongitude });
+            } else {
+                 setLoadingMapData(false);
             }
+        } else {
+            setLoadingMapData(false);
         }
-    }, [tour, userLocation]);
+    }, [tour, userLocation, fetchRoute]);
 
     const handleOpenDirections = () => {
         if (tour.startLatitude && tour.startLongitude && userLocation) {
@@ -93,12 +153,12 @@ export const TourCustomMap: React.FC<TourCustomMapProps> = ({ tour, height = 300
 
     const handleViewCustomMap = () => {
         router.push({
-            pathname: "/tour_custom_map",
+            pathname: "/(screens)/tour_custom_map_details",
             params: { tourId: tour.id }
         });
     };
 
-    if (loadingUserLocation) {
+    if (loadingUserLocation || loadingMapData) {
         return <ActivityIndicator size="large" color={COLORS.primary} style={{ height }} />;
     }
 
@@ -120,6 +180,18 @@ export const TourCustomMap: React.FC<TourCustomMapProps> = ({ tour, height = 300
                         <Polyline coordinates={routeCoordinates} strokeWidth={4} strokeColor={COLORS.primary} lineDashPattern={[1]} />
                     )}
                 </MapView>
+            )}
+            {routeInfo.distance && routeInfo.duration && (
+                <View style={styles.routeInfoContainer}>
+                    <View style={styles.routeInfoItem}>
+                        <Ionicons name="walk-outline" size={16} color="#FFF" />
+                        <Text style={styles.routeInfoText}>{routeInfo.distance !== "N/A" ? `${routeInfo.distance} km` : "N/A"}</Text>
+                    </View>
+                    <View style={styles.routeInfoItem}>
+                        <Ionicons name="time-outline" size={16} color="#FFF" />
+                        <Text style={styles.routeInfoText}>{routeInfo.duration !== "N/A" ? `${routeInfo.duration} phút` : "N/A"}</Text>
+                    </View>
+                </View>
             )}
             {userLocation && (
                 <TouchableOpacity
@@ -147,7 +219,10 @@ const styles = StyleSheet.create({
     userMarkerDot: { width: 12, height: 12, borderRadius: 6, backgroundColor: COLORS.primary },
     checkpointMarker: { alignItems: 'center', justifyContent: 'center', width: 30, height: 30, borderRadius: 15, borderWidth: 2, borderColor: '#FFF' },
     startMarker: { backgroundColor: COLORS.primary, borderColor: '#FFF', width: 34, height: 34, borderRadius: 17, borderWidth: 3 },
-    directionsButton: { position: 'absolute', bottom: 60, right: 10, backgroundColor: COLORS.primary, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 2 },
+    routeInfoContainer: { position: 'absolute', top: 10, left: 10, backgroundColor: 'rgba(0, 0, 0, 0.7)', borderRadius: 12, padding: 8, flexDirection: 'row', justifyContent: 'space-between' },
+    routeInfoItem: { flexDirection: 'row', alignItems: 'center', marginHorizontal: 8 },
+    routeInfoText: { color: '#FFF', marginLeft: 4, fontWeight: '600' },
+    directionsButton: { position: 'absolute', bottom: 80, right: 10, backgroundColor: COLORS.primary, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 2 },
     directionsButtonText: { color: '#FFF', fontWeight: 'bold', marginLeft: 4 },
     customMapButton: {
         position: 'absolute',
@@ -155,19 +230,15 @@ const styles = StyleSheet.create({
         left: 16,
         right: 16,
         backgroundColor: COLORS.primary,
-        paddingVertical: 12,
+        paddingVertical: 16,
         paddingHorizontal: 20,
-        borderRadius: 8,
+        borderRadius: 12,
         alignItems: 'center',
         elevation: 3,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 2,
     },
     customMapButtonText: {
         color: '#FFF',
-        fontSize: 16,
+        fontSize: 18,
         fontWeight: 'bold',
     },
 }); 
