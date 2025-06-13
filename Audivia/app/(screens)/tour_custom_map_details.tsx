@@ -1,10 +1,49 @@
-import { View, TouchableOpacity, Text, SafeAreaView, StyleSheet, ActivityIndicator, Image, Dimensions, FlatList } from "react-native"
+import { View, TouchableOpacity, Text, SafeAreaView, StyleSheet, ActivityIndicator, Image, useWindowDimensions } from "react-native"
 import { useRouter, useLocalSearchParams } from "expo-router"
 import { Ionicons } from "@expo/vector-icons"
 import { useEffect, useState, useRef } from "react"
 import { Tour, CustomMapImage } from "@/models"
 import { getTourById } from "@/services/tour"
 import { COLORS } from "@/constants/theme"
+import { FlatList, Gesture, GestureDetector } from "react-native-gesture-handler"
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated"
+
+const AnimatedImage = Animated.createAnimatedComponent(Image);
+
+const ZoomableImage = ({ item }: { item: CustomMapImage }) => {
+    const { width, height } = useWindowDimensions();
+    const scale = useSharedValue(1);
+    const focalX = useSharedValue(0);
+    const focalY = useSharedValue(0);
+
+    const pinchGesture = Gesture.Pinch()
+        .onUpdate((e) => {
+            scale.value = e.scale;
+        })
+        .onEnd(() => {
+            scale.value = withTiming(1);
+        });
+
+    const animatedStyle = useAnimatedStyle(() => {
+        return {
+            transform: [
+                { translateX: focalX.value },
+                { translateY: focalY.value },
+                { scale: scale.value },
+            ],
+        };
+    });
+
+    return (
+        <GestureDetector gesture={pinchGesture}>
+            <AnimatedImage
+                source={{ uri: item.imageUrl }}
+                style={[{ width, height }, animatedStyle]}
+                resizeMode="contain"
+            />
+        </GestureDetector>
+    )
+}
 
 export default function TourCustomMapDetailsScreen() {
     const router = useRouter()
@@ -12,8 +51,8 @@ export default function TourCustomMapDetailsScreen() {
     const [tour, setTour] = useState<Tour>()
     const [loading, setLoading] = useState<boolean>(true)
     const [currentIndex, setCurrentIndex] = useState(0)
-    const flatListRef = useRef<FlatList>(null)
-    const width = Dimensions.get('window').width;
+    const flatListRef = useRef<FlatList<any>>(null)
+    const { width } = useWindowDimensions();
 
     useEffect(() => {
         const fetchTourById = async () => {
@@ -43,13 +82,9 @@ export default function TourCustomMapDetailsScreen() {
         setCurrentIndex(index)
     }
 
-    const renderItem = ({ item, index }: { item: CustomMapImage; index: number }) => (
+    const renderItem = ({ item }: { item: CustomMapImage }) => (
         <View style={[styles.carouselItem, { width }]}>
-            <Image
-                source={{ uri: item.imageUrl }}
-                style={styles.mapImage}
-                resizeMode="contain"
-            />
+            <ZoomableImage item={item} />
         </View>
     );
 
@@ -78,7 +113,7 @@ export default function TourCustomMapDetailsScreen() {
                 <TouchableOpacity style={styles.backButton} onPress={goBack}>
                     <Ionicons name="arrow-back" size={24} color="#000" />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>Sơ đồ tham quan {tour?.title ? `- ${tour.title.substring(0, 15)}${tour.title.length > 15 ? '...' : ''}` : ''}</Text>
+                <Text style={styles.headerTitle} numberOfLines={1} ellipsizeMode="tail">Sơ đồ - {tour?.title ?? ''}</Text>
                 <View style={{ width: 40 }} />
             </View>
 
@@ -99,7 +134,7 @@ export default function TourCustomMapDetailsScreen() {
                         showsHorizontalScrollIndicator={false}
                         onScroll={handleScroll}
                         scrollEventThrottle={16}
-                        keyExtractor={(item, index) => index.toString()}
+                        keyExtractor={(item) => item.id.toString()}
                     />
                     <View style={styles.counterContainer}>
                         <Text style={styles.counterText}>{currentIndex + 1}/{tour.customMapImages.length}</Text>
@@ -119,7 +154,7 @@ export default function TourCustomMapDetailsScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: "#fff",
+        backgroundColor: "#000",
     },
     header: {
         flexDirection: "row",
@@ -128,11 +163,21 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingVertical: 12,
         borderBottomWidth: 1,
-        borderBottomColor: "#f0f0f0",
+        borderBottomColor: "#333",
+        backgroundColor: 'rgba(0,0,0,0.7)',
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 10,
     },
     headerTitle: {
         fontSize: 18,
         fontWeight: "bold",
+        color: '#fff',
+        flex: 1,
+        textAlign: 'center',
+        marginHorizontal: 10,
     },
     backButton: {
         width: 40,
@@ -165,13 +210,12 @@ const styles = StyleSheet.create({
     },
     sliderContainer: {
         flex: 1,
-        backgroundColor: '#f5f5f5',
+        backgroundColor: '#000',
     },
     carouselItem: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#fff',
     },
     mapImage: {
         width: '100%',
