@@ -1,5 +1,6 @@
 import '../global.css';
 import 'react-native-reanimated';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider } from '@/contexts/AuthContext';
 import LayoutContent from '@/contexts/LayoutContext';
@@ -157,10 +158,12 @@ export default function RootLayout() {
   }, [user?.id]);
 
   return (
-    <AuthProvider>
-      <SafeAreaProvider>
-        <LayoutContent />
-      </SafeAreaProvider>
-    </AuthProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <AuthProvider>
+        <SafeAreaProvider>
+          <LayoutContent />
+        </SafeAreaProvider>
+      </AuthProvider>
+    </GestureHandlerRootView>
   );
 }

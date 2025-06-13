@@ -6,41 +6,92 @@ import { Tour, CustomMapImage } from "@/models"
 import { getTourById } from "@/services/tour"
 import { COLORS } from "@/constants/theme"
 import { FlatList, Gesture, GestureDetector } from "react-native-gesture-handler"
-import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated"
+import Animated, { useAnimatedStyle, useSharedValue, withTiming, runOnJS } from "react-native-reanimated"
 
 const AnimatedImage = Animated.createAnimatedComponent(Image);
 
-const ZoomableImage = ({ item }: { item: CustomMapImage }) => {
+interface ZoomableImageProps {
+    item: CustomMapImage;
+    onZoom: (isZoomed: boolean) => void;
+}
+
+const ZoomableImage = ({ item, onZoom }: ZoomableImageProps) => {
     const { width, height } = useWindowDimensions();
+
     const scale = useSharedValue(1);
-    const focalX = useSharedValue(0);
-    const focalY = useSharedValue(0);
+    const savedScale = useSharedValue(1);
+    const translationX = useSharedValue(0);
+    const savedTranslationX = useSharedValue(0);
+    const translationY = useSharedValue(0);
+    const savedTranslationY = useSharedValue(0);
+
+    const panGesture = Gesture.Pan()
+        .averageTouches(true)
+        .onUpdate((e) => {
+            'worklet';
+            if (scale.value > 1) {
+                const maxTranslateX = (width * scale.value - width) / 2;
+                const maxTranslateY = (height * scale.value - height) / 2;
+                translationX.value = Math.max(-maxTranslateX, Math.min(maxTranslateX, savedTranslationX.value + e.translationX));
+                translationY.value = Math.max(-maxTranslateY, Math.min(maxTranslateY, savedTranslationY.value + e.translationY));
+            }
+        })
+        .onEnd(() => {
+            'worklet';
+            savedTranslationX.value = translationX.value;
+            savedTranslationY.value = translationY.value;
+        });
 
     const pinchGesture = Gesture.Pinch()
         .onUpdate((e) => {
-            scale.value = e.scale;
+            'worklet';
+            const newScale = savedScale.value * e.scale;
+            if (newScale >= 1) {
+                scale.value = newScale;
+            }
         })
         .onEnd(() => {
-            scale.value = withTiming(1);
+            'worklet';
+            if (scale.value < 1.1) {
+                scale.value = withTiming(1);
+                translationX.value = withTiming(0);
+                translationY.value = withTiming(0);
+                savedTranslationX.value = 0;
+                savedTranslationY.value = 0;
+                savedScale.value = 1;
+                runOnJS(onZoom)(false);
+            } else {
+                savedScale.value = scale.value;
+                runOnJS(onZoom)(true);
+            }
         });
 
-    const animatedStyle = useAnimatedStyle(() => {
-        return {
-            transform: [
-                { translateX: focalX.value },
-                { translateY: focalY.value },
-                { scale: scale.value },
-            ],
-        };
+    const doubleTap = Gesture.Tap().numberOfTaps(2).onStart(() => {
+        'worklet';
+        if (scale.value > 1) {
+            scale.value = withTiming(1);
+            savedScale.value = 1;
+            translationX.value = withTiming(0);
+            savedTranslationX.value = 0;
+            translationY.value = withTiming(0);
+            savedTranslationY.value = 0;
+            runOnJS(onZoom)(false);
+        } else {
+            scale.value = withTiming(2.5);
+            savedScale.value = 2.5;
+            runOnJS(onZoom)(true);
+        }
     });
 
+    const composedGesture = Gesture.Race(doubleTap, Gesture.Simultaneous(pinchGesture, panGesture));
+
+    const animatedStyle = useAnimatedStyle(() => ({
+        transform: [{ translateX: translationX.value }, { translateY: translationY.value }, { scale: scale.value }],
+    }));
+
     return (
-        <GestureDetector gesture={pinchGesture}>
-            <AnimatedImage
-                source={{ uri: item.imageUrl }}
-                style={[{ width, height }, animatedStyle]}
-                resizeMode="contain"
-            />
+        <GestureDetector gesture={composedGesture}>
+            <AnimatedImage source={{ uri: item.imageUrl }} style={[{ width, height }, animatedStyle]} resizeMode="contain" />
         </GestureDetector>
     )
 }
@@ -51,6 +102,8 @@ export default function TourCustomMapDetailsScreen() {
     const [tour, setTour] = useState<Tour>()
     const [loading, setLoading] = useState<boolean>(true)
     const [currentIndex, setCurrentIndex] = useState(0)
+    const [isZoomed, setIsZoomed] = useState(false);
+
     const flatListRef = useRef<FlatList<any>>(null)
     const { width } = useWindowDimensions();
 
@@ -66,80 +119,110 @@ export default function TourCustomMapDetailsScreen() {
                 setLoading(false)
             }
         }
-
         if (tourId) {
             fetchTourById()
         }
     }, [tourId])
 
-    const goBack = () => {
-        router.back()
-    }
+    const goBack = () => router.back();
 
-    const handleScroll = (event: any) => {
-        const contentOffsetX = event.nativeEvent.contentOffset.x
-        const index = Math.round(contentOffsetX / width)
-        setCurrentIndex(index)
-    }
+    const sortedImages = tour?.customMapImages?.sort((a, b) => a.order - b.order) || [];
+
+    const handleNext = () => {
+        if (currentIndex < sortedImages.length - 1) {
+            const nextIndex = currentIndex + 1;
+            flatListRef.current?.scrollToIndex({ index: nextIndex, animated: true });
+            setCurrentIndex(nextIndex);
+        }
+    };
+
+    const handlePrev = () => {
+        if (currentIndex > 0) {
+            const prevIndex = currentIndex - 1;
+            flatListRef.current?.scrollToIndex({ index: prevIndex, animated: true });
+            setCurrentIndex(prevIndex);
+        }
+    };
 
     const renderItem = ({ item }: { item: CustomMapImage }) => (
         <View style={[styles.carouselItem, { width }]}>
-            <ZoomableImage item={item} />
+            <ZoomableImage
+                item={item}
+                onZoom={setIsZoomed}
+            />
         </View>
     );
 
-    const renderDots = () => {
-        if (!tour?.customMapImages) return null;
-
-        return (
-            <View style={styles.dotsContainer}>
-                {tour.customMapImages.map((_, index) => (
-                    <View
-                        key={index}
-                        style={[
-                            styles.dot,
-                            currentIndex === index && styles.activeDot
-                        ]}
-                    />
-                ))}
-            </View>
-        );
-    };
+    const navButtonsStyle = useAnimatedStyle(() => {
+        return {
+            opacity: withTiming(isZoomed ? 0 : 1),
+            transform: [{ scale: withTiming(isZoomed ? 0.5 : 1) }]
+        }
+    })
 
     return (
         <SafeAreaView style={styles.container}>
-            {/* Header */}
             <View style={styles.header}>
                 <TouchableOpacity style={styles.backButton} onPress={goBack}>
-                    <Ionicons name="arrow-back" size={24} color="#000" />
+                    <Ionicons name="arrow-back" size={24} color="#FFF" />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle} numberOfLines={1} ellipsizeMode="tail">Sơ đồ - {tour?.title ?? ''}</Text>
                 <View style={{ width: 40 }} />
             </View>
 
-            {/* Custom Map Images Slider */}
             {loading ? (
                 <View style={styles.loadingContainer}>
                     <ActivityIndicator size="large" color={COLORS.primary} />
                     <Text style={styles.loadingText}>Đang tải sơ đồ...</Text>
                 </View>
-            ) : tour?.customMapImages && tour.customMapImages.length > 0 ? (
+            ) : sortedImages.length > 0 ? (
                 <View style={styles.sliderContainer}>
                     <FlatList
                         ref={flatListRef}
-                        data={tour.customMapImages.sort((a, b) => a.order - b.order)}
+                        data={sortedImages}
                         renderItem={renderItem}
                         horizontal
                         pagingEnabled
                         showsHorizontalScrollIndicator={false}
-                        onScroll={handleScroll}
-                        scrollEventThrottle={16}
-                        keyExtractor={(item) => item.order.toString()}
+                        keyExtractor={(item) => item.imageUrl}
+                        scrollEnabled={false} // Disable swiping!
+                        onMomentumScrollEnd={(event) => { // Update index if scrolled programmatically
+                            const contentOffsetX = event.nativeEvent.contentOffset.x;
+                            const index = Math.round(contentOffsetX / width);
+                            setCurrentIndex(index);
+                        }}
                     />
+
+                    <Animated.View style={[styles.navButton, styles.navButtonLeft, navButtonsStyle]}>
+                        {currentIndex > 0 && (
+                            <TouchableOpacity onPress={handlePrev}>
+                                <Ionicons name="chevron-back-circle" size={44} color="#FFF" />
+                            </TouchableOpacity>
+                        )}
+                    </Animated.View>
+                    <Animated.View style={[styles.navButton, styles.navButtonRight, navButtonsStyle]}>
+                        {currentIndex < sortedImages.length - 1 && (
+                            <TouchableOpacity onPress={handleNext}>
+                                <Ionicons name="chevron-forward-circle" size={44} color="#FFF" />
+                            </TouchableOpacity>
+                        )}
+                    </Animated.View>
+
+
                     <View style={styles.counterContainer}>
-                        <Text style={styles.counterText}>{currentIndex + 1}/{tour.customMapImages.length}</Text>
+                        <Text style={styles.counterText}>{currentIndex + 1}/{sortedImages.length}</Text>
                     </View>
-                    {renderDots()}
+                    <View style={styles.dotsContainer}>
+                        {sortedImages.map((_, index) => (
+                            <View
+                                key={index}
+                                style={[
+                                    styles.dot,
+                                    currentIndex === index && styles.activeDot
+                                ]}
+                            />
+                        ))}
+                    </View>
                 </View>
             ) : (
                 <View style={styles.errorContainer}>
@@ -162,13 +245,9 @@ const styles = StyleSheet.create({
         alignItems: "center",
         paddingHorizontal: 16,
         paddingVertical: 12,
-        borderBottomWidth: 1,
-        borderBottomColor: "#333",
-        backgroundColor: 'rgba(0,0,0,0.7)',
+        backgroundColor: 'rgba(0,0,0,0.5)',
         position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
+        top: 0, left: 0, right: 0,
         zIndex: 10,
     },
     headerTitle: {
@@ -185,6 +264,26 @@ const styles = StyleSheet.create({
         borderRadius: 20,
         justifyContent: "center",
         alignItems: "center",
+    },
+    sliderContainer: {
+        flex: 1,
+    },
+    carouselItem: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    navButton: {
+        position: 'absolute',
+        top: '50%',
+        transform: [{ translateY: -22 }],
+        zIndex: 10,
+    },
+    navButtonLeft: {
+        left: 15,
+    },
+    navButtonRight: {
+        right: 15,
     },
     loadingContainer: {
         flex: 1,
@@ -208,27 +307,15 @@ const styles = StyleSheet.create({
         color: COLORS.grey,
         textAlign: 'center',
     },
-    sliderContainer: {
-        flex: 1,
-        backgroundColor: '#000',
-    },
-    carouselItem: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    mapImage: {
-        width: '100%',
-        height: '100%',
-    },
     counterContainer: {
         position: 'absolute',
-        bottom: 20,
+        bottom: 10,
         right: 20,
         backgroundColor: 'rgba(0, 0, 0, 0.7)',
         paddingHorizontal: 12,
         paddingVertical: 6,
         borderRadius: 15,
+        zIndex: 10,
     },
     counterText: {
         color: '#fff',
@@ -239,9 +326,10 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         position: 'absolute',
-        bottom: 40,
+        bottom: 20,
         left: 0,
         right: 0,
+        zIndex: 10,
     },
     dot: {
         width: 8,
@@ -256,4 +344,4 @@ const styles = StyleSheet.create({
         height: 12,
         borderRadius: 6,
     },
-}); 
+});
