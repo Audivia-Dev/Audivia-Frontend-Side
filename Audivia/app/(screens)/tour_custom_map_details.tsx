@@ -90,7 +90,7 @@ export default function TourCustomMapDetailsScreen() {
 
     const renderDots = () => {
         if (!tour?.customMapImages) return null;
-        
+
         return (
             <View style={styles.dotsContainer}>
                 {tour.customMapImages.map((_, index) => (
@@ -134,7 +134,7 @@ export default function TourCustomMapDetailsScreen() {
                         showsHorizontalScrollIndicator={false}
                         onScroll={handleScroll}
                         scrollEventThrottle={16}
-                        keyExtractor={(item) => item.id.toString()}
+                        keyExtractor={(item) => item.order.toString()}
                     />
                     <View style={styles.counterContainer}>
                         <Text style={styles.counterText}>{currentIndex + 1}/{tour.customMapImages.length}</Text>
