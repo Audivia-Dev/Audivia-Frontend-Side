@@ -7,7 +7,7 @@ import { getDistance } from 'geolib';
 const LOCATION_TASK_NAME = 'background-location-task';
 const CHECKPOINTS_STORAGE_KEY = 'audivia-checkpoints-storage';
 const NOTIFICATION_TIMESTAMPS_KEY = 'audivia-notification-timestamps-storage';
-const NOTIFICATION_DISTANCE_THRESHOLD = 5; // 5 meters for better testing
+const NOTIFICATION_DISTANCE_THRESHOLD = 10; // 10 meters
 const NOTIFICATION_COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes
 const CHECKPOINT_NOTIFICATION_CATEGORY_ID = 'checkpoint-arrival';
 export const STOP_TOUR_ACTION_ID = 'stop-tour-action';
@@ -53,8 +53,8 @@ TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }) => {
         console.log(`Ignoring stale location update (age: ${Math.round(locationAge / 1000)}s)`);
         return;
       }
-      // 2. Ignore inaccurate location updates (accuracy > 25 meters)
-      if (currentLocation.coords.accuracy == null || currentLocation.coords.accuracy > 25) {
+      // 2. Ignore inaccurate location updates (accuracy > 50 meters)
+      if (currentLocation.coords.accuracy == null || currentLocation.coords.accuracy > 50) {
         console.log(`Ignoring inaccurate location update (accuracy: ${currentLocation.coords.accuracy?.toFixed(1) ?? 'unknown'}m)`);
         return;
       }
@@ -164,7 +164,7 @@ export const startLocationTracking = async (tripCheckpoints: any[], tourId: stri
     showsBackgroundLocationIndicator: true,
     foregroundService: {
       notificationTitle: "Audivia đang dẫn tour!",
-      notificationBody: "Theo dõi vị trí của bạn để thông báo khi tới các điểm dừng.",
+      notificationBody: "Theo dõi vị trí của bạn để thông báo khi tới các điểm dừng. Audivia sẽ tự động ngưng theo dõi vị trí khi bạn chọn Kết thúc Tour",
     }
   });
   console.log('High-accuracy location tracking started.');

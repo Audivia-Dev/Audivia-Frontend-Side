@@ -27,13 +27,9 @@ export default function RootLayout() {
   const router = useRouter();
 
   useEffect(() => {
-    // This effect runs once when the app is first loaded (after being killed).
-    // It ensures that any orphaned tracking task from a previous session is stopped.
-    // This implements the behavior: "closing the app stops tracking".
-    console.log("App mounted. Stopping any orphaned location tracking tasks.");
-    stopLocationTracking();
+    console.log("App mounted. Stopping any orphaned location tracking tasks has been disabled from root.");
+    // stopLocationTracking(); 
 
-    // Configure notification actions on app startup
     setupNotificationActions();
   }, []);
 
