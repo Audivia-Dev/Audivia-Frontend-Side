@@ -5,7 +5,12 @@ export default {
     "slug": "audivia",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/logoAudi.png",
+    "splash": {
+      "image": "./assets/images/logoAudi.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
     "scheme": "audivia",
     "deepLinking": true,
     "userInterfaceStyle": "automatic",
