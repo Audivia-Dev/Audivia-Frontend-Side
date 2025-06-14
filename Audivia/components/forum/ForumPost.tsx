@@ -4,7 +4,7 @@ import { COLORS } from "@/constants/theme";
 import { styles } from "@/styles/forum.styles";
 import { useUser } from "@/hooks/useUser";
 import { router } from "expo-router";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { reactPost, commentPost, getPostComments, getReactionByUserAndPost, updateComment, deleteComment } from "@/services/post";
 import { Post as PostModel, Comment as CommentModel } from "@/models";
 
@@ -49,14 +49,14 @@ export const ForumPost = ({ item }: ForumPostProps) => {
     fetchUserReactions();
   }, [user?.id, item.id]);
 
-  const navigateToProfile = (userId: string) => {
+  const navigateToProfile = useCallback((userId: string) => {
     router.push({
       pathname: "/profile",
       params: { userId },
     });
-  };
+  }, [router]);
 
-  const handleLike = async () => {
+  const handleLike = useCallback(async () => {
     if (!user?.id) return;
     const originallyLiked = isLiked;
     setIsLiked(!originallyLiked);
@@ -70,9 +70,9 @@ export const ForumPost = ({ item }: ForumPostProps) => {
       // Revert, ensuring likesCount never goes below 0
       setLikesCount(prev => Math.max(0, originallyLiked ? prev + 1 : prev - 1));
     }
-  };
+  }, [user?.id, item.id, isLiked]);
 
-  const handleComment = async () => {
+  const handleComment = useCallback(async () => {
     if (!user?.id || !commentText.trim() || isSubmittingComment) return;
     setIsSubmittingComment(true);
     try {
@@ -89,9 +89,9 @@ export const ForumPost = ({ item }: ForumPostProps) => {
     } finally {
       setIsSubmittingComment(false);
     }
-  };
+  }, [user?.id, item.id, commentText, isSubmittingComment]);
 
-  const handleOpenCommentsModal = async () => {
+  const handleOpenCommentsModal = useCallback(async () => {
     if (isLoadingComments) return;
     setIsLoadingComments(true);
     try {
@@ -109,9 +109,9 @@ export const ForumPost = ({ item }: ForumPostProps) => {
     } finally {
       setIsLoadingComments(false);
     }
-  };
+  }, [item.id, isLoadingComments]);
 
-  const handleUpdateComment = async () => {
+  const handleUpdateComment = useCallback(async () => {
     if (!editingComment || !editedContent.trim() || !user?.id) return;
     try {
       const originalComments = [...allComments];
@@ -127,9 +127,9 @@ export const ForumPost = ({ item }: ForumPostProps) => {
       console.error("Error updating comment:", error);
       Alert.alert("Lỗi", "Đã xảy ra lỗi khi cập nhật bình luận.");
     }
-  };
+  }, [editingComment, editedContent, user?.id, allComments]);
 
-  const handleDeleteComment = (commentId: string) => {
+  const handleDeleteComment = useCallback((commentId: string) => {
     if (!user?.id) return;
     Alert.alert(
       "Xóa bình luận",
@@ -156,10 +156,10 @@ export const ForumPost = ({ item }: ForumPostProps) => {
         },
       ]
     );
-  };
+  }, [user?.id, allComments]);
 
 
-  const renderCommentItem = ({ item: commentItem }: { item: CommentModel }) => {
+  const renderCommentItem = useCallback(({ item: commentItem }: { item: CommentModel }) => {
     const isAuthor = commentItem.createdBy === user?.id;
     const handleStartEdit = () => {
       setEditingComment(commentItem);
@@ -211,7 +211,7 @@ export const ForumPost = ({ item }: ForumPostProps) => {
         )}
       </View>
     );
-  };
+  }, [user?.id, editingComment, editedContent, handleUpdateComment, handleDeleteComment]);
 
   return (
     <View style={styles.postWrapper}>

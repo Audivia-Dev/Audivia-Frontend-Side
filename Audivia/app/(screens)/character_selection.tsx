@@ -111,7 +111,7 @@ const CharacterSelectionScreen = () => {
       await soundRef.current.loadAsync({ uri: character.audioUrl }, { shouldPlay: true })
       setIsPlaying(true)
     } catch (error) {
-      console.error("Error playing audio:", error)
+      alert("The audio is already loading! Please wait!")
       setIsPlaying(false)
     } finally {
       setIsLoading(false)

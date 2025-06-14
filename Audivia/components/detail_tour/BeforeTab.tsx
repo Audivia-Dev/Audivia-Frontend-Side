@@ -25,7 +25,11 @@ export const BeforeTab = ({ tour }: BeforeTabProps) => {
 
   const handleViewMap = () => {
     if (tour?.id) {
-      router.push(`/(screens)/tour_map?tourId=${tour.id}`)
+      if (tour.useCustomMap) {
+        router.push(`/(screens)/tour_custom_map?tourId=${tour.id}`)
+      } else {
+        router.push(`/(screens)/tour_map?tourId=${tour.id}`)
+      }
     }
   }
 

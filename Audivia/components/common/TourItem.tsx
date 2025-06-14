@@ -62,80 +62,80 @@ export const TourItem = ({ tour, isSavedTour = false, onDelete, onSave }: TourIt
   return (
     <View style={styles.tourList}>
       <TouchableOpacity style={styles.tourCard} onPress={() => navigateToTourDetail(tour.id)}>
-      <View>
-        {/* Image */}
-        <Image source={{ uri: tour.thumbnailUrl || "https://maps.googleapis.com/maps/api/staticmap?center=10.8700,106.8030&zoom=14&size=600x300&maptype=roadmap&markers=color:red%7C10.8700,106.8030&key=YOUR_API_KEY" }} style={styles.tourImage} />
-      </View>
-
-      {/* Tour Info */}
-      <View style={styles.tourInfo}>
-        {isSavedTour ? (
-          <TouchableOpacity
-            style={styles.favoriteButton}
-            onPress={() => handleDeleteSaveTour(tour.id)}
-          >
-            <Ionicons name="trash-outline" size={20} color={COLORS.red} />
-          </TouchableOpacity>
-        ) : (
-          <TouchableOpacity style={styles.favoriteButton} onPress={() => handleSaveTour(tour.id)}>
-            <FontAwesome name="heart" size={20} color={COLORS.primary} />
-          </TouchableOpacity>
-        )}
-
-        {/* Tour Name */}
-        <Text style={{ fontSize: 20, fontWeight: 'bold', marginLeft: 4, width: 200 }} numberOfLines={2}>{tour.title}</Text>
-
-        {/* Location */}
-        <View style={styles.locationContainer}>
-          <Ionicons name="location-outline" size={16} color="#666" />
-          <Text style={styles.locationText}>{tour.location}</Text>
+        <View>
+          {/* Image */}
+          <Image source={{ uri: tour.thumbnailUrl || "https://maps.googleapis.com/maps/api/staticmap?center=10.8700,106.8030&zoom=14&size=600x300&maptype=roadmap&markers=color:red%7C10.8700,106.8030&key=YOUR_API_KEY" }} style={styles.tourImage} />
         </View>
 
-        {/* Tour Description */}
-        <View style={styles.locationContainer}>
-          <Ionicons name="information-circle-outline" size={16} color="#666" />
-          <Text style={{ fontSize: 16, color: COLORS.grey, marginLeft: 4 }} numberOfLines={2}>{tour.description}</Text>
-        </View>
+        {/* Tour Info */}
+        <View style={styles.tourInfo}>
+          {isSavedTour ? (
+            <TouchableOpacity
+              style={styles.favoriteButton}
+              onPress={() => handleDeleteSaveTour(tour.id)}
+            >
+              <Ionicons name="trash-outline" size={20} color={COLORS.red} />
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity style={styles.favoriteButton} onPress={() => handleSaveTour(tour.id)}>
+              <FontAwesome name="heart" size={20} color={COLORS.primary} />
+            </TouchableOpacity>
+          )}
 
-        {/* Rating */}
-        <View style={styles.ratingContainer}>
-          <FontAwesome name="star" size={16} color={COLORS.orange} />
-          <Text style={styles.ratingText}>
-            {tour.avgRating}
-          </Text>
-        </View>
+          {/* Tour Name */}
+          <Text style={{ fontSize: 20, fontWeight: 'bold', marginLeft: 4, width: 200 }} numberOfLines={2}>{tour.title}</Text>
 
-        {/* Price and Book Button Container */}
-        <View style={styles.priceAndBookContainer}>
-          {/* Price */}
-          <View style={styles.priceTag}>
-            <Text style={{ fontSize: 16, fontWeight: 'bold', color: COLORS.primary }}>
-              {tour.price === 0 ? "Miễn phí" : ` ${tour.price} Đ`}
+          {/* Location */}
+          <View style={styles.locationContainer}>
+            <Ionicons name="location-outline" size={16} color="#666" />
+            <Text style={styles.locationText}>{tour.location}</Text>
+          </View>
+
+          {/* Tour Description */}
+          <View style={styles.locationContainer}>
+            <Ionicons name="information-circle-outline" size={16} color="#666" />
+            <Text style={{ fontSize: 16, color: COLORS.grey, marginLeft: 4 }} numberOfLines={2}>{tour.description}</Text>
+          </View>
+
+          {/* Rating */}
+          <View style={styles.ratingContainer}>
+            <FontAwesome name="star" size={16} color={COLORS.orange} />
+            <Text style={styles.ratingText}>
+              {tour.avgRating.toFixed(1)}
             </Text>
           </View>
 
-          {/* Book Button */}
-          <TouchableOpacity
-            onPress={() => isSavedTour ? navigateToPlanDate(tour.id) : navigateToTourDetail(tour.id)}
-          >
-            <View style={styles.bookButton}>
-              <LinearGradient
-                colors={[COLORS.primary, COLORS.purpleGradient]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.bookButton}
-              >
-                {isSavedTour ? (
-                  <Ionicons name="calendar-outline" size={24} color={COLORS.light} />
-                ) : (
-                  <Text style={styles.bookButtonText}>Đặt Ngay</Text>
-                )}
-              </LinearGradient>
+          {/* Price and Book Button Container */}
+          <View style={styles.priceAndBookContainer}>
+            {/* Price */}
+            <View style={styles.priceTag}>
+              <Text style={{ fontSize: 16, fontWeight: 'bold', color: COLORS.primary }}>
+                {tour.price === 0 ? "Miễn phí" : ` ${tour.price} Đ`}
+              </Text>
             </View>
-          </TouchableOpacity>
-        </View>
-      </View >
-    </TouchableOpacity >
+
+            {/* Book Button */}
+            <TouchableOpacity
+              onPress={() => isSavedTour ? navigateToPlanDate(tour.id) : navigateToTourDetail(tour.id)}
+            >
+              <View style={styles.bookButton}>
+                <LinearGradient
+                  colors={[COLORS.primary, COLORS.purpleGradient]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.bookButton}
+                >
+                  {isSavedTour ? (
+                    <Ionicons name="calendar-outline" size={24} color={COLORS.light} />
+                  ) : (
+                    <Text style={styles.bookButtonText}>Đặt Ngay</Text>
+                  )}
+                </LinearGradient>
+              </View>
+            </TouchableOpacity>
+          </View>
+        </View >
+      </TouchableOpacity >
     </View>
   )
 }

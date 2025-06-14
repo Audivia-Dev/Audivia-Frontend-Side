@@ -78,24 +78,30 @@ export default function Index() {
     fetchSearchedTours();
   }, [debouncedSearchQuery]);
 
-  const handleLocationChange = (address: string | null, coordinates?: { latitude: number; longitude: number } | null) => {
+  const handleLocationChange = useCallback((address: string | null, coordinates?: { latitude: number; longitude: number } | null) => {
     setCurrentLocationAddress(address);
     setUserCoordinates(coordinates || null);
-  };
+  }, []);
 
-  const handleDetailedSearch = () => {
+  const handleDetailedSearch = useCallback(() => {
     router.push({
       pathname: "/(screens)/filter_tour",
       params: { searchQuery: debouncedSearchQuery }
     });
-  }
+  }, [router, debouncedSearchQuery]);
 
-  const handleSuggestionPress = (tourId: string) => {
+  const handleSuggestionPress = useCallback((tourId: string) => {
     router.push({
       pathname: "/(screens)/detail_tour",
       params: { tourId: tourId }
     });
-  };
+  }, [router]);
+
+  const renderSuggestionItem = useCallback(({ item }: { item: Tour }) => (
+    <TouchableOpacity onPress={() => handleSuggestionPress(item.id)}>
+      <Text style={styles.suggestionItem}>{item.title}</Text>
+    </TouchableOpacity>
+  ), [handleSuggestionPress]);
 
   return (
     <View style={styles.container}>
@@ -126,11 +132,8 @@ export default function Index() {
             <FlatList
               data={searchedTours}
               keyExtractor={(item) => item.id}
-              renderItem={({ item }) => (
-                <TouchableOpacity onPress={() => handleSuggestionPress(item.id)}>
-                  <Text style={styles.suggestionItem}>{item.title}</Text>
-                </TouchableOpacity>
-              )}
+              renderItem={renderSuggestionItem}
+              keyboardShouldPersistTaps="handled"
             />
             <TouchableOpacity style={styles.detailedSearchButton} onPress={handleDetailedSearch}>
               <Text style={styles.detailedSearchText}>Search more detail</Text>

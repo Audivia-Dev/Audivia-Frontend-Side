@@ -1,4 +1,4 @@
-import { Image, Text, View } from "react-native";
+import { Image, Text, View, ScrollView, KeyboardAvoidingView, Platform } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import styles from "@/styles/auth.styles";
 import { COLORS } from "@/constants/theme";
@@ -32,36 +32,42 @@ export default function Signup() {
   }
 
   return (
-    <View style={styles.container}>
-      {/* Circular Background Shape */}
-      <View style={styles.circleBottomShape} />
-      {/* Logo */}
-      <View style={styles.logoSection}>
-        <MaskedView maskElement={
-          <Text style={[styles.brandTitle, { backgroundColor: 'transparent' }]}>
-            Đăng Ký
-          </Text>
-        }>
-          <LinearGradient
-            colors={[COLORS.primary, COLORS.purpleGradient]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}>
-            <Text style={[styles.brandTitle, { opacity: 0 }]}>
+    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#fff' }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
+      <ScrollView
+        contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingHorizontal: 24, paddingTop: 60, paddingBottom: 20 }}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Circular Background Shape */}
+        <View style={styles.circleBottomShape} />
+        {/* Logo */}
+        <View style={styles.logoSection}>
+          <MaskedView maskElement={
+            <Text style={[styles.brandTitle, { backgroundColor: 'transparent' }]}>
               Đăng Ký
             </Text>
-          </LinearGradient>
-        </MaskedView>
-        <Image source={{ uri: 'https://res.cloudinary.com/dgzn2ix8w/image/upload/v1748439988/Audivia/xxynw0hglztf4mijnobw.png' }} style={styles.logo} />
+          }>
+            <LinearGradient
+              colors={[COLORS.primary, COLORS.purpleGradient]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}>
+              <Text style={[styles.brandTitle, { opacity: 0 }]}>
+                Đăng Ký
+              </Text>
+            </LinearGradient>
+          </MaskedView>
+          <Image source={{ uri: 'https://res.cloudinary.com/dgzn2ix8w/image/upload/v1748439988/Audivia/xxynw0hglztf4mijnobw.png' }} style={styles.logo} />
 
-      </View>
+        </View>
 
-      <AuthForm
-        type="signup"
-        onSubmit={handleSignup}
-        onGoogleAuth={handleGoogleSignup}
-        onToggleAuth={() => router.push("/login")}
-      />
+        <AuthForm
+          type="signup"
+          onSubmit={handleSignup}
+          onGoogleAuth={handleGoogleSignup}
+          onToggleAuth={() => router.push("/login")}
+        />
 
-    </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }

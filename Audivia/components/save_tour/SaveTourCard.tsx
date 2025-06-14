@@ -48,15 +48,15 @@ export const SaveTourCard = ({ item, onDelete }: SaveTourCardProps) => {
 
   return (
     <View style={styles.tourCard}>
-      <View style={{alignItems: 'flex-end', marginEnd: 10, marginTop: 10}}>
+      <View style={{ alignItems: 'flex-end', marginEnd: 10, marginTop: 10 }}>
         <TouchableOpacity onPress={() => setShowPostOptions(!showPostOptions)}>
           <Ionicons name="ellipsis-horizontal" size={20} color="#666" />
         </TouchableOpacity>
       </View>
       {showPostOptions && (
         <View style={styles.postOptions}>
-          <TouchableOpacity 
-            style={styles.postOption} 
+          <TouchableOpacity
+            style={styles.postOption}
             onPress={() => handleDeleteSaveTour(item.id)}
           >
             <Ionicons name="trash-outline" size={20} color={COLORS.red} />
@@ -75,7 +75,7 @@ export const SaveTourCard = ({ item, onDelete }: SaveTourCardProps) => {
           </View>
           <View style={styles.tourRating}>
             <Ionicons name="star" size={16} color={COLORS.orange} />
-            <Text style={styles.ratingText}>{item.tour.avgRating}</Text>
+            <Text style={styles.ratingText}>{item.tour.avgRating.toFixed(1)}</Text>
           </View>
         </View>
 

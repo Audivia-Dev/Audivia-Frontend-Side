@@ -3,24 +3,35 @@ import * as Location from 'expo-location';
 import * as Notifications from 'expo-notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getDistance } from 'geolib';
+import { Platform } from 'react-native';
 
 const LOCATION_TASK_NAME = 'background-location-task';
 const CHECKPOINTS_STORAGE_KEY = 'audivia-checkpoints-storage';
-const NOTIFICATION_TIMESTAMPS_KEY = 'audivia-notification-timestamps-storage';
-const NOTIFICATION_DISTANCE_THRESHOLD = 5; // 5 meters for better testing
-const NOTIFICATION_COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes
+const NOTIFICATION_TIMESTAMPS_KEY = 'audivia-notification-timestamps';
+const NOTIFICATION_DISTANCE_THRESHOLD = 20;
+const NOTIFICATION_COOLDOWN_MS = 10 * 60 * 1000; // 10 minutes
 const CHECKPOINT_NOTIFICATION_CATEGORY_ID = 'checkpoint-arrival';
 export const STOP_TOUR_ACTION_ID = 'stop-tour-action';
 
 // This function needs to be called once when the app initializes.
 export const setupNotificationActions = () => {
+  // Create a custom notification channel for Android with vibration
+  if (Platform.OS === 'android') {
+    Notifications.setNotificationChannelAsync('checkpoint-alerts', {
+      name: 'Checkpoint Alerts',
+      importance: Notifications.AndroidImportance.MAX,
+      vibrationPattern: [0, 1000, 500, 1000, 500, 1000, 500, 1000],
+      sound: 'default',
+    });
+  }
+
   Notifications.setNotificationCategoryAsync(CHECKPOINT_NOTIFICATION_CATEGORY_ID, [
     {
       identifier: STOP_TOUR_ACTION_ID,
       buttonTitle: 'Dừng Tour',
       options: {
         isDestructive: true,
-        opensAppToForeground: false, // Handle action in the background
+        opensAppToForeground: false,
       },
     },
   ]);
@@ -47,14 +58,12 @@ TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }) => {
       const currentLocation = locations[0];
 
       // --- Location Validation ---
-      // 1. Ignore stale location updates (older than 5 seconds)
       const locationAge = Date.now() - currentLocation.timestamp;
-      if (locationAge > 5000) {
+      if (locationAge > 10000) { // 10 seconds tolerance for staleness
         console.log(`Ignoring stale location update (age: ${Math.round(locationAge / 1000)}s)`);
         return;
       }
-      // 2. Ignore inaccurate location updates (accuracy > 25 meters)
-      if (currentLocation.coords.accuracy == null || currentLocation.coords.accuracy > 25) {
+      if (currentLocation.coords.accuracy == null || currentLocation.coords.accuracy > 50) {
         console.log(`Ignoring inaccurate location update (accuracy: ${currentLocation.coords.accuracy?.toFixed(1) ?? 'unknown'}m)`);
         return;
       }
@@ -68,43 +77,51 @@ TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }) => {
         return; // No data to process
       }
 
-      const { checkpoints, tourId } = JSON.parse(storedData)
+      const { checkpoints, tourId } = JSON.parse(storedData);
       if (!currentLocation || !checkpoints || checkpoints.length === 0 || !tourId) return;
 
-      let timestampsNeedUpdate = false;
+      // --- New Logic: Find the single nearest checkpoint first ---
+      let nearestCheckpoint = null;
+      let minDistance = Infinity;
+
       for (const checkpoint of checkpoints) {
         const distance = getDistance(
           { latitude: currentLocation.coords.latitude, longitude: currentLocation.coords.longitude },
           { latitude: checkpoint.latitude, longitude: checkpoint.longitude }
         );
 
-        const lastNotified = notificationTimestamps[checkpoint.id] || 0;
-        const hasCooledDown = Date.now() - lastNotified > NOTIFICATION_COOLDOWN_MS;
-
-        if (distance <= NOTIFICATION_DISTANCE_THRESHOLD && hasCooledDown) {
-          console.log(`User is within radius for "${checkpoint.title}" and cooldown has passed. Notifying.`);
-          await Notifications.scheduleNotificationAsync({
-            content: {
-              title: "Tới điểm đến!",
-              body: `Bạn đang rất gần ${checkpoint.title}. Mở ứng dụng để nghe audio cùng Audi nhé.`,
-              sound: 'default',
-              data: {
-                tourId: tourId,
-                checkpointId: checkpoint.id
-              },
-              categoryIdentifier: CHECKPOINT_NOTIFICATION_CATEGORY_ID,
-            },
-            trigger: null,
-          });
-
-          // Update the timestamp for this checkpoint
-          notificationTimestamps[checkpoint.id] = Date.now();
-          timestampsNeedUpdate = true;
+        if (distance < minDistance) {
+          minDistance = distance;
+          nearestCheckpoint = checkpoint;
         }
       }
 
-      if (timestampsNeedUpdate) {
-        await AsyncStorage.setItem(NOTIFICATION_TIMESTAMPS_KEY, JSON.stringify(notificationTimestamps));
+      // --- Now, check if we should notify for the nearest one ---
+      if (nearestCheckpoint && minDistance <= NOTIFICATION_DISTANCE_THRESHOLD) {
+        const lastNotified = notificationTimestamps[nearestCheckpoint.id] || 0;
+        const hasCooledDown = (Date.now() - lastNotified) > NOTIFICATION_COOLDOWN_MS;
+
+        if (hasCooledDown) {
+          console.log(`User is near the closest checkpoint "${nearestCheckpoint.title}" (${minDistance.toFixed(1)}m) and cooldown has passed. Notifying.`);
+
+          await Notifications.scheduleNotificationAsync({
+            content: {
+              title: "Bạn đã tới một điểm đến!",
+              body: `Bạn đang ở rất gần ${nearestCheckpoint.title}. Mở ứng dụng để nghe audio cùng Audi nhé.`,
+              sound: Platform.OS === 'ios' ? 'notification_sound.wav' : undefined,
+              data: { tourId: tourId, checkpointId: nearestCheckpoint.id },
+              categoryIdentifier: CHECKPOINT_NOTIFICATION_CATEGORY_ID,
+              vibrate: Platform.OS === 'android' ? [0, 1000, 500, 1000, 500, 1000, 500, 1000] : undefined,
+            },
+            trigger: Platform.OS === 'android' ? { channelId: 'checkpoint-alerts' } : null,
+          });
+
+          // Update the timestamp for this checkpoint and save it
+          notificationTimestamps[nearestCheckpoint.id] = Date.now();
+          await AsyncStorage.setItem(NOTIFICATION_TIMESTAMPS_KEY, JSON.stringify(notificationTimestamps));
+        } else {
+          console.log(`User is near "${nearestCheckpoint.title}", but it's on cooldown. Skipping.`);
+        }
       }
 
     } catch (taskError) {
@@ -114,16 +131,11 @@ TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }) => {
 });
 
 export const startLocationTracking = async (tripCheckpoints: any[], tourId: string) => {
-  // First, check if a tracking task is already running.
-  // If so, stop it before starting a new one to prevent conflicts.
   const isTracking = await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
   if (isTracking) {
     console.log("A previous location tracking task was running. Stopping it before starting a new one.");
     await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
   }
-
-  // Clear any previous notification timestamps to ensure a fresh session
-  await AsyncStorage.removeItem(NOTIFICATION_TIMESTAMPS_KEY);
 
   console.log("Requesting permissions...");
   const { status: foregroundStatus } = await Location.requestForegroundPermissionsAsync();
@@ -138,9 +150,8 @@ export const startLocationTracking = async (tripCheckpoints: any[], tourId: stri
     return;
   }
 
-  // Store non-notified checkpoints for the background task
   const dataToStore = {
-    checkpoints: tripCheckpoints, // Store original checkpoints without `notified` flag
+    checkpoints: tripCheckpoints,
     tourId: tourId,
   };
   await AsyncStorage.setItem(CHECKPOINTS_STORAGE_KEY, JSON.stringify(dataToStore));
@@ -164,7 +175,7 @@ export const startLocationTracking = async (tripCheckpoints: any[], tourId: stri
     showsBackgroundLocationIndicator: true,
     foregroundService: {
       notificationTitle: "Audivia đang dẫn tour!",
-      notificationBody: "Theo dõi vị trí của bạn để thông báo khi tới các điểm dừng.",
+      notificationBody: "Theo dõi vị trí của bạn để thông báo khi tới các điểm dừng. Audivia sẽ tự động ngưng theo dõi vị trí khi bạn chọn Kết thúc Tour",
     }
   });
   console.log('High-accuracy location tracking started.');
@@ -177,6 +188,6 @@ export const stopLocationTracking = async () => {
     console.log("Stopped location updates.");
   }
   await AsyncStorage.removeItem(CHECKPOINTS_STORAGE_KEY);
-  await AsyncStorage.removeItem(NOTIFICATION_TIMESTAMPS_KEY); // Also clear timestamps on stop
+  await AsyncStorage.removeItem(NOTIFICATION_TIMESTAMPS_KEY);
   console.log('Location tracking stopped and checkpoints cleared.');
 };
