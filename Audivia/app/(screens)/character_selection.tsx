@@ -98,8 +98,11 @@ const CharacterSelectionScreen = () => {
   }
   const stopAudio = async () => {
     if (soundRef.current) {
-      await soundRef.current.stopAsync()
-      await soundRef.current.unloadAsync()
+      try {
+        await soundRef.current.unloadAsync()
+      } catch (e) {
+        // Sound might already be unloaded, so we can ignore this error.
+      }
     }
     setIsPlaying(false)
   }
@@ -108,10 +111,11 @@ const CharacterSelectionScreen = () => {
     if (!soundRef.current) return;
     try {
       setIsLoading(true)
+      await stopAudio();
       await soundRef.current.loadAsync({ uri: character.audioUrl }, { shouldPlay: true })
       setIsPlaying(true)
     } catch (error) {
-      alert("The audio is already loading! Please wait!")
+      console.error("Error playing preview audio: ", error);
       setIsPlaying(false)
     } finally {
       setIsLoading(false)
@@ -119,6 +123,7 @@ const CharacterSelectionScreen = () => {
   }
 
   const handleSelectCharacter = async (index: number) => {
+    if (isLoading) return
     if (index < 0 || index >= characters.length) return
 
     Animated.sequence([
@@ -134,9 +139,7 @@ const CharacterSelectionScreen = () => {
       }),
     ]).start()
 
-    if (isPlaying) {
-      await stopAudio();
-    }
+    await stopAudio();
 
     const characterId = characters[index].id
     setSelectedCharacter(characterId)
@@ -144,6 +147,9 @@ const CharacterSelectionScreen = () => {
   }
 
   const handleConfirmSelection = async () => {
+    if (isPlaying) {
+      await stopAudio();
+    }
     try {
       if (!userTourId) {
         console.error("No user tour ID found")
@@ -171,12 +177,13 @@ const CharacterSelectionScreen = () => {
   }
 
   const handleAudioToggle = async (character: any) => {
+    if (isLoading) return
     const isCurrentlyPlayingThisCharacter = isPlaying && selectedCharacter === character.id;
     if (isCurrentlyPlayingThisCharacter) {
       await stopAudio()
     } else {
-      setSelectedCharacter(character.id)
-      await playPreview(character)
+      setSelectedCharacter(character.id);
+      await playPreview(character);
     }
   }
 
@@ -222,7 +229,7 @@ const CharacterSelectionScreen = () => {
       </View>
 
       <View style={styles.cardContainer}>
-        <TouchableOpacity style={styles.arrowButton} onPress={handlePrevious}>
+        <TouchableOpacity style={styles.arrowButton} onPress={handlePrevious} disabled={isLoading}>
           <Ionicons name="chevron-back" size={32} color={COLORS.dark} />
         </TouchableOpacity>
 
@@ -236,6 +243,7 @@ const CharacterSelectionScreen = () => {
               style={[styles.audioButton, { backgroundColor: COLORS.primary }]}
               onPress={() => handleAudioToggle(currentCharacter)}
               activeOpacity={0.8}
+              disabled={isLoading}
             >
               {isLoading ? (
                 <ActivityIndicator size="small" color={COLORS.white} />
@@ -263,7 +271,7 @@ const CharacterSelectionScreen = () => {
 
         </Animated.View>
 
-        <TouchableOpacity style={styles.arrowButton} onPress={handleNext}>
+        <TouchableOpacity style={styles.arrowButton} onPress={handleNext} disabled={isLoading}>
           <Ionicons name="chevron-forward" size={32} color={COLORS.dark} />
         </TouchableOpacity>
       </View>
@@ -274,6 +282,7 @@ const CharacterSelectionScreen = () => {
             key={index}
             style={[styles.paginationDot, currentSlide === index && styles.paginationDotActive]}
             onPress={() => handleSelectCharacter(index)}
+            disabled={isLoading}
           />
         ))}
       </View>
