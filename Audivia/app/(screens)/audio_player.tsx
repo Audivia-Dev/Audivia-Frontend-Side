@@ -74,13 +74,19 @@ export default function AudioPlayerScreen() {
     try {
       const existingCheckpointData = await getByTourProgressAndCheckpoint(params.tourProgressId, params.checkpointId);
       const existingCheckpointProgress = existingCheckpointData.response;
+
+      const soundStatus = await sound?.getStatusAsync();
+      const durationMillis = (soundStatus as AVPlaybackStatus & { durationMillis?: number })?.durationMillis;
+      const totalDurationSecs = durationMillis ? Math.ceil(durationMillis / 1000) : 0;
+      const isCompleted = totalDurationSecs > 0 && progressSecs >= totalDurationSecs - 2;
+
       if (existingCheckpointProgress) {
-        const progressDataToUpdate = {
-          progressSeconds: progressSecs,
-          isCompleted: existingCheckpointProgress.isCompleted || false,
-          lastListenedTime: new Date().toISOString()
-        };
-        if (progressSecs > existingCheckpointProgress.progressSeconds) {
+        if (progressSecs > existingCheckpointProgress.progressSeconds || (isCompleted && !existingCheckpointProgress.isCompleted)) {
+          const progressDataToUpdate = {
+            progressSeconds: progressSecs,
+            isCompleted: existingCheckpointProgress.isCompleted || isCompleted,
+            lastListenedTime: new Date().toISOString()
+          };
           await updateCheckpointProgress(existingCheckpointProgress.id, progressDataToUpdate);
         }
       } else {
@@ -89,7 +95,7 @@ export default function AudioPlayerScreen() {
           tourCheckpointId: params.checkpointId,
           checkpointAudioId: trackData.id,
           progressSeconds: progressSecs,
-          isCompleted: false,
+          isCompleted: isCompleted,
           lastListenedTime: new Date().toISOString()
         };
         await createCheckpointProgress(progressDataToCreate);
@@ -97,7 +103,7 @@ export default function AudioPlayerScreen() {
     } catch (error) {
       console.error('Error in saveTrackProgress:', error);
     }
-  }, [user?.id, params.checkpointId, params.tourProgressId]);
+  }, [user?.id, params.checkpointId, params.tourProgressId, sound]);
 
   useEffect(() => {
     const fetchAndSetAudioData = async () => {
@@ -179,43 +185,29 @@ export default function AudioPlayerScreen() {
     setCurrentProgress(Math.ceil(status.positionMillis / 1000));
 
     if (status.didJustFinish) {
-      if (typeof status.durationMillis === 'number' && user?.id && checkpointId && audioData?.id && tourProgressId) {
-        try {
-          const existingProgressData = await getByTourProgressAndCheckpoint(tourProgressId, checkpointId);
-          const existingProgress = existingProgressData.response;
-          const totalDuration = Math.ceil(status.durationMillis / 1000);
-          const progressData = {
-            progressSeconds: totalDuration,
-            isCompleted: true,
-            lastListenedTime: new Date().toISOString()
-          };
-          if (existingProgress) {
-            await updateCheckpointProgress(existingProgress.id, progressData);
-          } else {
-            await createCheckpointProgress({
-              ...progressData,
-              userTourProgressId: tourProgressId,
-              tourCheckpointId: checkpointId,
-              checkpointAudioId: audioData.id
-            });
-          }
-        } catch (error) {
-          console.error('Error updating checkpoint progress on completion:', error);
+      if (user?.id && checkpointId && audioData?.id && tourProgressId) {
+        const soundStatus = await sound?.getStatusAsync();
+        const durationMillis = (soundStatus as AVPlaybackStatus & { durationMillis?: number })?.durationMillis;
+
+        if (durationMillis) {
+          const totalDuration = Math.ceil(durationMillis / 1000);
+          console.log(`Track finished. Total duration: ${totalDuration}s. Marking as complete.`);
+          await saveTrackProgress(totalDuration, audioData);
+        } else {
+          console.warn("Audio finished but durationMillis is not available. Progress might not be marked as complete accurately.");
         }
-      } else if (status.didJustFinish) {
-        console.warn("Audio finished but durationMillis is not available. Progress might not be marked as complete accurately.");
       }
     }
   };
 
   const prepareForTrackChangeOrExit = async () => {
     if (sound) {
-      await sound.stopAsync();
       if (currentProgress > 0 && audioData) {
         console.log(`Explicit Save: Saving progress for ${audioData.id} at ${currentProgress}s`);
         await saveTrackProgress(currentProgress, audioData);
       }
       console.log(`Explicit Unload: Unloading sound for ${audioData?.id}`);
+      await sound.stopAsync();
       await sound.unloadAsync();
       setSound(null);
     }
