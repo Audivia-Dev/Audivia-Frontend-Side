@@ -91,7 +91,7 @@ TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }) => {
             content: {
               title: "Tới điểm đến!",
               body: `Bạn đang rất gần ${checkpoint.title}. Mở ứng dụng để nghe audio cùng Audi nhé.`,
-              sound: Platform.OS === 'ios' ? 'default' : undefined, // Use default sound on iOS
+              sound: Platform.OS === 'ios' ? 'notification_sound.wav' : undefined, // Custom sound for iOS
               data: { tourId: tourId, checkpointId: checkpoint.id },
               categoryIdentifier: CHECKPOINT_NOTIFICATION_CATEGORY_ID,
               vibrate: Platform.OS === 'android' ? [0, 1000, 500, 1000, 500, 1000, 500, 1000] : undefined,
