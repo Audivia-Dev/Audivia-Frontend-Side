@@ -12,10 +12,10 @@ export interface ChatHeaderProps {
   type?: 'private' | 'group';
 }
 
-export const ChatHeader = ({ 
-  avatar, 
-  title, 
-  isOnline, 
+export const ChatHeader = ({
+  avatar,
+  title,
+  isOnline,
   onBack,
   members = [],
   type = 'private'
@@ -26,7 +26,7 @@ export const ChatHeader = ({
         <TouchableOpacity onPress={onBack} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="#000" />
         </TouchableOpacity>
-        
+
         {type === 'group' ? (
           <GroupAvatar members={members} size={40} />
         ) : (
@@ -34,7 +34,7 @@ export const ChatHeader = ({
             <Image source={{ uri: avatar }} style={styles.avatar} />
           ) : (
             <View style={[styles.avatar, styles.avatarPlaceholder]}>
-              <Text style={styles.avatarText}>{title.charAt(0)}</Text>
+              <Text style={styles.avatarText}>{(title !== undefined && title !== null) ? title.charAt(0) : ""}</Text>
             </View>
           )
         )}

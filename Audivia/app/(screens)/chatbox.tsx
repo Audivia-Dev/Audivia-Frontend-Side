@@ -28,6 +28,16 @@ const generateGUID = () => {
   })
 }
 
+// Moved outside component as it doesn't depend on component state
+const mapApiMessageToUIMessage = (apiMsg: ApiChatMessage): UIMessage => {
+  return {
+    id: apiMsg.id || generateGUID(),
+    text: apiMsg.reply,
+    time: apiMsg.timestamp,
+    isBot: apiMsg.sender === 1,
+  }
+}
+
 interface UIMessage {
   id: string
   text: string
@@ -71,22 +81,6 @@ export default function ChatScreen() {
     }
   }, [user])
 
-  // Effect to load initial chat history
-  useEffect(() => {
-    if (clientSessionId && userId) {
-      loadChatHistory(1, true)
-    }
-  }, [clientSessionId, userId])
-
-  const mapApiMessageToUIMessage = (apiMsg: ApiChatMessage, isNewestBotReply: boolean = false): UIMessage => {
-    return {
-      id: apiMsg.id || generateGUID(),
-      text: apiMsg.reply,
-      time: apiMsg.timestamp,
-      isBot: apiMsg.sender === 1,
-    }
-  }
-
   const loadChatHistory = useCallback(async (page: number, initialLoad = false) => {
     if (!clientSessionId || !hasMoreHistory || isLoadingMore || (initialLoad && isLoadingHistory)) return
 
@@ -112,7 +106,14 @@ export default function ChatScreen() {
     }
   }, [clientSessionId, hasMoreHistory, isLoadingMore, isLoadingHistory])
 
-  const handleSendMessage = async () => {
+  // Effect to load initial chat history
+  useEffect(() => {
+    if (clientSessionId && userId) {
+      loadChatHistory(1, true)
+    }
+  }, [clientSessionId, userId, loadChatHistory])
+
+  const handleSendMessage = useCallback(async () => {
     if (inputText.trim() === "" || !clientSessionId || !userId || isSendingMessage) return
 
     setIsSendingMessage(true)
@@ -131,7 +132,7 @@ export default function ChatScreen() {
 
     try {
       const botReply = await sendChatMessage(userMessageText, clientSessionId, userId)
-      const newBotMessage = mapApiMessageToUIMessage(botReply, true)
+      const newBotMessage = mapApiMessageToUIMessage(botReply)
 
       setMessages(prevMessages => {
         return [newBotMessage, ...prevMessages]
@@ -144,15 +145,15 @@ export default function ChatScreen() {
     } finally {
       setIsSendingMessage(false)
     }
-  }
+  }, [inputText, clientSessionId, userId, isSendingMessage])
 
-  const loadMoreMessages = () => {
+  const loadMoreMessages = useCallback(() => {
     if (hasMoreHistory && !isLoadingMore && clientSessionId) {
       loadChatHistory(currentPage + 1)
     }
-  }
+  }, [hasMoreHistory, isLoadingMore, clientSessionId, currentPage, loadChatHistory])
 
-  const renderMessage = ({ item }: { item: UIMessage }) => {
+  const renderMessage = useCallback(({ item }: { item: UIMessage }) => {
     return (
       <View
         style={[
@@ -169,11 +170,11 @@ export default function ChatScreen() {
         </View>
       </View>
     )
-  }
+  }, [])
 
-  const goBack = () => {
+  const goBack = useCallback(() => {
     router.back()
-  }
+  }, [router])
 
   // Auto-scroll to bottom (or top for inverted FlatList) when new messages are added
   useEffect(() => {
@@ -228,6 +229,10 @@ export default function ChatScreen() {
         inverted
         onEndReached={loadMoreMessages}
         onEndReachedThreshold={0.5}
+        initialNumToRender={PAGE_SIZE}
+        maxToRenderPerBatch={PAGE_SIZE}
+        windowSize={10}
+        removeClippedSubviews={true}
         ListHeaderComponent={
           isLoadingMore ? <ActivityIndicator style={{ marginVertical: 10 }} size="small" color={COLORS.primary} /> : null
         }

@@ -235,9 +235,7 @@ export default function AudioPlayerScreen() {
 
   const handleNextAudio = async () => {
     await prepareForTrackChangeOrExit();
-    console.log("Getting audio for checkpoint next to checkpoint: ", checkpointId)
     const res = await getNextAudioByCheckpointId(checkpointId);
-    console.log(res)
     if (res.response?.id) {
       router.setParams({ checkpointId: res.response.tourCheckpointId });
     } else {

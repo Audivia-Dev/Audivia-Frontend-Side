@@ -19,7 +19,7 @@ export const writeReviewTour = async (
     throw error
   }
 }
-export const getReviewTourById = async (tourId: string) => {
+export const getReviewTourByTourId = async (tourId: string) => {
   try {
     const response = await apiClient.get(`/tour-reviews/tour/${tourId}`);
     return response.data;
@@ -29,7 +29,17 @@ export const getReviewTourById = async (tourId: string) => {
   }
 }
 
-export const updateReviewTour = async (reviewId: string, data: { rating: number; content: string }) => {
+export const getReviewTourByTourIdAndUserId = async (tourId: string, userId: string) => {
+  try {
+    const response = await apiClient.get(`/tour-reviews/tours/${tourId}/users/${userId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Lỗi khi lấy tour đánh giá:', error);
+    throw error;
+  }
+}
+
+export const updateReviewTour = async (reviewId: string, data: { rating: number; content: string; title: string }) => {
   try {
     const response = await apiClient.put(`/tour-reviews/${reviewId}`, data);
     return response.data;

@@ -1,80 +1,116 @@
-import React, { useEffect, useState } from 'react';
-import { 
-  View, 
-  Text, 
-  Image, 
-  StyleSheet, 
-  TouchableOpacity, 
-  TextInput, 
+import React, { useEffect, useState, useCallback } from 'react';
+import {
+  View,
+  Text,
+  Image,
+  StyleSheet,
+  TouchableOpacity,
+  TextInput,
   SafeAreaView,
   ScrollView,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
-import { writeReviewTour } from '@/services/review_tour';
+import { writeReviewTour, getReviewTourByTourIdAndUserId, updateReviewTour } from '@/services/review_tour';
 import { useUser } from '@/hooks/useUser';
 import { getTourById } from '@/services/tour';
+
+interface TourInfo {
+    thumbnailUrl: string;
+    title: string;
+    duration: number;
+    price: number;
+}
 
 const WriteReviewScreen = () => {
   const [rating, setRating] = useState(5);
   const [title, setTitle] = useState('');
   const [review, setReview] = useState('');
-  const {tourId} = useLocalSearchParams()
-  const {user} = useUser()
-  const [tourInfor, setTourInfor] = useState()
+  const [reviewId, setReviewId] = useState<string | null>(null);
+  const { tourId } = useLocalSearchParams()
+  const { user } = useUser()
+  const [tourInfor, setTourInfor] = useState<TourInfo | null>(null);
 
   useEffect(() => {
-    const fetchTourData = async () => {
-        try {
-            const response = await getTourById(tourId as string)
-            setTourInfor(response.response)
-        } catch (error) {
-            console.error('Error fetching tour:', error)
+    const fetchInitialData = async () => {
+      if (!tourId || !user?.id) return;
+      try {
+        const [tourResponse, reviewResponse] = await Promise.all([
+          getTourById(tourId as string),
+          getReviewTourByTourIdAndUserId(tourId as string, user.id)
+        ]);
+        
+        if (tourResponse.success) {
+            setTourInfor(tourResponse.response);
         }
-    }
 
-    fetchTourData()
-  },[])
+        if (reviewResponse.success && reviewResponse.response) {
+          const existingReview = reviewResponse.response;
+          setRating(existingReview.rating);
+          setTitle(existingReview.title);
+          setReview(existingReview.content);
+          setReviewId(existingReview.id);
+        }
 
-  const handleSubmitReview = async () => {
-    if (!tourId) {
-      console.error('Tour ID is missing');
+      } catch (error) {
+        console.error('Error fetching initial data:', error);
+      }
+    };
+
+    fetchInitialData();
+  }, [tourId, user?.id]);
+
+  const handleSubmitReview = useCallback(async () => {
+    if (!tourId || !user?.id) {
+      Alert.alert('Lỗi', 'Thông tin tour hoặc người dùng bị thiếu.');
       return;
     }
-    if (!user?.id) {
-      console.error('User ID is missing');
-      return;
-    }
+    
     try {
-      const response = await writeReviewTour(
-        title,
-        rating,
-        review,
-        tourId as string,
-        user.id
-      );
-      console.log('Review submitted successfully:', response);
-      Alert.alert('Success', 'Your review has been submitted successfully!');
+      if (reviewId) {
+        await updateReviewTour(reviewId, { rating, content: review, title });
+        Alert.alert('Thành công', 'Đánh giá của bạn đã được cập nhật.');
+      } else {
+        await writeReviewTour(title, rating, review, tourId as string, user.id);
+        Alert.alert('Thành công', 'Cảm ơn bạn đã gửi đánh giá!');
+      }
       router.back();
     } catch (error: any) {
+        if (error.response?.data?.message?.includes("already reviewed")) {
+            Alert.alert('Đã đánh giá', 'Bạn đã gửi đánh giá cho tour này rồi. Vui lòng quay lại để chỉnh sửa.');
+        } else {
+            Alert.alert('Lỗi', 'Đã có lỗi xảy ra. Vui lòng thử lại.');
+        }
       console.error('Error submitting review:', error.response?.data || error.message);
     }
-  };
+  }, [tourId, user?.id, reviewId, rating, title, review]);
+
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.scrollView}>
+        <KeyboardAvoidingView 
+            style={{ flex: 1 }}
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+        >
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={{ flexGrow: 1 }}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.header}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.backButton}
             onPress={() => router.back()}
           >
             <Ionicons name="arrow-back" size={24} color="#000" />
           </TouchableOpacity>
-          
-          <Text style={styles.headerTitle}>Viết đánh giá</Text>
-          
-          <TouchableOpacity 
+
+          <Text style={styles.headerTitle}>{reviewId ? 'Chỉnh sửa đánh giá' : 'Viết đánh giá'}</Text>
+
+          <TouchableOpacity
             style={styles.closeButton}
             onPress={() => router.back()}
           >
@@ -82,70 +118,73 @@ const WriteReviewScreen = () => {
           </TouchableOpacity>
         </View>
 
-        <View style={styles.tourInfo}>
-          <Image 
-            source={{uri: tourInfor?.thumbnailUrl}} 
-            style={styles.tourImage}
-          />
-          <View style={styles.tourDetails}>
-            <Text style={styles.tourName}>{tourInfor?.title}</Text>
-            <Text style={styles.tourDuration}>{tourInfor?.duration} giờ</Text>
-            <Text style={styles.tourCompletion}>{tourInfor?.price} VND</Text>
-          </View>
-        </View>
+        {tourInfor && (
+            <View style={styles.tourInfo}>
+            <Image
+                source={{ uri: tourInfor.thumbnailUrl }}
+                style={styles.tourImage}
+            />
+            <View style={styles.tourDetails}>
+                <Text style={styles.tourName}>{tourInfor.title}</Text>
+                <Text style={styles.tourDuration}>{tourInfor.duration} giờ</Text>
+                <Text style={styles.tourCompletion}>{tourInfor.price} VND</Text>
+            </View>
+            </View>
+        )}
 
         <View style={styles.ratingSection}>
-          <Text style={styles.ratingTitle}>Đưa ra trải nghiệm của bạn</Text>
+          <Text style={styles.ratingTitle}>Trải nghiệm của bạn như thế nào?</Text>
           <View style={styles.starsContainer}>
             {[1, 2, 3, 4, 5].map((star) => (
-              <TouchableOpacity 
-                key={star} 
+              <TouchableOpacity
+                key={star}
                 onPress={() => setRating(star)}
               >
-                <Ionicons 
-                  name={star <= rating ? "star" : "star-outline"} 
-                  size={32} 
-                  color="#FFD700" 
+                <Ionicons
+                  name={star <= rating ? "star" : "star-outline"}
+                  size={32}
+                  color="#FFD700"
                   style={styles.starIcon}
                 />
               </TouchableOpacity>
             ))}
           </View>
-          <Text style={styles.ratingText}>{rating} trên 5</Text>
+          <Text style={styles.ratingText}>{rating} trên 5 sao</Text>
         </View>
 
         <View style={styles.inputSection}>
-          <Text style={styles.inputLabel}>Tựa đề đánh giá của bạn</Text>
+          <Text style={styles.inputLabel}>Tiêu đề</Text>
           <TextInput
             style={styles.titleInput}
             value={title}
             onChangeText={setTitle}
-            placeholder="1 nơi tuyệt vời !"
+            placeholder="Một nơi tuyệt vời !"
             placeholderTextColor="#999"
           />
         </View>
 
         <View style={styles.inputSection}>
-          <Text style={styles.inputLabel}>VIết đánh giá</Text>
+          <Text style={styles.inputLabel}>Nội dung đánh giá</Text>
           <TextInput
             style={styles.reviewInput}
             value={review}
             onChangeText={setReview}
-            placeholder="Chia sẻ trải nghiệm của bản thân về chuyến đi này..."
+            placeholder="Hãy chia sẻ những trải nghiệm và cảm nhận của bạn về chuyến đi này nhé..."
             placeholderTextColor="#999"
             multiline
             numberOfLines={5}
             textAlignVertical="top"
           />
         </View>
-
-        <TouchableOpacity 
+        <View style={{ flex: 1 }} />
+        <TouchableOpacity
           style={styles.submitButton}
           onPress={handleSubmitReview}
         >
-          <Text style={styles.submitButtonText}>Đăng đánh giá</Text>
+          <Text style={styles.submitButtonText}>{reviewId ? 'Cập nhật đánh giá' : 'Đăng đánh giá'}</Text>
         </TouchableOpacity>
       </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
@@ -209,7 +248,7 @@ const styles = StyleSheet.create({
   },
   ratingSection: {
     padding: 16,
-    alignItems: 'flex-start',
+    alignItems: 'center',
   },
   ratingTitle: {
     fontSize: 16,
@@ -226,15 +265,20 @@ const styles = StyleSheet.create({
   ratingText: {
     fontSize: 14,
     color: '#666',
+    marginTop: 4,
   },
   inputSection: {
-    padding: 16,
-    paddingTop: 0,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
   },
   inputLabel: {
     fontSize: 16,
     fontWeight: '500',
     marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    padding: 12,
   },
   titleInput: {
     borderWidth: 1,
@@ -250,6 +294,7 @@ const styles = StyleSheet.create({
     padding: 12,
     fontSize: 16,
     height: 120,
+    textAlignVertical: 'top',
   },
   photoSection: {
     margin: 16,

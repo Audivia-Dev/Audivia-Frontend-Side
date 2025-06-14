@@ -4,7 +4,7 @@ import { styles } from "@/styles/tour_detail.styles"
 import { COLORS } from "@/constants/theme"
 import type { Review, Tour } from "@/models"
 import { useEffect, useState } from "react"
-import { getReviewTourById, deleteReviewTour, updateReviewTour } from "@/services/review_tour"
+import { getReviewTourByTourId, deleteReviewTour, updateReviewTour } from "@/services/review_tour"
 import { useLocalSearchParams } from "expo-router"
 import { useUser } from "@/hooks/useUser"
 
@@ -24,7 +24,7 @@ export const ReviewsTab = ({ tour, onReviewChange }: ReviewsTabProps) => {
 
   const fetchReviews = async () => {
     try {
-      const response = await getReviewTourById(tourId as string)
+      const response = await getReviewTourByTourId(tourId as string)
       if (!Array.isArray(response)) {
         console.error("Invalid response format:", response)
         setReviews([])
@@ -116,7 +116,7 @@ export const ReviewsTab = ({ tour, onReviewChange }: ReviewsTabProps) => {
       </View>
 
       <Text style={styles.reviewComment}>{review.content}</Text>
-      
+
       {user?.id === review.createdBy && (
         <View style={styles.reviewActions}>
           <TouchableOpacity onPress={() => handleOpenModal(review)} style={styles.actionButton}>
@@ -133,7 +133,7 @@ export const ReviewsTab = ({ tour, onReviewChange }: ReviewsTabProps) => {
   return (
     <View style={styles.reviewsContainer}>
       <View style={styles.ratingOverview}>
-        <Text style={styles.ratingBig}>{tour?.avgRating}</Text>
+        <Text style={styles.ratingBig}>{tour?.avgRating.toFixed(1)}</Text>
         <View style={styles.ratingStarsContainer}>
           {[1, 2, 3, 4, 5].map((star, index) => (
             <FontAwesome

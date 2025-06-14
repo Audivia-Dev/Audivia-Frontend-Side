@@ -7,7 +7,9 @@ import { Platform } from 'react-native';
 
 const LOCATION_TASK_NAME = 'background-location-task';
 const CHECKPOINTS_STORAGE_KEY = 'audivia-checkpoints-storage';
-const NOTIFICATION_DISTANCE_THRESHOLD = 10;
+const NOTIFICATION_TIMESTAMPS_KEY = 'audivia-notification-timestamps';
+const NOTIFICATION_DISTANCE_THRESHOLD = 20;
+const NOTIFICATION_COOLDOWN_MS = 10 * 60 * 1000; // 10 minutes
 const CHECKPOINT_NOTIFICATION_CATEGORY_ID = 'checkpoint-arrival';
 export const STOP_TOUR_ACTION_ID = 'stop-tour-action';
 
@@ -68,6 +70,9 @@ TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }) => {
       // --- End Validation ---
 
       const storedData = await AsyncStorage.getItem(CHECKPOINTS_STORAGE_KEY);
+      const timestampsData = await AsyncStorage.getItem(NOTIFICATION_TIMESTAMPS_KEY);
+      const notificationTimestamps = timestampsData ? JSON.parse(timestampsData) : {};
+
       if (!storedData) {
         return; // No data to process
       }
@@ -75,8 +80,9 @@ TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }) => {
       const { checkpoints, tourId } = JSON.parse(storedData);
       if (!currentLocation || !checkpoints || checkpoints.length === 0 || !tourId) return;
 
-      const remainingCheckpoints = [];
-      let checkpointsUpdated = false;
+      // --- New Logic: Find the single nearest checkpoint first ---
+      let nearestCheckpoint = null;
+      let minDistance = Infinity;
 
       for (const checkpoint of checkpoints) {
         const distance = getDistance(
@@ -84,39 +90,37 @@ TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }) => {
           { latitude: checkpoint.latitude, longitude: checkpoint.longitude }
         );
 
-        if (distance <= NOTIFICATION_DISTANCE_THRESHOLD) {
-          console.log(`User is within radius for "${checkpoint.title}". Notifying and removing from list.`);
-
-          await Notifications.scheduleNotificationAsync({
-            content: {
-              title: "Tới điểm đến!",
-              body: `Bạn đang rất gần ${checkpoint.title}. Mở ứng dụng để nghe audio cùng Audi nhé.`,
-              sound: Platform.OS === 'ios' ? 'notification_sound.wav' : undefined, // Custom sound for iOS
-              data: { tourId: tourId, checkpointId: checkpoint.id },
-              categoryIdentifier: CHECKPOINT_NOTIFICATION_CATEGORY_ID,
-              vibrate: Platform.OS === 'android' ? [0, 1000, 500, 1000, 500, 1000, 500, 1000] : undefined,
-            },
-            trigger: Platform.OS === 'android' ? {
-              channelId: 'checkpoint-alerts',
-            } : null,
-          });
-
-          checkpointsUpdated = true; // Mark that we need to update storage
-        } else {
-          remainingCheckpoints.push(checkpoint); // Keep checkpoint for next time
+        if (distance < minDistance) {
+          minDistance = distance;
+          nearestCheckpoint = checkpoint;
         }
       }
 
-      if (checkpointsUpdated) {
-        // If all checkpoints have been notified, stop tracking
-        if (remainingCheckpoints.length === 0) {
-          console.log("All checkpoints have been notified. Stopping location tracking.");
-          await stopLocationTracking();
+      // --- Now, check if we should notify for the nearest one ---
+      if (nearestCheckpoint && minDistance <= NOTIFICATION_DISTANCE_THRESHOLD) {
+        const lastNotified = notificationTimestamps[nearestCheckpoint.id] || 0;
+        const hasCooledDown = (Date.now() - lastNotified) > NOTIFICATION_COOLDOWN_MS;
+
+        if (hasCooledDown) {
+          console.log(`User is near the closest checkpoint "${nearestCheckpoint.title}" (${minDistance.toFixed(1)}m) and cooldown has passed. Notifying.`);
+
+          await Notifications.scheduleNotificationAsync({
+            content: {
+              title: "Bạn đã tới một điểm đến!",
+              body: `Bạn đang ở rất gần ${nearestCheckpoint.title}. Mở ứng dụng để nghe audio cùng Audi nhé.`,
+              sound: Platform.OS === 'ios' ? 'notification_sound.wav' : undefined,
+              data: { tourId: tourId, checkpointId: nearestCheckpoint.id },
+              categoryIdentifier: CHECKPOINT_NOTIFICATION_CATEGORY_ID,
+              vibrate: Platform.OS === 'android' ? [0, 1000, 500, 1000, 500, 1000, 500, 1000] : undefined,
+            },
+            trigger: Platform.OS === 'android' ? { channelId: 'checkpoint-alerts' } : null,
+          });
+
+          // Update the timestamp for this checkpoint and save it
+          notificationTimestamps[nearestCheckpoint.id] = Date.now();
+          await AsyncStorage.setItem(NOTIFICATION_TIMESTAMPS_KEY, JSON.stringify(notificationTimestamps));
         } else {
-          // Otherwise, update the list of checkpoints in storage
-          const dataToStore = { checkpoints: remainingCheckpoints, tourId: tourId };
-          await AsyncStorage.setItem(CHECKPOINTS_STORAGE_KEY, JSON.stringify(dataToStore));
-          console.log("Updated remaining checkpoints in storage.");
+          console.log(`User is near "${nearestCheckpoint.title}", but it's on cooldown. Skipping.`);
         }
       }
 
@@ -184,5 +188,6 @@ export const stopLocationTracking = async () => {
     console.log("Stopped location updates.");
   }
   await AsyncStorage.removeItem(CHECKPOINTS_STORAGE_KEY);
+  await AsyncStorage.removeItem(NOTIFICATION_TIMESTAMPS_KEY);
   console.log('Location tracking stopped and checkpoints cleared.');
 };

@@ -54,7 +54,7 @@ export const AboutTab = ({ tour }: AboutTabProps) => {
               />
             ))}
           </View>
-          <Text style={styles.ratingText}>{tour?.avgRating}</Text>
+          <Text style={styles.ratingText}>{tour?.avgRating.toFixed(1)}</Text>
         </View>
       </View>
 

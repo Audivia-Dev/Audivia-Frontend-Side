@@ -275,7 +275,7 @@ export default function MessagingInboxScreen() {
             }}
           >
             <Text style={{ color: "white", fontWeight: "bold", fontSize: 18 }}>
-              {item.name.charAt(0).toUpperCase()}
+              {item.name.charAt(0).toUpperCase() || ""}
             </Text>
           </View>
         )}
