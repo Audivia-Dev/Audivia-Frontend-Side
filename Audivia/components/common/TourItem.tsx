@@ -2,6 +2,7 @@ import { COLORS } from "@/constants/theme"
 import { useUser } from "@/hooks/useUser"
 import { Tour } from "@/models"
 import { createSaveTour } from "@/services/save_tour"
+import { formatMoney } from "@/utils/formatter"
 import { FontAwesome, Ionicons } from "@expo/vector-icons"
 import { LinearGradient } from "expo-linear-gradient"
 import { router } from "expo-router"
@@ -110,7 +111,7 @@ export const TourItem = ({ tour, isSavedTour = false, onDelete, onSave }: TourIt
             {/* Price */}
             <View style={styles.priceTag}>
               <Text style={{ fontSize: 16, fontWeight: 'bold', color: COLORS.primary }}>
-                {tour.price === 0 ? "Miễn phí" : ` ${tour.price} Đ`}
+                {tour.price === 0 ? "Miễn phí" : ` ${formatMoney(tour.price)} Đ`}
               </Text>
             </View>
 
