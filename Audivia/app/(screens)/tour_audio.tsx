@@ -388,7 +388,7 @@ export default function TourAudioScreen() {
             <Ionicons name="cash-outline" size={20} color={COLORS.primary} style={styles.detailIcon} />
             <View>
               <Text style={styles.detailLabel}>Giá</Text>
-              <Text style={styles.detailValue}>{tour?.price} VND</Text>
+              <Text style={styles.detailValue}>{tour?.price.toLocaleString('vi-VN')} VND</Text>
             </View>
           </View>
         </View>

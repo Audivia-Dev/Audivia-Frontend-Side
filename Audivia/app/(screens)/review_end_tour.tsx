@@ -17,6 +17,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { writeReviewTour, getReviewTourByTourIdAndUserId, updateReviewTour } from '@/services/review_tour';
 import { useUser } from '@/hooks/useUser';
 import { getTourById } from '@/services/tour';
+import { formatMoney } from '@/utils/formatter';
 
 interface TourInfo {
     thumbnailUrl: string;

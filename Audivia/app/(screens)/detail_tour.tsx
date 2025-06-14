@@ -17,6 +17,7 @@ import { createNotification } from "@/services/notification"
 import { useNotificationCount } from "@/hooks/useNotificationCount"
 import { getTourProgress, createTourProgress } from "@/services/progress"
 import { LinearGradient } from "expo-linear-gradient"
+import { formatMoney } from "@/utils/formatter"
 
 export default function TourDetailScreen() {
   const [activeTab, setActiveTab] = useState("about")
@@ -151,7 +152,7 @@ export default function TourDetailScreen() {
       <View style={styles.startButtonContainer}>
         {/* Price Display */}
         <View style={styles.priceDisplayContainer}>
-          <Text style={styles.priceDisplayText}>{tour?.price} Đ</Text>
+          <Text style={styles.priceDisplayText}>{formatMoney(tour?.price)} Đ</Text>
         </View>
         <View style={styles.startButtonWrapper}>
           <LinearGradient
@@ -188,7 +189,7 @@ export default function TourDetailScreen() {
                 <Text style={styles.tourName}>{tour?.title}</Text>
                 {/* <Text style={styles.tourDesc}>45-mins guided experience</Text> */}
               </View>
-              <Text style={styles.tourPrice}>{tour?.price} VNĐ</Text>
+              <Text style={styles.tourPrice}>{tour?.price.toLocaleString('vi-VN')} VNĐ</Text>
             </View>
 
             <View style={styles.paymentMethodHeader}>
@@ -200,7 +201,7 @@ export default function TourDetailScreen() {
             <View style={styles.walletBox}>
               <View style={styles.walletLeft}>
                 <Text style={styles.walletName}>Ví Audivia</Text>
-                <Text style={styles.walletBalance}>Số dư: {user?.balanceWallet} VNĐ</Text>
+                <Text style={styles.walletBalance}>Số dư: {user?.balanceWallet.toLocaleString('vi-VN')} VNĐ</Text>
               </View>
               {/* <TouchableOpacity>
                 <Text style={styles.changeText}>Change</Text>
@@ -209,7 +210,7 @@ export default function TourDetailScreen() {
 
             <View style={styles.totalRow}>
               <Text style={styles.totalLabel}>Tổng tiền: </Text>
-              <Text style={styles.totalAmount}>{tour?.price} VNĐ</Text>
+              <Text style={styles.totalAmount}>{tour?.price.toLocaleString('vi-VN')} VNĐ</Text>
             </View>
 
             <LinearGradient
