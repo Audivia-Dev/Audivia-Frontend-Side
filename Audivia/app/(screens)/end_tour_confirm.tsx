@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '@/constants/theme';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useLocationTracking } from '@/hooks/useLocationTracking';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const { width } = Dimensions.get('window');
 
@@ -33,8 +34,15 @@ const EndTourScreen = () => {
           </Text>
         </View>
 
-        <TouchableOpacity style={styles.button} onPress={onFinish}>
-          <Text style={styles.buttonText}>Tiếp tục</Text>
+        <TouchableOpacity  onPress={onFinish}>
+          <LinearGradient
+              colors={[COLORS.primary, COLORS.purpleGradient]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.button}
+              >
+                <Text style={[styles.buttonText, { backgroundColor: 'transparent' }]}>Tiếp tục</Text>
+            </LinearGradient>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -99,21 +107,15 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   button: {
-    backgroundColor: '#00A9CE',
-    paddingVertical: 16,
-    paddingHorizontal: 32,
-    borderRadius: 12,
-    elevation: 4,
-    shadowColor: '#00A9CE',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
+    backgroundColor: COLORS.primary,
+    padding: 15,
+    borderRadius: 8,
+    alignItems: 'center',
   },
   buttonText: {
-    color: 'white',
+    color: '#fff',
     fontSize: 16,
     fontWeight: '600',
-    letterSpacing: 0.5,
   },
 });
 

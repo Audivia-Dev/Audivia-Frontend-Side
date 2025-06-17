@@ -19,6 +19,9 @@ import { useUser } from '@/hooks/useUser';
 import { getTourById } from '@/services/tour';
 import { formatMoney } from '@/utils/formatter';
 
+import { COLORS } from '@/constants/theme';
+import { LinearGradient } from 'expo-linear-gradient';
+
 interface TourInfo {
     thumbnailUrl: string;
     title: string;
@@ -182,7 +185,15 @@ const WriteReviewScreen = () => {
           style={styles.submitButton}
           onPress={handleSubmitReview}
         >
-          <Text style={styles.submitButtonText}>{reviewId ? 'Cập nhật đánh giá' : 'Đăng đánh giá'}</Text>
+            <LinearGradient
+              colors={[COLORS.primary, COLORS.purpleGradient]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.button}
+              >
+                 <Text style={styles.buttonText}>{reviewId ? 'Cập nhật đánh giá' : 'Đăng đánh giá'}</Text>
+            </LinearGradient>
+         
         </TouchableOpacity>
       </ScrollView>
       </KeyboardAvoidingView>
@@ -321,7 +332,7 @@ const styles = StyleSheet.create({
     color: '#999',
   },
   submitButton: {
-    backgroundColor: '#00A9CE',
+    backgroundColor: '#ffffff',
     borderRadius: 8,
     padding: 16,
     margin: 16,
@@ -331,6 +342,17 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+    button: {
+    backgroundColor: COLORS.primary,
+    padding: 15,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 

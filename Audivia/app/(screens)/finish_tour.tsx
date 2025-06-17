@@ -9,6 +9,7 @@ import { COLORS } from '@/constants/theme';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useLocationTracking } from '@/hooks/useLocationTracking';
 import { useUser } from '@/hooks/useUser';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const FinishTourScreen = () => {
   const [suggestedTours, setSuggestedTours] = useState<Tour[]>([])
@@ -112,9 +113,19 @@ const FinishTourScreen = () => {
             <Text style={styles.quizButtonText}>Câu đố vui</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.homeButton} onPress={handleGoHome}>
-            <Text style={styles.homeButtonText}>Quay về trang chủ</Text>
-          </TouchableOpacity>
+
+          <TouchableOpacity onPress={handleGoHome}  activeOpacity={0.7}>
+        <LinearGradient
+          colors={[COLORS.primary, COLORS.purpleGradient]}  // Thay bằng màu gradient bạn muốn
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.button}  // Style cho nút
+        >
+         <Text style={[styles.buttonText, { backgroundColor: 'transparent' }]}>
+         Quay về trang chủ
+          </Text>
+        </LinearGradient>
+      </TouchableOpacity>
 
           {/* Discover More Tours */}
           <View>
@@ -236,6 +247,17 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 16,
   },
+  button: {
+    backgroundColor: COLORS.primary,
+    padding: 15,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  }
 });
 
 export default FinishTourScreen;

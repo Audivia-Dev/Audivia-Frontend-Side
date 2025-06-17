@@ -22,50 +22,49 @@ export default function PlanTourScreen() {
   const [planDate, setPlanDate] = useState("");
   const router = useRouter();
   const searchParams = useLocalSearchParams();
-  const tourId = searchParams.id as string;
+  const savedTourId = searchParams.id as string;
   const [tourInfor, setTour] = useState<SaveTour>();
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+
 
   const goBack = () => {
     router.back();
   };
 
   useEffect(() => {
-    if (tourId) {
-      getSaveTourById(tourId).then((res) => {
+    if (savedTourId) {
+      getSaveTourById(savedTourId).then((res) => {
         setTour(res.response);
         // Nếu có plannedTime, chuyển đổi và hiển thị
         if (res.response.plannedTime) {
           const date = new Date(res.response.plannedTime);
-          const formatted = date.toLocaleDateString("vi-VN");
-          setPlanDate(formatted);
           setSelectedDate(date);
         }
       });
     }
-  }, [tourId]);
+  }, [savedTourId]);
 
   const handleDateChange = (event: any, date?: Date) => {
     setShowDatePicker(false);
     if (date) {
       setSelectedDate(date);
-      // Format lại ngày thành chuỗi dd/mm/yyyy cho hiển thị
-      const formatted = date.toLocaleDateString("vi-VN");
-      setPlanDate(formatted);
     }
   };
 
   const handleSavePlanTime = async () => {
-    if (tourId && planDate) {
-      // Chuyển đổi từ dd/mm/yyyy sang yyyy-mm-ddT00:00:00.000Z
-      const [day, month, year] = planDate.split('/');
-      const isoDate = new Date(`${year}-${month}-${day}T00:00:00.000Z`).toISOString();
-      
-      await updateSaveTour(tourId, isoDate);
+    if (savedTourId && selectedDate) {
+      console.log('savedTOUR', savedTourId);
+      await updateSaveTour(savedTourId, selectedDate.toISOString());
       router.back();
     }
   };
+
+  const formattedDisplayDate = selectedDate ? new Intl.DateTimeFormat('vi-VN', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  }).format(selectedDate) : '';
 
   return (
     <SafeAreaView style={styles.container}>
@@ -133,8 +132,8 @@ export default function PlanTourScreen() {
               style={styles.dateInput}
               onPress={() => setShowDatePicker(true)}
             >
-              <Text style={planDate ? styles.dateText : styles.datePlaceholder}>
-                {planDate || "dd/mm/yyyy"}
+              <Text style={selectedDate ? styles.dateText : styles.datePlaceholder}>
+                {selectedDate? formattedDisplayDate : "dd/mm/yyyy"}
               </Text>
               <Ionicons
                 name="calendar-outline"
