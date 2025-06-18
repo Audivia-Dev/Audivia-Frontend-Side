@@ -13,9 +13,10 @@ interface TourItemProps {
   isSavedTour?: boolean;
   onDelete?: (tourId: string) => void;
   onSave?: (tourId: string) => void;
+  savedTourId: string
 }
 
-export const TourItem = ({ tour, isSavedTour = false, onDelete, onSave }: TourItemProps) => {
+export const TourItem = ({ tour, isSavedTour = false, onDelete, onSave, savedTourId}: TourItemProps) => {
   const { user } = useUser()
 
   const navigateToTourDetail = (tourId: string) => {
@@ -56,8 +57,8 @@ export const TourItem = ({ tour, isSavedTour = false, onDelete, onSave }: TourIt
     )
   }
 
-  const navigateToPlanDate = (tourId: string) => {
-    router.push(`/plan_tour?id=${tourId}`)
+  const navigateToPlanDate = (savedTourId: string) => {
+    router.push(`/plan_tour?id=${savedTourId}`)
   }
 
   return (
@@ -117,7 +118,7 @@ export const TourItem = ({ tour, isSavedTour = false, onDelete, onSave }: TourIt
 
             {/* Book Button */}
             <TouchableOpacity
-              onPress={() => isSavedTour ? navigateToPlanDate(tour.id) : navigateToTourDetail(tour.id)}
+              onPress={() => isSavedTour ? navigateToPlanDate(savedTourId) : navigateToTourDetail(tour.id)}
             >
               <View style={styles.bookButton}>
                 <LinearGradient

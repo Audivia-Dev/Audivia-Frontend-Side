@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { FlatList, SafeAreaView, Alert, View } from "react-native"
 import styles from "@/styles/save_tour.styles"
 import { useUser } from "@/hooks/useUser"
@@ -7,6 +7,7 @@ import { SaveTour } from "@/models"
 import { TourItem } from "@/components/common/TourItem"
 import { SaveTourNotification } from "@/components/save_tour/SaveTourNotification"
 import { Header } from "@/components/common/Header"
+import { useFocusEffect } from "@react-navigation/native"
 
 export default function SavedToursScreen() {
   const { user } = useUser()
@@ -23,9 +24,11 @@ export default function SavedToursScreen() {
     }
   }
 
-  useEffect(() => {
-    refreshSavedTours()
-  }, [user?.id])
+  useFocusEffect(
+    useCallback(() => {
+      refreshSavedTours()
+    }, [user?.id])
+  )
 
   const handleDeleteTour = async (tourId: string) => {
     try {
@@ -41,7 +44,7 @@ export default function SavedToursScreen() {
     }
   }
 
-  const tours = saveTours.map(saveTour => saveTour.tour)
+
 
   return (
     <SafeAreaView style={styles.container}>
@@ -50,9 +53,9 @@ export default function SavedToursScreen() {
       <SaveTourNotification savedToursCount={saveTours.length} />
       </View>
       <View style={styles.tourList}>
-      <FlatList data={tours} 
+      <FlatList data={saveTours} 
           keyExtractor={(item) => item.id}
-          renderItem={({ item }) => <TourItem tour={item} isSavedTour={true} onDelete={handleDeleteTour} onSave={refreshSavedTours}/>}
+          renderItem={({ item }) => <TourItem tour={item.tour} isSavedTour={true} onDelete={handleDeleteTour} onSave={refreshSavedTours} savedTourId={item.id}/>}
           showsVerticalScrollIndicator={false} />
       </View>
     </SafeAreaView>
