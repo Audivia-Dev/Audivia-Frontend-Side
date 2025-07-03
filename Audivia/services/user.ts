@@ -47,10 +47,11 @@ export const getUserInfo = async (id: string) => {
 };
 export const updateUserInfo = async (id: string, data: any) => {
   try {
-    await apiClient.put(`/users/${id}`, data);
-  } catch (error) {
+    const response = await apiClient.put(`/users/${id}`, data);
+    return { success: true, response: response.data };
+  } catch (error: any) {
     console.error('Lỗi cập nhật thông tin người dùng:', error);
-    throw error;
+    return { success: false, message: error.response?.data?.message || 'Unknown error' };
   }
 };
 
@@ -108,6 +109,17 @@ export const resetPassword = async (email: string, newPassword: string) => {
     return response.data;
   } catch (error) {
     console.error('Password reset failed:', error);
+    throw error;
+  }
+};
+
+export const getCountryList = async () => {
+  try {
+    const response = await fetch('https://restcountries.com/v3.1/all?fields=name');
+    const data = await response.json();
+    return data.map((country: any) => country.name.common).sort();
+  } catch (error) {
+    console.error('Error fetching country list:', error);
     throw error;
   }
 };

@@ -11,6 +11,7 @@ interface ProfileInfoProps {
   onFollow: () => void
   onUnfollow: () => void
   onMessage: () => void
+  onEditProfile: () => void
 }
 
 export const ProfileInfo = ({
@@ -19,7 +20,8 @@ export const ProfileInfo = ({
   status,
   onFollow,
   onUnfollow,
-  onMessage
+  onMessage,
+  onEditProfile
 }: ProfileInfoProps) => {
   return (
     <View style={styles.profileInfo}>
@@ -27,16 +29,14 @@ export const ProfileInfo = ({
       <Text style={styles.profileBio}>{user?.bio}</Text>
 
       {isOwnProfile ? (
-        <View style={styles.socialStats}>
-          <View style={styles.socialStat}>
-            <Text style={styles.socialStatNumber}>{user?.friends}</Text>
-            <Text style={styles.socialStatLabel}>Bạn bè</Text>
-          </View>
-          <View style={styles.socialStatDivider} />
-          <View style={styles.socialStat}>
-            <Text style={styles.socialStatNumber}>{user?.followers}</Text>
-            <Text style={styles.socialStatLabel}>Người theo dõi</Text>
-          </View>
+        <View style={styles.profileActions}>
+          <TouchableOpacity
+            style={[styles.profileActionButton, styles.primaryActionButton]}
+            onPress={onEditProfile}
+          >
+            <Ionicons name="create-outline" size={20} color="#fff" />
+            <Text style={styles.primaryActionText}>Chỉnh sửa thông tin</Text>
+          </TouchableOpacity>
         </View>
       ) : (
         <View style={styles.profileActions}>

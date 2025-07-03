@@ -16,7 +16,7 @@ interface TourItemProps {
   savedTourId: string
 }
 
-export const TourItem = ({ tour, isSavedTour = false, onDelete, onSave, savedTourId}: TourItemProps) => {
+export const TourItem = ({ tour, isSavedTour = false, onDelete, onSave, savedTourId }: TourItemProps) => {
   const { user } = useUser()
 
   const navigateToTourDetail = (tourId: string) => {
@@ -103,7 +103,7 @@ export const TourItem = ({ tour, isSavedTour = false, onDelete, onSave, savedTou
           <View style={styles.ratingContainer}>
             <FontAwesome name="star" size={16} color={COLORS.orange} />
             <Text style={styles.ratingText}>
-              {tour.avgRating.toFixed(1)}
+              {tour.avgRating.toFixed(1)} {`(${tour.ratingCount} đánh giá)`}
             </Text>
           </View>
 
