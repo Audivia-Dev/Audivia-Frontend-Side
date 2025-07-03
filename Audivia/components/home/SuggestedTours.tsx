@@ -96,7 +96,7 @@ export const SuggestedTours = ({ suggestedTours, onRefresh }: SuggestedToursProp
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             <FontAwesome name="star" size={14} color={COLORS.orange} />
             <Text style={{ fontSize: 16, marginLeft: 4, fontWeight: '500' }}>
-              {item.avgRating.toFixed(1)}
+              {item.avgRating.toFixed(1)} {`(${item.ratingCount} đánh giá)`}
             </Text>
           </View>
 

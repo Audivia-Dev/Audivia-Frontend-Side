@@ -165,9 +165,6 @@ export default function TourAudioScreen() {
     } catch (error) {
       console.error('Error updating tour progress:', error)
     }
-
-    console.log("checkpoint in tour_audio file", checkpointId)
-
     router.push(`/audio_player?checkpointId=${checkpointId}&characterId=${characterId}&tourProgressId=${tourProgress.id}`)
   }
 
@@ -371,7 +368,7 @@ export default function TourAudioScreen() {
           <View style={styles.detailItem}>
             <Ionicons name="sunny-outline" size={20} color={COLORS.primary} style={styles.detailIcon} />
             <View>
-              <Text style={styles.detailLabel}>THời gian tuyệt nhất</Text>
+              <Text style={styles.detailLabel}>Thời gian tuyệt nhất</Text>
               <Text style={styles.detailValue}>Buổi sáng</Text>
             </View>
           </View>

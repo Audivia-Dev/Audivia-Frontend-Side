@@ -19,6 +19,7 @@ import { createChatRoom, createChatRoomMember, getPrivateRoom } from "@/services
 import { createNotification } from "@/services/notification"
 import { Ionicons } from "@expo/vector-icons"
 import { COLORS } from "@/constants/theme"
+import { EditProfileModal } from "@/components/profile/EditProfileModal"
 
 const modalStyles = StyleSheet.create({
   modalOverlay: {
@@ -64,6 +65,7 @@ export default function ProfileScreen() {
   const [activeTab, setActiveTab] = useState("posts")
   const [showAvatarModal, setShowAvatarModal] = useState(false)
   const [showPostModal, setShowPostModal] = useState(false)
+  const [showEditProfileModal, setShowEditProfileModal] = useState(false)
   const [postContent, setPostContent] = useState("")
   const [postLocation, setPostLocation] = useState("")
   const [postImages, setPostImages] = useState<string[]>([])
@@ -102,9 +104,12 @@ export default function ProfileScreen() {
         setStatus(userFollowStatus.followStatusString);
 
         const response = await getUserInfo(params.userId as string);
+        console.log('Fetched profile data for other user:', response.response);
         setProfileUser(response.response);
       } else if (user) {
-        setProfileUser(user);
+        const response = await getUserInfo(user.id);
+        console.log('Fetched profile data for own user:', response.response);
+        setProfileUser(response.response);
         const friendList = await getUserFriends(user?.id)
         setFriend(friendList.response)
       }
@@ -352,6 +357,38 @@ export default function ProfileScreen() {
     }
   };
 
+  const handleSaveProfile = async (updatedFields: Partial<User>) => {
+    if (!profileUser?.id) {
+      Alert.alert('Lỗi', 'Không tìm thấy thông tin người dùng');
+      return;
+    }
+
+    try {
+      const response = await updateUserInfo(profileUser.id, updatedFields);
+      if (response.success) {
+        setProfileUser((prevProfileUser) => ({
+          ...(prevProfileUser as User),
+          ...updatedFields,
+        }));
+        setShowEditProfileModal(false);
+        Alert.alert('Thành công', 'Cập nhật thông tin cá nhân thành công.');
+        fetchUserData();
+      } else {
+        throw new Error(response.message || 'Không thể cập nhật thông tin cá nhân.');
+      }
+    } catch (error: any) {
+      console.error('Error updating profile:', error);
+      Alert.alert(
+        'Lỗi',
+        error.response?.data?.message || error.message || 'Không thể cập nhật thông tin cá nhân. Vui lòng thử lại.'
+      );
+    }
+  };
+
+  const handleEditProfile = () => {
+    setShowEditProfileModal(true);
+  };
+
   const goBack = () => {
     router.back()
   }
@@ -453,6 +490,7 @@ export default function ProfileScreen() {
               onFollow={handleCreateUserFollow}
               onUnfollow={handleDeleteUserFollow}
               onMessage={handleMessage}
+              onEditProfile={handleEditProfile}
             />
 
             <ProfileTabs
@@ -473,6 +511,15 @@ export default function ProfileScreen() {
         onSave={handleSavePost}
         editingPost={editingPost}
       />
+
+      {profileUser && (
+        <EditProfileModal
+          visible={showEditProfileModal}
+          onClose={() => setShowEditProfileModal(false)}
+          onUpdated={fetchUserData}
+          user={profileUser}
+        />
+      )}
 
       <Modal
         visible={showAvatarModal}
